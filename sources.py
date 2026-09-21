@@ -32,8 +32,38 @@ YAHOO_NEWS = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={symbol}&region
 FRED_OBS = "https://api.stlouisfed.org/fred/series/observations"
 
 
+# ── ONCE A HOST HAS THROTTLED US, IT HAS THROTTLED US ───────────────────────────────
+#
+# A 429 is a fact about the CLIENT IP, not about the symbol. So the first 429 already
+# tells you what the next seven requests will do, and retrying each of them with backoff
+# spends two minutes learning the same thing eight times. Measured on the first hosted
+# run: every symbol and the index history, all 429, and the second run then sat in
+# backoff long enough to be worth fixing before it ever ran on a schedule.
+#
+# After `THROTTLE_AFTER` refusals from one host, every later call to that host in the same
+# process returns `http_429_host_throttled` immediately and the ladder drops to its
+# fallback. Per process, not persisted: each run gets a fresh chance, because the limit is
+# a rolling window and the next run is minutes later on possibly another machine.
+THROTTLE_AFTER = 2
+_throttled = {}
+
+
+def _host_of(url):
+    return urllib.parse.urlparse(url).netloc.lower()
+
+
+def reset_throttles():
+    """Forget which hosts are throttled. For tests, and for a long-lived process."""
+    _throttled.clear()
+
+
 def _get(url, headers=None, retries=2):
     """(body_bytes, state). Retries only what is worth retrying."""
+    host = _host_of(url)
+    if _throttled.get(host, 0) >= THROTTLE_AFTER:
+        # NAMED DIFFERENTLY FROM A PLAIN 429 ON PURPOSE. "This host refused us" and "we
+        # stopped asking this host" are different facts, and the second one is ours.
+        return None, "http_429_host_throttled"
     req = urllib.request.Request(url, headers={"User-Agent": UA, **(headers or {})})
     last = "unknown"
     for attempt in range(retries + 1):
@@ -48,6 +78,9 @@ def _get(url, headers=None, retries=2):
             # the first hosted run. Retried with real backoff it usually clears.
             if e.code == 429:
                 last = "http_429"
+                _throttled[host] = _throttled.get(host, 0) + 1
+                if _throttled[host] >= THROTTLE_AFTER:
+                    return None, "http_429"
                 if attempt < retries:
                     time.sleep(4.0 * (attempt + 1))
                     continue

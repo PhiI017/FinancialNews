@@ -163,6 +163,33 @@ def every_source_reports_where_it_stopped():
 
 
 @test
+def one_rate_limit_is_not_relearned_once_per_symbol():
+    """
+    A 429 IS A FACT ABOUT THE IP, NOT ABOUT THE SYMBOL.
+
+    So the first refusal already tells you what the next seven requests will do. Retrying
+    each with backoff spends minutes learning the same thing eight times — measured on the
+    second hosted run, which sat in backoff long enough to matter before it had ever run
+    on a schedule. After two refusals the host is skipped and the ladder drops straight to
+    its fallback.
+
+    The skip is named differently from a plain 429 because "this host refused us" and "we
+    stopped asking" are different facts, and only the second one is our decision.
+    """
+    sources.reset_throttles()
+    try:
+        host = "query1.finance.yahoo.com"
+        sources._throttled[host] = sources.THROTTLE_AFTER
+        body, state = sources._get(f"https://{host}/anything")
+        assert body is None and state == "http_429_host_throttled", (body, state)
+        # ...and it is per-process, so the next run gets a clean chance at it
+        sources.reset_throttles()
+        assert sources._throttled == {}
+    finally:
+        sources.reset_throttles()
+
+
+@test
 def an_unconfigured_channel_is_reported_and_never_raises():
     """
     THE NOTIFIER IS THE WORST PLACE FOR AN EXCEPTION.
