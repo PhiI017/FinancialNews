@@ -1,0 +1,18 @@
+{
+  "fired_levels": [],
+  "highest_close": 0.0,
+  "history": [
+    {
+      "at": "2026-09-21",
+      "drawdown_pct": 0.0,
+      "fired": [],
+      "mode": "daily",
+      "sent": {
+        "email": "not_configured",
+        "ntfy": "not_configured"
+      },
+      "urgency": "quiet"
+    }
+  ],
+  "last_run": "2026-09-21 23:14:18"
+}
