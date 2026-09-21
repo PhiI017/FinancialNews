@@ -41,10 +41,20 @@ def _get(url, headers=None, retries=2):
             with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
                 return r.read(), "ok"
         except urllib.error.HTTPError as e:
-            # A 4xx IS OURS AND A 5xx IS THEIRS, so only one of them is worth a retry.
-            if 400 <= e.code < 500:
+            # A 4xx IS OURS AND A 5xx IS THEIRS, so only one of them is worth a retry —
+            # WITH ONE EXCEPTION THAT COST A WHOLE RUN. 429 is neither: it means "you are
+            # right, just slower". Classifying it with the 4xx family returned instantly
+            # and gave up, and on 2026-09-21 that turned every symbol into `http_429` on
+            # the first hosted run. Retried with real backoff it usually clears.
+            if e.code == 429:
+                last = "http_429"
+                if attempt < retries:
+                    time.sleep(4.0 * (attempt + 1))
+                    continue
+            elif 400 <= e.code < 500:
                 return None, f"http_{e.code}"
-            last = f"http_{e.code}"
+            else:
+                last = f"http_{e.code}"
         except urllib.error.URLError as e:
             last = "timeout" if "timed out" in str(e.reason).lower() else "unreachable"
         except Exception as e:
@@ -54,7 +64,59 @@ def _get(url, headers=None, retries=2):
     return None, last
 
 
-def quote(symbol, lookback_days=7):
+# ── A SECOND PRICE SOURCE, BECAUSE THE FIRST ONE THROTTLES DATACENTRES ─────────────
+#
+# MEASURED ON THE FIRST HOSTED RUN: Yahoo answered 429 to all seven symbols and to the
+# index history, from a GitHub runner, in under a second. Hosted runners share well-known
+# IP ranges and Yahoo rate-limits them as a block — so this is not a bad minute, it is the
+# normal condition of the machine this is designed to run on.
+#
+# Stooq serves the same daily closes as plain CSV with no key and no session, and it does
+# not appear to treat datacentres differently. It is the fallback rather than the primary
+# only because Yahoo carries more symbols; when Yahoo answers, nothing changes.
+#
+# THE LADDER REPORTS WHICH RUNG ANSWERED. "Where did this number come from" is the first
+# question about a disagreement, and a silent fallback makes it unanswerable.
+STOOQ = "https://stooq.com/q/d/l/?s={symbol}&i=d"
+
+STOOQ_SYMBOLS = {
+    # Stooq spells US equities with a .us suffix, indices with a caret, crypto plainly.
+    "^GSPC": "^spx",
+    "BTC-USD": "btcusd",
+}
+
+
+def _stooq_symbol(symbol):
+    if symbol in STOOQ_SYMBOLS:
+        return STOOQ_SYMBOLS[symbol]
+    return symbol.lower() + ".us"
+
+
+def _stooq_rows(symbol):
+    """([(date, close)], state) — daily closes from Stooq's CSV."""
+    body, state = _get(STOOQ.format(symbol=urllib.parse.quote(_stooq_symbol(symbol))))
+    if state != "ok":
+        return None, state
+    try:
+        lines = body.decode("utf-8", "replace").strip().splitlines()
+        header = lines[0].lower().split(",")
+        di, ci = header.index("date"), header.index("close")
+    except Exception:
+        return None, "unparsed"
+    rows = []
+    for line in lines[1:]:
+        parts = line.split(",")
+        try:
+            rows.append((parts[di], float(parts[ci])))
+        except (ValueError, IndexError):
+            continue          # Stooq writes "N/D" for a day with no print
+    if len(rows) < 2:
+        # AN EMPTY CSV WITH A HEADER IS HOW STOOQ SAYS "NO SUCH SYMBOL", with a 200.
+        return None, "empty"
+    return rows, "ok"
+
+
+def _yahoo_quote(symbol, lookback_days=7):
     """
     ({symbol, price, prev_close, change_pct, asof}, state) for one symbol.
 
@@ -89,10 +151,11 @@ def quote(symbol, lookback_days=7):
         "prev_close": prev,
         "change_pct": (price / prev - 1.0) * 100.0 if prev else 0.0,
         "asof": time.strftime("%Y-%m-%d", time.gmtime(stamps[-1])) if stamps else "",
+        "source": "yahoo",
     }, "ok"
 
 
-def index_history(symbol="^GSPC", years=40):
+def _yahoo_index_history(symbol="^GSPC", years=40):
     """
     ([(date, close)], state) — long daily history, for a REAL all-time high.
 
@@ -231,3 +294,51 @@ def dedupe(items):
             seen.add(key)
             out.append(it)
     return out
+
+
+def quote(symbol, lookback_days=7):
+    """
+    ({...,'source'}, state) — Yahoo, then Stooq. The winning rung is in `source`.
+
+    THE FALLBACK IS NOT A NICETY HERE. On a GitHub runner Yahoo answered 429 to every
+    symbol at once, which is the normal condition of a shared datacentre IP rather than
+    an outage. A single-source alerter on this hardware simply does not work.
+
+    BOTH FAILURE STATES ARE REPORTED, not just the last one, because "Yahoo throttled and
+    Stooq does not carry this symbol" and "both timed out" call for different fixes.
+    """
+    row, state = _yahoo_quote(symbol, lookback_days)
+    if state == "ok":
+        return row, state
+
+    rows, alt_state = _stooq_rows(symbol)
+    if alt_state != "ok":
+        return None, f"yahoo_{state}+stooq_{alt_state}"
+    price, prev = rows[-1][1], rows[-2][1]
+    return {
+        "symbol": symbol,
+        "price": price,
+        "prev_close": prev,
+        "change_pct": (price / prev - 1.0) * 100.0 if prev else 0.0,
+        "asof": rows[-1][0],
+        "source": "stooq",
+    }, "ok"
+
+
+def index_history(symbol="^GSPC", years=40):
+    """
+    ([(date, close)], state) — the long history, Yahoo then Stooq.
+
+    Stooq's daily index file runs back decades, which is what the all-time high needs.
+    `triggers.ratchet_high` still refuses to lower a stored high, so even if a fallback
+    returns a shorter history than the primary once did, the record cannot shrink.
+    """
+    rows, state = _yahoo_index_history(symbol, years)
+    if state == "ok":
+        return rows, state
+    alt, alt_state = _stooq_rows(symbol)
+    if alt_state != "ok":
+        return None, f"yahoo_{state}+stooq_{alt_state}"
+    if len(alt) < 250:
+        return None, f"yahoo_{state}+stooq_too_short"
+    return alt, "ok"

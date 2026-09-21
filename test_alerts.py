@@ -128,12 +128,29 @@ def every_source_reports_where_it_stopped():
     fetcher returns a (value, state) pair and never a bare None.
     """
     import inspect
-    for name in ("quote", "index_history", "fred_series", "headlines"):
+    # The public `quote` and `index_history` are LADDERS; the parsing that can fail in an
+    # interesting way lives in the rung beneath. Check the rungs for the distinction and
+    # the ladders for reporting it onward.
+    for name in ("_yahoo_quote", "_yahoo_index_history", "_stooq_rows",
+                 "fred_series", "headlines", "feed"):
         src = inspect.getsource(getattr(sources, name))
         assert "return None, " in src or "return (rows" in src, (
             f"sources.{name} has no stated failure state")
-        assert "unparsed" in src or "no_key" in src or "too_short" in src, (
+        assert any(w in src for w in ("unparsed", "no_key", "too_short", "empty")), (
             f"sources.{name} cannot distinguish our bug from the host's")
+
+    # AND THE LADDER NAMES BOTH RUNGS. "Yahoo throttled and Stooq has no such symbol" and
+    # "both timed out" need different fixes, and one combined word cannot say which.
+    for name in ("quote", "index_history"):
+        src = inspect.getsource(getattr(sources, name))
+        assert "yahoo_" in src and "stooq_" in src, (
+            f"sources.{name} collapses two different failures into one state")
+
+    # 429 IS RETRYABLE AND WAS NOT. It means "you are right, just slower" — grouping it
+    # with the 4xx family returned instantly and gave up, which is exactly what happened
+    # on the first hosted run: every symbol http_429 in under a second.
+    getsrc = inspect.getsource(sources._get)
+    assert "e.code == 429" in getsrc, "429 is not retried separately from the 4xx family"
 
     # `no_key` is a STATE, not a silence — checked for real, since it needs no network.
     saved = os.environ.pop("FRED_API_KEY", None)
