@@ -1,0 +1,101 @@
+{
+  "_comment": "THE ONLY FILE YOU EDIT TO ADD OR REMOVE SOMETHING. Add a line, commit, done.",
+  "_status_meanings": {
+    "held": "you own it \u2014 moves are alerted and it appears in every digest",
+    "watching": "you do not own it yet \u2014 alerted the same way, but the LLM is told you are deciding, not holding",
+    "muted": "kept in the file for later, never fetched, never alerted"
+  },
+  "positions": [
+    {
+      "symbol": "META",
+      "kind": "stock",
+      "status": "held",
+      "note": "core holding"
+    },
+    {
+      "symbol": "CELH",
+      "kind": "stock",
+      "status": "held",
+      "note": "small cap, expect noise \u2014 see move_pct"
+    },
+    {
+      "symbol": "TTWO",
+      "kind": "stock",
+      "status": "held",
+      "note": ""
+    },
+    {
+      "symbol": "VOO",
+      "kind": "etf",
+      "status": "held",
+      "note": "S&P 500 core"
+    },
+    {
+      "symbol": "BTC-USD",
+      "kind": "crypto",
+      "status": "held",
+      "note": "trades weekends; see the weekend note in triggers.py"
+    },
+    {
+      "symbol": "SCHG",
+      "kind": "etf",
+      "status": "watching",
+      "note": "candidate growth sleeve"
+    },
+    {
+      "symbol": "SPMO",
+      "kind": "etf",
+      "status": "watching",
+      "note": "the momentum alternative to SCHG"
+    }
+  ],
+  "_per_symbol_overrides": "move_pct sets the single-day move that counts as urgent for ONE symbol. Omitted means the default in triggers.py.",
+  "overrides": {
+    "CELH": {
+      "move_pct": 8.0
+    },
+    "BTC-USD": {
+      "move_pct": 7.0
+    }
+  },
+  "index": {
+    "symbol": "^GSPC",
+    "dip_levels_pct": [
+      5,
+      10,
+      15,
+      20,
+      25
+    ]
+  },
+  "macro": {
+    "_comment": "FRED series. Free, needs FRED_API_KEY. Omit the key and these are skipped with a stated reason, not silently.",
+    "series": {
+      "DCOILWTICO": "WTI crude oil",
+      "DGS10": "10-year Treasury yield",
+      "DFF": "Fed funds effective rate"
+    },
+    "_move_thresholds": "an absolute one-day change that counts as urgent",
+    "thresholds": {
+      "DCOILWTICO": 5.0,
+      "DGS10": 0.15,
+      "DFF": 0.2
+    }
+  },
+  "themes": [
+    "US-Iran diplomacy, Strait of Hormuz, oil supply",
+    "US-China trade talks, tariffs, rare earths, AI export controls",
+    "Federal Reserve rate decisions and inflation prints",
+    "AI capital spending by large technology companies"
+  ],
+  "_feeds_comment": "BROAD MARKET NEWS, not just your tickers. Per-symbol feeds only ever mention a company that is already on your list, so they cannot warn you about something coming from outside it \u2014 a Fed decision, an oil shock, a China headline. These are free public RSS feeds. Delete any that get noisy; add any you trust. Every fetch reports its own failure state, so a dead feed is named in the letter, not silent.",
+  "feeds": {
+    "Federal Reserve press releases": "https://www.federalreserve.gov/feeds/press_all.xml",
+    "Yahoo S&P 500": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US",
+    "Yahoo crude oil": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=CL=F&region=US&lang=en-US",
+    "MarketWatch top stories": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+    "CNBC markets": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664"
+  },
+  "_feed_limit": "headlines taken per feed. Higher costs a little more to summarise.",
+  "feed_limit": 8
+}

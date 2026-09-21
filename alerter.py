@@ -1,0 +1,289 @@
+"""
+alerter.py — the entry point. Four modes, one state file.
+
+    python alerter.py --setup     what is configured, what is missing, and a safe topic
+    python alerter.py --check     urgent scan. Arithmetic only. Cheap, run it often
+    python alerter.py --daily      note after the close
+    python alerter.py --weekahead  Monday: what is coming this week
+    python alerter.py --weekly     Sunday: the week in review, and next week
+    python alerter.py --dry-run   with any of the above: print, send nothing, spend nothing
+
+── WHY THE STATE FILE IS COMMITTED ──────────────────────────────────────────────────
+
+`state.json` remembers which dip levels are spent and the highest close ever seen. A
+runner starts from a fresh checkout every time, so state that lives only on disk is state
+that does not exist — the -10% alert would fire again on every single run. Committing it
+is the same decision `ptr_documents` makes in the stocks collector, for the same reason.
+
+── WHAT RUNS WITHOUT ANY KEYS AT ALL ────────────────────────────────────────────────
+
+Prices, the index drawdown and every dip trigger need no credentials. FRED needs a free
+key, the summary needs an Anthropic key, and sending needs ntfy or SMTP — each is skipped
+with a STATED reason and never silently. `--setup` prints exactly which of those you have.
+"""
+
+import json
+import os
+import sys
+import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import calendar_events
+import notify
+import sources
+import summarize
+import triggers
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+WATCHLIST = os.path.join(HERE, "watchlist.json")
+STATE = os.path.join(HERE, "state.json")
+
+
+def load_watchlist():
+    with open(WATCHLIST) as fh:
+        return json.load(fh)
+
+
+def load_state():
+    try:
+        with open(STATE) as fh:
+            return json.load(fh)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"highest_close": 0.0, "fired_levels": [], "last_run": "", "history": []}
+
+
+def save_state(state):
+    state["last_run"] = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+    state["history"] = state.get("history", [])[-60:]
+    with open(STATE, "w") as fh:
+        json.dump(state, fh, indent=2, sort_keys=True)
+        fh.write("\n")
+
+
+def active_positions(wl):
+    return [p for p in wl["positions"] if p.get("status") != "muted"]
+
+
+def gather(wl, want_news=True, want_macro=True):
+    """Every fact, with every failure named. The one place that touches the network."""
+    facts = {"date": time.strftime("%Y-%m-%d", time.gmtime()),
+             "positions": active_positions(wl),
+             "themes": wl.get("themes", []),
+             "quotes": [], "quote_failures": {},
+             "macro": {}, "macro_failures": {}, "macro_labels": wl["macro"]["series"],
+             "headlines": [], "news_failures": {}}
+
+    for pos in facts["positions"]:
+        q, state = sources.quote(pos["symbol"])
+        if state == "ok":
+            facts["quotes"].append(q)
+        else:
+            facts["quote_failures"][pos["symbol"]] = state
+
+    rows, state = sources.index_history(wl["index"]["symbol"])
+    facts["index_state"] = state
+    facts["index"] = {}
+    if state == "ok":
+        closes = [c for _d, c in rows]
+        facts["index"] = {"close": closes[-1], "observed_high": max(closes)}
+
+    if want_macro:
+        for sid in wl["macro"]["series"]:
+            rows, state = sources.fred_series(sid)
+            if state == "ok":
+                facts["macro"][sid] = {"latest": rows[-1][1], "previous": rows[-2][1]
+                                       if len(rows) > 1 else rows[-1][1],
+                                       "asof": rows[-1][0], "rows": rows}
+            else:
+                facts["macro_failures"][sid] = state
+
+    if want_news:
+        for pos in facts["positions"]:
+            items, state = sources.headlines(pos["symbol"], limit=6)
+            if state == "ok":
+                facts["headlines"].extend(items)
+            else:
+                facts["news_failures"][pos["symbol"]] = state
+
+        # AND THE BROAD FEEDS, which are the only ones that can carry a story arriving
+        # from OUTSIDE the watchlist. A per-symbol feed cannot warn you about a Fed
+        # decision or an oil shock, because neither one names your companies.
+        limit = int(wl.get("feed_limit", 8))
+        for label, url in (wl.get("feeds") or {}).items():
+            items, state = sources.feed(url, label=label, limit=limit)
+            if state == "ok":
+                facts["headlines"].extend(items)
+            else:
+                facts["news_failures"][label] = state
+
+        before = len(facts["headlines"])
+        facts["headlines"] = sources.dedupe(facts["headlines"])
+        facts["duplicates_removed"] = before - len(facts["headlines"])
+    return facts
+
+
+def evaluate(facts, wl, state):
+    """Apply the triggers. Returns (verdict, updated_state). No network, no model."""
+    idx = facts.get("index") or {}
+    fired, rearmed, drawdown = [], [], 0.0
+    if idx.get("close"):
+        high, moved = triggers.ratchet_high(state.get("highest_close"), idx["observed_high"])
+        state["highest_close"] = high
+        idx["high"] = high
+        idx["high_moved_up"] = moved
+        drawdown, fired, rearmed = triggers.dip_state(
+            idx["close"], high, wl["index"]["dip_levels_pct"], state.get("fired_levels", []))
+        idx["drawdown_pct"] = drawdown
+        idx["fired"] = fired[-1] if fired else None
+        spent = set(state.get("fired_levels", [])) | set(fired)
+        spent -= set(rearmed)
+        state["fired_levels"] = sorted(spent)
+
+    big = triggers.movers(facts["quotes"], wl.get("overrides", {}))
+    macro_rows = {sid: row["rows"] for sid, row in (facts.get("macro") or {}).items()}
+    macro_hits = triggers.macro_moves(macro_rows, wl["macro"].get("thresholds", {}))
+
+    return {"urgency": triggers.urgency(fired, big, macro_hits),
+            "fired_levels": fired, "rearmed_levels": rearmed,
+            "drawdown_pct": drawdown, "movers": big, "macro_hits": macro_hits}, state
+
+
+def urgent_text(verdict, facts):
+    """Short enough for a phone notification. Numbers, not prose."""
+    bits = []
+    for level in verdict["fired_levels"]:
+        bits.append(f"S&P is {abs(verdict['drawdown_pct']):.1f}% below its high "
+                    f"— your {level}% trigger.")
+    for m in verdict["movers"]:
+        bits.append(f"{m['symbol']} {m['change_pct']:+.1f}% today.")
+    for h in verdict["macro_hits"]:
+        label = facts.get("macro_labels", {}).get(h["series"], h["series"])
+        bits.append(f"{label} {h['change']:+.2f} to {h['latest']}.")
+    return "\n".join(bits) or "Nothing triggered."
+
+
+def failures_line(facts):
+    """WHAT DID NOT ANSWER, ALWAYS PRINTED. A quiet digest and a broken one look alike."""
+    out = []
+    for sym, st in (facts.get("quote_failures") or {}).items():
+        out.append(f"no price for {sym} ({st})")
+    for sid, st in (facts.get("macro_failures") or {}).items():
+        out.append(f"no {sid} ({st})")
+    for name, st in (facts.get("news_failures") or {}).items():
+        out.append(f"no news from {name} ({st})")
+    if facts.get("index_state") != "ok":
+        out.append(f"no S&P history ({facts.get('index_state')})")
+    return ("Not retrieved this run: " + "; ".join(out)) if out else ""
+
+
+def run(mode, dry_run=False):
+    wl = load_watchlist()
+    state = load_state()
+    wants_note = mode in ("daily", "weekahead", "weekly")
+    facts = gather(wl, want_news=wants_note, want_macro=True)
+    verdict, state = evaluate(facts, wl, state)
+
+    # HOW FAR AHEAD EACH LETTER LOOKS. The Monday letter is about the week in front of
+    # it; Sunday's covers the week that starts tomorrow; the daily one only flags
+    # something landing within a couple of days, or it becomes a weekly letter every day.
+    window = {"daily": 2, "weekahead": 8, "weekly": 9}.get(mode, 0)
+    if window:
+        facts["catalysts_text"], facts["catalysts_warning"] = \
+            calendar_events.render(within_days=window)
+
+    note, note_state = (None, "not requested")
+    if wants_note and not dry_run:
+        note, note_state = summarize.summarize(facts, kind=mode)
+    elif wants_note:
+        note_state = "skipped (dry run — nothing spent)"
+
+    body_lines = []
+    if mode == "check":
+        subject = f"Market alert — {verdict['urgency']}"
+        body_lines.append(urgent_text(verdict, facts))
+    else:
+        subject = {"daily": "Daily market note",
+                   "weekahead": "The week ahead",
+                   "weekly": "The week in review, and what is next"}[mode]
+        idx = facts.get("index") or {}
+        if idx.get("close"):
+            body_lines.append(f"S&P 500 {idx['close']:.2f}, "
+                              f"{idx['drawdown_pct']:+.2f}% from its high of {idx['high']:.2f}.")
+        for q in facts["quotes"]:
+            body_lines.append(f"{q['symbol']} {q['price']:.2f} ({q['change_pct']:+.2f}%)")
+        if note:
+            body_lines.extend(["", note])
+        else:
+            body_lines.extend(["", f"[no written summary: {note_state}]"])
+
+    failed = failures_line(facts)
+    if failed:
+        body_lines.extend(["", failed])
+    body = "\n".join(body_lines)
+
+    print(f"--- {mode} / {verdict['urgency']} ---\n{subject}\n{body}\n")
+    if wants_note:
+        print(f"summary: {note_state}")
+
+    if dry_run:
+        print("DRY RUN — nothing sent, nothing spent, state not written.")
+        return 0
+
+    sent = {}
+    if mode == "check":
+        # A QUIET CHECK SENDS NOTHING AT ALL. An alerter that pings you to say nothing
+        # happened is one you mute, and a muted alerter misses the day that matters.
+        if verdict["urgency"] == "urgent":
+            sent = notify.send(subject, body, level="urgent", channels=("ntfy", "email"))
+        else:
+            print("quiet — nothing sent")
+    else:
+        # THE LETTERS ARE EMAIL. A 450-word newsletter on a phone notification is
+        # unreadable, and pushing one every weekday is how the urgent channel — which
+        # shares the app — gets muted. ntfy carries a one-line pointer instead.
+        sent = notify.send(subject, body, level="important", channels=("email",))
+        head = body.split("\n\n")[0][:180]
+        sent["ntfy"] = notify.push(subject, head + "\n(full letter in your email)",
+                                   level="quiet")[1]
+    if sent:
+        print("delivery:", sent)
+
+    state.setdefault("history", []).append(
+        {"at": facts["date"], "mode": mode, "urgency": verdict["urgency"],
+         "drawdown_pct": round(verdict["drawdown_pct"], 2),
+         "fired": verdict["fired_levels"], "sent": sent})
+    save_state(state)
+    return 0
+
+
+def setup():
+    """What this machine can do, and what it is missing. Sends nothing."""
+    wl = load_watchlist()
+    have = notify.configured()
+    ok_llm, why = summarize.available()
+    print("\n  WATCHING")
+    for p in active_positions(wl):
+        print(f"    {p['symbol']:<9} {p['status']}")
+    print(f"    S&P dip levels: {wl['index']['dip_levels_pct']}")
+    print("\n  CHANNELS")
+    print(f"    ntfy   {'ready' if have['ntfy'] else 'NOT SET — set NTFY_TOPIC'}")
+    print(f"    email  {'ready' if have['email'] else 'NOT SET — set SMTP_USER, SMTP_PASS, ALERT_EMAIL_TO'}")
+    print("\n  OPTIONAL")
+    print(f"    FRED   {'ready' if os.getenv('FRED_API_KEY') else 'NOT SET — oil, yields and Fed rate will be skipped'}")
+    print(f"    LLM    {'ready — ' + summarize.MODEL if ok_llm else 'NOT SET — ' + why}")
+    if not have["ntfy"]:
+        print(f"\n  A topic nobody will guess: {notify.random_topic()}")
+    print(f"\n  {summarize.estimate_cost(3000, 700)[1]}\n")
+    return 0
+
+
+if __name__ == "__main__":
+    argv = sys.argv[1:]
+    dry = "--dry-run" in argv
+    if "--setup" in argv:
+        sys.exit(setup())
+    for flag in ("check", "daily", "weekahead", "weekly"):
+        if f"--{flag}" in argv:
+            sys.exit(run(flag, dry_run=dry))
+    print(__doc__.split("──")[0].rstrip())

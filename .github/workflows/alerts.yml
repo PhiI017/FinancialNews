@@ -1,0 +1,127 @@
+# The alerter. Runs on GitHub's hosted runners.
+#
+# ⚠ THIS FILE BELONGS IN A PUBLIC REPOSITORY, AND THAT IS THE WHOLE POINT. Public repos
+# get unlimited free Actions minutes; private ones are metered at 2,000 a month, and the
+# repository this was written in ran out — which is precisely what it must not depend on.
+#
+# ⚠ AND THE REPOSITORY IT LIVES IN MUST HAVE NO SELF-HOSTED RUNNER. A pull request can
+# change a workflow, so a public repo with a self-hosted runner lets a stranger run code
+# on your machine. This repo has none and must never get one. Keep it separate from any
+# repository that does.
+#
+# NOTHING SECRET IS IN THIS FILE. Every credential is a repository secret, and the
+# holdings themselves can be too — see WATCHLIST_JSON below.
+name: market alerts
+
+on:
+  schedule:
+    # Urgent scan through the US session. 13:30-21:00 UTC is 9:30am-5pm Eastern.
+    # Half-hourly is a deliberate ceiling: a dip trigger you learn about 30 minutes late
+    # is still actionable, and polling harder mostly buys noise.
+    - cron: "*/30 13-20 * * 1-5"
+    # After the close, with the written note.
+    - cron: "35 21 * * 1-5"
+    # Monday, before the US open: what is coming this week.
+    - cron: "0 12 * * 1"
+    # Sunday: the week in review, and what is coming next.
+    - cron: "0 15 * * 0"
+    # ONE WEEKEND SCAN, because bitcoin does not stop when the exchanges do. Equities are
+    # unchanged from Friday and simply report no move.
+    - cron: "0 15 * * 6"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "check | daily | weekahead | weekly"
+        type: choice
+        options: ["check", "daily", "weekahead", "weekly"]
+        default: "check"
+      dry_run:
+        description: "print only — send nothing, spend nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write          # the state file is committed; see alerter.py
+
+concurrency:
+  # TWO RUNS MUST NOT BOTH DECIDE A TRIGGER IS UNSPENT. They would each send the -10%
+  # alert and each commit a state file the other overwrites.
+  group: market-alerts
+  cancel-in-progress: false
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # anthropic ONLY. Everything else is the standard library, which is why this job
+      # takes seconds rather than minutes and why a broken wheel cannot stop a price alert.
+      - name: Install
+        run: pip install --quiet anthropic
+
+      - name: Which mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "35 21 * * 1-5" ]; then
+            echo "mode=daily" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 12 * * 1" ]; then
+            echo "mode=weekahead" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 15 * * 0" ]; then
+            echo "mode=weekly" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=check" >> "$GITHUB_OUTPUT"
+          fi
+
+      # OPTIONAL: keep your holdings out of a public repo. Put the whole watchlist.json
+      # in a secret named WATCHLIST_JSON and it overwrites the committed one at runtime.
+      # Leave the secret unset and the committed file is used as-is.
+      - name: Private watchlist, if you set one
+        env:
+          WATCHLIST_JSON: ${{ secrets.WATCHLIST_JSON }}
+        run: |
+          if [ -n "$WATCHLIST_JSON" ]; then
+            printf '%s' "$WATCHLIST_JSON" > watchlist.json
+            python -c "import json;json.load(open('watchlist.json'))" \
+              && echo "using the watchlist from the secret"
+          else
+            echo "using the committed watchlist.json"
+          fi
+
+      - name: Run
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python alerter.py --${{ steps.mode.outputs.mode }} \
+            ${{ inputs.dry_run == true && '--dry-run' || '' }}
+
+      # THE STATE FILE IS THE MEMORY. Without this commit every run starts fresh and the
+      # same dip level alerts forever. The watchlist is never committed back — if it came
+      # from the secret, committing it would publish the holdings the secret hides.
+      - name: Remember what fired
+        if: ${{ always() && inputs.dry_run != true }}
+        run: |
+          git checkout -- watchlist.json 2>/dev/null || true
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add state.json || true
+          git diff --cached --quiet && echo "state unchanged" && exit 0
+          git commit -m "alerts: state after $(date -u +%Y-%m-%dT%H:%M)Z [skip ci]"
+          for i in 1 2 3 4; do
+            git push && exit 0
+            sleep $((i * 3))
+            git pull --rebase --autostash || true
+          done
+          echo "could not push state after 4 attempts" >&2

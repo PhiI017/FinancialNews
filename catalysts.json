@@ -1,0 +1,28 @@
+{
+  "_comment": "DATED EVENTS THE NEWSLETTERS LOOK AHEAD TO. Edit freely — one line each.",
+  "_why_a_file": "There is no free, reliable API for an economic calendar, and guessing dates is worse than having none: a newsletter that says 'CPI is Tuesday' when it is Thursday is worse than one that says nothing. So these are declared, dated, and easy to correct. Anything in the past is dropped automatically, and a stale file is reported rather than silently producing an empty week-ahead.",
+  "_fields": "date (YYYY-MM-DD), what, why_it_matters, tags",
+  "events": [
+    {"date": "2026-10-14", "what": "September CPI",
+     "why_it_matters": "core inflation above 2.4% is the warning sign for more hikes",
+     "tags": ["fed", "inflation"]},
+    {"date": "2026-10-15", "what": "Q3 earnings season begins (banks first)",
+     "why_it_matters": "sets the tone; watch guidance more than the beat",
+     "tags": ["earnings"]},
+    {"date": "2026-10-27", "what": "Big tech Q3 earnings week",
+     "why_it_matters": "AI capital spending guidance from Microsoft, Alphabet, Amazon and Meta. Directly hits META and anything growth-weighted",
+     "tags": ["earnings", "ai", "META", "SCHG", "SPMO"]},
+    {"date": "2026-11-03", "what": "US midterm elections",
+     "why_it_matters": "the post-election 3-6 month window is the one seasonal effect that survived testing",
+     "tags": ["politics"]},
+    {"date": "2026-11-10", "what": "US-China trade truce expires",
+     "why_it_matters": "extension or tariffs; rare earths are the tell",
+     "tags": ["china", "trade"]},
+    {"date": "2026-12-11", "what": "US government funding deadline",
+     "why_it_matters": "shutdown risk",
+     "tags": ["politics"]},
+    {"date": "2026-12-15", "what": "December FOMC meeting",
+     "why_it_matters": "a hike here is the 2018 analogue — that year the damage came AFTER the election",
+     "tags": ["fed"]}
+  ]
+}
