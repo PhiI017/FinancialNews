@@ -112,6 +112,52 @@ def _get(url, headers=None, retries=2):
 # question about a disagreement, and a silent fallback makes it unanswerable.
 STOOQ = "https://stooq.com/q/d/l/?s={symbol}&i=d"
 
+# ── THE THIRD AND FOURTH RUNGS, AFTER BOTH FREE NO-KEY SOURCES REFUSED ─────────────
+#
+# MEASURED ON A HOSTED RUNNER, 2026-09-21. Yahoo answers 429 to the whole IP range.
+# Stooq answers 200 with `<!DOCTYPE html>...This site requires JavaScript to verify your
+# browser` — an anti-bot challenge wearing a success code, which is why it arrived as
+# `unparsed` rather than as an error. Two different walls, same cause: this runs from a
+# datacentre, and free unkeyed price data is exactly what gets fenced off from those.
+#
+# So the working sources need a key. Both below are free, instant, and take no card.
+#
+#   FRED      the S&P 500 itself, as series SP500. THIS IS THE IMPORTANT ONE — the dip
+#             triggers are the whole point of the system and this alone restores them.
+#   FINNHUB   individual equities and ETFs, 60 calls a minute free, which is ten times
+#             what seven holdings need.
+FINNHUB_QUOTE = "https://finnhub.io/api/v1/quote?symbol={symbol}&token={key}"
+
+
+def finnhub_quote(symbol, key=None):
+    """
+    ({...}, state) — one symbol from Finnhub. `no_key` is a state, not a silence.
+
+    NOT USED FOR CRYPTO. Finnhub spells bitcoin as an exchange pair rather than BTC-USD,
+    and guessing which exchange would invent a price difference nobody chose. Crypto falls
+    through to the rung below rather than being quietly mapped.
+    """
+    key = key or os.getenv("FINNHUB_API_KEY")
+    if not key:
+        return None, "no_key"
+    if symbol.endswith("-USD"):
+        return None, "not_covered"
+    body, state = _get(FINNHUB_QUOTE.format(symbol=urllib.parse.quote(symbol), key=key))
+    if state != "ok":
+        return None, state
+    try:
+        d = json.loads(body)
+        price, prev = float(d["c"]), float(d["pc"])
+    except Exception:
+        return None, "unparsed"
+    if not price or not prev:
+        # FINNHUB ANSWERS 200 WITH ZEROES for a symbol it does not carry. A zero price
+        # would read as a 100% collapse and fire every alert at once.
+        return None, "empty"
+    return {"symbol": symbol, "price": price, "prev_close": prev,
+            "change_pct": (price / prev - 1.0) * 100.0,
+            "asof": time.strftime("%Y-%m-%d"), "source": "finnhub"}, "ok"
+
 STOOQ_SYMBOLS = {
     # Stooq spells US equities with a .us suffix, indices with a caret, crypto plainly.
     "^GSPC": "^spx",
@@ -351,9 +397,13 @@ def quote(symbol, lookback_days=7):
     if state == "ok":
         return row, state
 
+    row, fh_state = finnhub_quote(symbol)
+    if fh_state == "ok":
+        return row, "ok"
+
     rows, alt_state = _stooq_rows(symbol)
     if alt_state != "ok":
-        return None, f"yahoo_{state}+stooq_{alt_state}"
+        return None, f"yahoo_{state}+finnhub_{fh_state}+stooq_{alt_state}"
     price, prev = rows[-1][1], rows[-2][1]
     return {
         "symbol": symbol,
@@ -376,6 +426,16 @@ def index_history(symbol="^GSPC", years=40):
     rows, state = _yahoo_index_history(symbol, years)
     if state == "ok":
         return rows, state
+
+    # FRED BEFORE STOOQ, because it is the one that answers from a datacentre. Its SP500
+    # series is the index's own daily close, roughly ten years of it — shorter than
+    # Yahoo's forty, which `ratchet_high` makes safe: a stored all-time high can never be
+    # lowered by a source that sees less history than the one before it.
+    if symbol in ("^GSPC", "^SPX", "SPX"):
+        fred_rows, fred_state = fred_series("SP500", last_n=4000)
+        if fred_state == "ok" and len(fred_rows) >= 250:
+            return fred_rows, "ok"
+
     alt, alt_state = _stooq_rows(symbol)
     if alt_state != "ok":
         return None, f"yahoo_{state}+stooq_{alt_state}"

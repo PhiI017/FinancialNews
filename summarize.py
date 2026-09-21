@@ -114,7 +114,19 @@ def summarize(facts, kind="daily", model=None):
     text = "".join(b.text for b in response.content if b.type == "text").strip()
     usage = response.usage
     cost, _ = estimate_cost(usage.input_tokens, usage.output_tokens, model)
-    return text, f"ok (${cost:.4f}, {usage.input_tokens}+{usage.output_tokens} tokens)"
+
+    # WHO WROTE THIS, ON THE LETTER ITSELF. `response.model` is what the API reports it
+    # actually served, not what was asked for — those can differ, and the served one is
+    # the honest answer. Reading it off the response rather than echoing the request is
+    # the difference between a label and a fact.
+    #
+    # It carries the cost too, so the running total is visible in your inbox rather than
+    # only in a console you would have to go and look at.
+    served = getattr(response, "model", model)
+    text += (f"\n\n—\nWritten by {served}. This letter cost ${cost:.4f} "
+             f"({usage.input_tokens} in, {usage.output_tokens} out). "
+             f"Not financial advice.")
+    return text, f"ok ({served}, ${cost:.4f}, {usage.input_tokens}+{usage.output_tokens} tokens)"
 
 
 def render(facts, kind):
