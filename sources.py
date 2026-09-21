@@ -135,6 +135,13 @@ def _stooq_rows(symbol):
         header = lines[0].lower().split(",")
         di, ci = header.index("date"), header.index("close")
     except Exception:
+        # PRINT WHAT WE COULD NOT READ. `unparsed` means the failure is OURS, and on a
+        # hosted runner there is no way to reproduce it by hand — this container cannot
+        # reach stooq.com either. Without the body, the next fix is a guess; with it, the
+        # log says whether we got an error page, a hit limit, or a shape we misread.
+        # Same reason probe.py in the sibling project keeps a body it could not parse.
+        head = body[:200].decode("utf-8", "replace").replace("\n", " ")
+        print(f"    stooq {symbol}: 200 but unreadable. First 200 bytes: {head!r}")
         return None, "unparsed"
     rows = []
     for line in lines[1:]:
