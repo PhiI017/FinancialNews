@@ -112,8 +112,38 @@ import sources
 # holders, so a fund trading at a large premium is paid to create the supply that removes
 # it.
 
-DEFAULT_RUNGS = (20.0, 10.0, 0.0, -10.0)
-WARN_ONLY_ABOVE = 20.0          # the +20 rung is an early warning, never a buy signal
+# ── AND THEN THE DATA ARRIVED AND THE RUNGS WERE CALIBRATED FOR THE WRONG UNIVERSE ──
+#
+# Measured from CEF Connect's own history on 2026-09-22:
+#
+#     2026-06-30   NAV 10.51   price 39.75   premium +278.21%
+#     2026-07-31   NAV 11.32   price 25.98   premium +129.51%
+#
+# Our arithmetic and the source's `DiscountData` agree to the hundredth on both, so the
+# reading is not in doubt. THE PREMIUM HALVED IN ONE MONTH and the fund still trades at
+# roughly two and a half times the value of what it owns.
+#
+# +20 / +10 / 0 / -10 would never have fired. They were written from the closed-end base
+# rate, which is sound and describes where these things END UP, not where this one is.
+# A ladder whose top rung is seven times below the current level is not cautious, it is
+# silent, and it would have sat there saying nothing while the premium fell 150 points.
+#
+# THE RUNGS ARE NOW SPACED WHERE THE DECISION ACTUALLY CHANGES, which is the loss you
+# take if the premium converges: p/(1+p).
+#
+#   +100   still paying twice what the assets are worth; a 50% fall to reach NAV. WARN.
+#    +50   a 33% fall to NAV. The first level worth a notification.
+#    +25   a 20% fall to NAV.
+#      0   at NAV. The base rate says this is where such vehicles rest, and it is the
+#          first level that is not paying for optimism at all.
+#
+# NONE OF THE POSITIVE RUNGS IS AN ENDORSEMENT. They are compression milestones on
+# something that began at +278%, and the honest reading of the closed-end literature is
+# that the only defensible entry is at or below NAV. The intermediate rungs exist so the
+# system speaks on the way down rather than staying mute until a level that may take
+# years to arrive.
+DEFAULT_RUNGS = (100.0, 50.0, 25.0, 0.0)
+WARN_ONLY_ABOVE = 100.0         # the +100 rung warns; it is never a buy signal
 MIN_HISTORY_POINTS = 60         # before the fund's own distribution may set the rungs
 
 # ── HOW OLD IS TOO OLD DEPENDS ON HOW OFTEN THE NUMBER IS PUBLISHED ─────────────────
@@ -185,6 +215,13 @@ def premium(symbol, price, nav_row, cadence=None):
         "stale_after": limit,
         "cadence": cadence or nav_row.get("cadence"),
         "premium_pct": premium_pct(price, nav_row["nav"]),
+        # THE NUMBER THAT ACTUALLY DECIDES ANYTHING. A premium of +155% sounds like a
+        # percentage to shrug at; "a 61% loss if it converges to NAV, with the companies
+        # unchanged" is the same fact in the units of the decision. p/(1+p), and it is
+        # computed here because it is arithmetic and the model must never derive it.
+        "loss_to_nav_pct": (premium_pct(price, nav_row["nav"]) /
+                            (100.0 + premium_pct(price, nav_row["nav"])) * 100.0
+                            if premium_pct(price, nav_row["nav"]) > -100 else None),
         "source": nav_row.get("source", ""),
     }, "ok"
 
@@ -279,11 +316,11 @@ NAV_ROUTES = {
     "nasdaq_summary": ("url",
                        "https://api.nasdaq.com/api/quote/{sym}/summary?assetclass=stocks"),
     "nasdaq_profile": ("url", "https://api.nasdaq.com/api/company/{sym}/company-profile"),
-    # THE FUND'S OWN SITE. A registered closed-end fund is required to publish its NAV, and
-    # its own page is where it does. Several spellings because the domain is a guess.
-    "sponsor_com": ("url", "https://robostrategy.com/"),
-    "sponsor_fund": ("url", "https://robostrategy.com/fund/"),
-    "sponsor_www": ("url", "https://www.robostrategy.com/"),
+    # THE FUND'S OWN SITE IS GONE FROM THIS LIST. Three spellings of robostrategy.com were
+    # probed on 2026-09-22: two timed out and one 404'd. A guessed domain is a guess, the
+    # timeouts cost seventy-five seconds of every survey, and CEF Connect already answers
+    # with the fund's NAV ticker — so there is nothing left for it to add. Put it back if
+    # the real domain is ever known, which is a fact nobody here has.
     # THE SEC, WHICH IS THE ONLY DURABLE ONE HERE. Everything else is a company's goodwill.
     "sec_lookup": ("sec",
                    "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany"
@@ -347,29 +384,69 @@ def nav_ticker(symbol):
     return (ticker, "ok") if ticker else (None, "no_nav_ticker")
 
 
-def nav_from_cefconnect(symbol):
-    """({nav, asof, source}, state) — the published NAV series, newest point."""
-    for period in ("1M", "3M", "6M", "1Y"):
-        body, state = sources._get(CEFCONNECT_HIST.format(sym=symbol, period=period))
-        if state != "ok":
-            return None, state
-        try:
-            data = (json.loads(body) or {}).get("Data") or {}
-        except Exception:
-            return None, "unparsed"
-        rows = data.get("PriceHistory") or []
-        # A 200 WITH AN EMPTY LIST IS NOT A FAILURE AND NOT AN ANSWER. For a fund this new
-        # the short windows are genuinely empty, so a longer one is tried before concluding
-        # anything — the opposite of reading the first empty reply as "nothing exists".
-        if not rows:
+def cefconnect_series(symbol, period="1Y"):
+    """
+    ([{date, nav, price, premium_pct, source_premium}], state) — the published history.
+
+    THE FIELD NAMES ARE THE SOURCE'S AND I HAD GUESSED THEM WRONG. The first version
+    looked for "NAV"/"Nav"/"nav" and "Date"/"date"; the reply uses `NAVData`, `Data` for
+    the PRICE, and `DataDate`. It would have parsed nothing and reported `empty_all_periods`
+    — "this fund has no NAV history" — from a reply containing exactly that history. The
+    same shape as every other mistake in this file today: a parser that cannot tell a
+    format it does not recognise from data that is not there.
+
+    AND THE SOURCE COMPUTES THE PREMIUM ITSELF, so it is read back and checked against
+    ours rather than ignored. `DiscountData` is positive for a premium, which is worth
+    knowing before reading a 278 as a discount. Two routes to one number is the same
+    discipline the price ladder uses, and here it confirmed the reading exactly: 39.75
+    over a NAV of 10.51 is +278.21%, which is what the field says to the hundredth.
+    """
+    body, state = sources._get(CEFCONNECT_HIST.format(sym=symbol, period=period))
+    if state != "ok":
+        return None, state
+    try:
+        data = (json.loads(body) or {}).get("Data") or {}
+    except Exception:
+        return None, "unparsed"
+    out = []
+    for r in data.get("PriceHistory") or []:
+        nav_v, price_v = r.get("NAVData"), r.get("Data")
+        when = (r.get("DataDate") or "")[:10]
+        if not nav_v or not price_v or not when:
             continue
-        last = rows[-1]
-        value = last.get("NAV") or last.get("Nav") or last.get("nav")
-        when = (last.get("Date") or last.get("date") or "")[:10]
-        if value:
-            return {"nav": float(value), "asof": when, "cadence": DEFAULT_NAV_CADENCE,
+        mine = premium_pct(float(price_v), float(nav_v))
+        theirs = r.get("DiscountData")
+        row = {"date": when, "nav": float(nav_v), "price": float(price_v),
+               "premium_pct": mine, "source_premium": theirs}
+        # A DISAGREEMENT HERE IS A BUG, NOT A ROUNDING QUESTION. If the source's own
+        # figure and ours part company the field means something else than assumed, and
+        # that is worth stopping on rather than quietly preferring one.
+        if theirs is not None and abs(float(theirs) - mine) > 0.5:
+            row["disagrees_by"] = round(float(theirs) - mine, 2)
+        out.append(row)
+    if not out:
+        return None, "empty"
+    return sorted(out, key=lambda r: r["date"]), "ok"
+
+
+def nav_from_cefconnect(symbol):
+    """
+    ({nav, asof, source}, state) — the newest published NAV point.
+
+    THE SHORT WINDOWS ARE GENUINELY EMPTY FOR THIS FUND and the long ones are not, so an
+    empty reply is not an answer and the next window is tried. Reading the first empty
+    PriceHistory as "no history exists" is the mistake this function was rewritten for.
+    """
+    last_state = "empty"
+    for period in ("3M", "6M", "1Y"):
+        rows, state = cefconnect_series(symbol, period)
+        if state == "ok" and rows:
+            newest = rows[-1]
+            return {"nav": newest["nav"], "asof": newest["date"],
+                    "cadence": DEFAULT_NAV_CADENCE,
                     "source": f"cefconnect_{period}"}, "ok"
-    return None, "empty_all_periods"
+        last_state = state
+    return None, f"all_periods_{last_state}"
 
 
 def nav(symbol, wl=None):

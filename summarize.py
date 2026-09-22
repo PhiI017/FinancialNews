@@ -238,6 +238,13 @@ def render(facts, kind):
             f"creating and redeeming shares at NAV to close that gap. Their plan buys at "
             f"{', '.join(f'{r:+.0f}%' for r in row['rungs'])}. Do not tell them to buy "
             f"or sell; say where the premium is and what moved it.")
+        if row.get("loss_to_nav_pct") is not None:
+            lines.append(
+                f"  GIVE THE PREMIUM IN THE UNITS OF THE DECISION, using this figure and "
+                f"not one you derive: if the premium went to zero from here the shares "
+                f"fall {row['loss_to_nav_pct']:.0f}%, with the companies the fund owns "
+                f"completely unchanged. That is the risk being carried, and a percentage "
+                f"premium on its own does not convey it.")
         # THE ASSUMPTION THE WHOLE FIGURE RESTS ON, SAID OUT LOUD EVERY TIME.
         lines.append(
             f"  STATE THIS PLAINLY, in one clause: the NAV is from {row['nav_asof']}, "

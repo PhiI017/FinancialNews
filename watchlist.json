@@ -60,15 +60,16 @@
       "kind": "fund",
       "status": "watching",
       "name": "RoboStrategy",
-      "note": "premium-to-NAV vehicle — see premium_watch; NOT a plain ETF, see the comment",
+      "note": "closed-end fund — premium to NAV is the risk, see premium.py; NAV is a quarterly appraisal, last struck 2026-06-30",
       "nav": null,
       "nav_asof": "",
       "premium_rungs_pct": [
-        20,
-        10,
-        0,
-        -10
-      ]
+        100,
+        50,
+        25,
+        0
+      ],
+      "nav_cadence": "quarterly"
     },
     {
       "symbol": "OUST",
@@ -144,5 +145,5 @@
   "_positions_name_comment": "`name` is what a NEWS SEARCH is given, not a label. A bare ticker is a low-precision query dressed as a targeted one — searching 'VOO' or 'ALL' returns English rather than news — so a symbol with no name here skips the Google News rung and reports `no_name` instead of serving noise as coverage.",
   "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items. Yahoo S&P 500 went the same way on the same day, for the OTHER reason: http_429 on every run, because Yahoo fences datacentres as a block. It works from a laptop and never from the runner this lives on, and MarketWatch and CNBC already carry the index's news. Eleven feeds left.",
   "_new_thresholds_comment": "BOT 8% and OUST 10% are STARTING GUESSES, not measurements. CELH's 8% was set the same way and the reasoning is in triggers.movers: a threshold too low sends a small cap's ordinary Tuesday every week, and the response to that is muting the channel the dip alerts share. Both should be re-set from their own realised daily ranges once there are a few weeks of collected prices to measure.",
-  "_bot_nav_comment": "BOT IS A CLOSED-END FUND, NOT AN ETF — confirmed on the runner 2026-09-22: TradingView returns type 'fund', typespecs ['closedend'], and Nasdaq's API answers 'Symbol not exists' for assetclass=etf. There is no creation/redemption at NAV, so nothing pulls the price back toward the assets and the premium is structural rather than an anomaly. NO FREE SOURCE PUBLISHES ITS NAV YET: six were surveyed and TradingView's nav column is null, CEF Connect 404s, Nasdaq does not classify it as a fund. So put the NAV and the date it was published here, from the fund's own site, and the premium alert starts working. It is age-checked like any fetched number — past premium.MAX_NAV_AGE_DAYS the letter reports `nav_stale` with the age instead of computing a premium against an old mark. premium_rungs_pct: +20 is a WARNING and not a buy; 10, 0 and -10 are the buy levels. Shaped like the S&P dip ladder. Change them here, not in code."
+  "_bot_nav_comment": "BOT IS A CLOSED-END FUND, NOT AN ETF — confirmed on the runner 2026-09-22 (TradingView type 'fund', typespecs ['closedend']; Nasdaq answers 'Symbol not exists' for assetclass=etf). No creation/redemption at NAV, so nothing pulls the price back to the assets and the premium is structural. THE NAV COMES FROM CEF CONNECT, whose own figures read: 2026-06-30 NAV 10.51 against a price of 39.75, a premium of +278%; 2026-07-31 NAV 11.32 against 25.98, +130%. It is a QUARTERLY APPRAISAL of private holdings, so between marks the premium moves because the PRICE moved, not because anything was re-valued — nav_cadence says so and the letter repeats it every time. premium_rungs_pct: +100 WARNS and is not a buy; 50, 25 and 0 are the levels. They are spaced by the loss taken if the premium converges — p/(1+p) — so +50 means a 33% fall to reach NAV. None of the positive rungs is an endorsement; the closed-end base rate says the defensible entry is at or below NAV. Change them here, not in code."
 }

@@ -325,18 +325,40 @@ def the_premium_rungs_spend_and_rearm_like_the_dip_ladder():
     5%-dip mistake in a new place.
     """
     import premium
-    rungs = (20.0, 10.0, 0.0, -10.0)
-    hit, spent = premium.crossed(17.5, rungs, [])
-    assert hit == [20.0], hit
-    assert all(r >= premium.WARN_ONLY_ABOVE for r in hit), "the +20 rung is warn-only"
-    hit, spent = premium.crossed(17.0, rungs, spent)
+    # THE REAL LEVELS, AND THE REASON THEY ARE NOT THE FIRST ONES I WROTE. BOT's measured
+    # premium was +278% on 2026-06-30 and +130% a month later. A ladder topping out at
+    # +20% would have been silent through a 150-point fall — not cautious, mute.
+    rungs = (100.0, 50.0, 25.0, 0.0)
+    hit, spent = premium.crossed(95.0, rungs, [])
+    assert hit == [100.0], hit
+    assert all(r >= premium.WARN_ONLY_ABOVE for r in hit), "the top rung is warn-only"
+    hit, spent = premium.crossed(92.0, rungs, spent)
     assert hit == [], "the same rung must not fire twice on a drift"
-    hit, spent = premium.crossed(8.0, rungs, spent)
-    assert hit == [10.0], hit
+    hit, spent = premium.crossed(40.0, rungs, spent)
+    assert hit == [50.0], f"40% has passed 50 and not 25, got {hit}"
+    # A JUMP PAST SEVERAL LEVELS FIRES ALL OF THEM. A premium that halves overnight has
+    # crossed every rung in between, and reporting only the nearest would understate what
+    # happened on the one day it mattered most.
+    hit, spent = premium.crossed(20.0, rungs, spent)
+    assert hit == [25.0], hit
+    hit, fresh = premium.crossed(20.0, rungs, [100.0])
+    assert hit == [50.0, 25.0], f"one step past two rungs must fire both, got {hit}"
     # BACK ABOVE A LEVEL RE-ARMS IT, so a second approach alerts again.
-    hit, spent = premium.crossed(12.0, rungs, spent)
-    assert hit == [] and 10.0 not in spent, spent
-    assert premium.crossed(8.0, rungs, spent)[0] == [10.0]
+    hit, spent = premium.crossed(60.0, rungs, spent)
+    assert hit == [] and 50.0 not in spent, spent
+    assert premium.crossed(45.0, rungs, spent)[0] == [50.0]
+
+    # AND THE NUMBER THAT DECIDES ANYTHING IS THE LOSS, NOT THE PREMIUM. "+155%" invites a
+    # shrug; "a 61% fall if it converges, with the companies unchanged" is the same fact in
+    # the units of the decision. Computed in code, never by the model.
+    row, state = premium.premium("BOT", 28.88, {"nav": 11.32, "asof": "2026-07-31",
+                                                "cadence": "quarterly"})
+    assert state == "ok", state
+    assert abs(row["premium_pct"] - 155.1) < 0.5, row["premium_pct"]
+    assert abs(row["loss_to_nav_pct"] - 60.8) < 0.5, row["loss_to_nav_pct"]
+    # A QUARTERLY MARK MUST SURVIVE BEING WEEKS OLD, or the tracker refuses almost always
+    # and that is the same as not existing. This one is 53 days old and usable.
+    assert row["stale_days"] > 40 and row["stale_after"] == 120, row
 
     # THE FUND'S OWN DISTRIBUTION REFUSES UNTIL THERE IS ONE, rather than taking quartiles
     # of a handful of readings — which is a guessed dial wearing a statistic's clothes.
