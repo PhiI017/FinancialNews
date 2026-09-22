@@ -98,6 +98,7 @@ def gather(wl, want_news=True, want_macro=True):
         row, state = premium.premium(sym, (quoted or {}).get("price"), nav_row)
         if state == "ok":
             row["rungs"] = tuple(float(r) for r in pos["premium_rungs_pct"])
+            row["rung_prices"] = premium.rung_prices(row, row["rungs"])
             facts["premiums"][sym] = row
         else:
             # THE NAV'S OWN FAILURE IS MORE USEFUL THAN THE PREMIUM'S when there was no

@@ -226,6 +226,27 @@ def premium(symbol, price, nav_row, cadence=None):
     }, "ok"
 
 
+def rung_prices(row, rungs):
+    """
+    [{rung, price, fall_pct}] — what each level costs, and the fall to reach it.
+
+    THE MODEL DERIVED THIS CORRECTLY ONCE AND THAT IS NOT A REASON TO LEAVE IT THERE.
+    Given a NAV of 11.32 and a +100% rung it produced "around 22.64, a 21% fall" — right
+    to the cent. The same letter format produced "34 points above your trigger" when the
+    answer was 746, from the same kind of derivation, and the sentence read just as well.
+    Getting it right is a property of the day, not of the method.
+
+    So every level the letter can mention arrives already computed, for the same reason
+    the dip ladder's trigger price does.
+    """
+    out = []
+    for rung in sorted(rungs, reverse=True):
+        price = row["nav"] * (1.0 + rung / 100.0)
+        out.append({"rung": rung, "price": price,
+                    "fall_pct": (price / row["price"] - 1.0) * 100.0})
+    return out
+
+
 def _age_days(asof):
     if not asof:
         return None

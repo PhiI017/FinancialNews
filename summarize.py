@@ -245,6 +245,12 @@ def render(facts, kind):
                 f"fall {row['loss_to_nav_pct']:.0f}%, with the companies the fund owns "
                 f"completely unchanged. That is the risk being carried, and a percentage "
                 f"premium on its own does not convey it.")
+        for r in row.get("rung_prices") or []:
+            lines.append(
+                f"  Their {r['rung']:+.0f}% level is a share price of {r['price']:,.2f}, "
+                f"{r['fall_pct']:+.1f}% from here. USE THESE FIGURES AS GIVEN AND DERIVE "
+                f"NOTHING: a previous letter computed a trigger distance itself and was "
+                f"wrong by a factor of twenty, in a sentence that read perfectly.")
         # THE ASSUMPTION THE WHOLE FIGURE RESTS ON, SAID OUT LOUD EVERY TIME.
         lines.append(
             f"  STATE THIS PLAINLY, in one clause: the NAV is from {row['nav_asof']}, "

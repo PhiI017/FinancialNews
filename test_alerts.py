@@ -360,6 +360,18 @@ def the_premium_rungs_spend_and_rearm_like_the_dip_ladder():
     # and that is the same as not existing. This one is 53 days old and usable.
     assert row["stale_days"] > 40 and row["stale_after"] == 120, row
 
+    # AND EVERY LEVEL ARRIVES PRICED, so the model never derives one. It did derive one
+    # correctly — "around 22.64, a 21% fall" from a NAV of 11.32 — and that is not a
+    # reason to leave it there: the same letter format once said "34 points above your
+    # trigger" when the answer was 746, just as fluently.
+    priced = premium.rung_prices({"nav": 11.32, "price": 28.62}, (100.0, 50.0, 25.0, 0.0))
+    assert [p["rung"] for p in priced] == [100.0, 50.0, 25.0, 0.0]
+    assert abs(priced[0]["price"] - 22.64) < 0.01, priced[0]
+    assert abs(priced[0]["fall_pct"] + 20.9) < 0.1, priced[0]
+    # The 0% rung IS the NAV, and reaching it is the full loss computed above.
+    assert abs(priced[-1]["price"] - 11.32) < 0.01
+    assert abs(priced[-1]["fall_pct"] + 60.4) < 0.1, priced[-1]
+
     # THE FUND'S OWN DISTRIBUTION REFUSES UNTIL THERE IS ONE, rather than taking quartiles
     # of a handful of readings — which is a guessed dial wearing a statistic's clothes.
     got, state = premium.rungs_from_history([1.0, 2.0, 3.0])
