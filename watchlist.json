@@ -54,6 +54,20 @@
       "status": "watching",
       "note": "the momentum alternative to SCHG",
       "name": "Invesco S&P 500 Momentum ETF"
+    },
+    {
+      "symbol": "BOT",
+      "kind": "fund",
+      "status": "watching",
+      "name": "RoboStrategy",
+      "note": "premium-to-NAV vehicle — see premium_watch; NOT a plain ETF, see the comment"
+    },
+    {
+      "symbol": "OUST",
+      "kind": "stock",
+      "status": "watching",
+      "name": "Ouster",
+      "note": "lidar small cap — expect noise, see move_pct"
     }
   ],
   "_per_symbol_overrides": "move_pct sets the single-day move that counts as urgent for ONE symbol. Omitted means the default in triggers.py.",
@@ -63,6 +77,12 @@
     },
     "BTC-USD": {
       "move_pct": 7.0
+    },
+    "BOT": {
+      "move_pct": 8.0
+    },
+    "OUST": {
+      "move_pct": 10.0
     }
   },
   "index": {
@@ -114,5 +134,6 @@
   "_feed_limit": "headlines taken per feed. Higher costs a little more to summarise.",
   "feed_limit": 6,
   "_positions_name_comment": "`name` is what a NEWS SEARCH is given, not a label. A bare ticker is a low-precision query dressed as a targeted one — searching 'VOO' or 'ALL' returns English rather than news — so a symbol with no name here skips the Google News rung and reports `no_name` instead of serving noise as coverage.",
-  "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items. Yahoo S&P 500 went the same way on the same day, for the OTHER reason: http_429 on every run, because Yahoo fences datacentres as a block. It works from a laptop and never from the runner this lives on, and MarketWatch and CNBC already carry the index's news. Eleven feeds left."
+  "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items. Yahoo S&P 500 went the same way on the same day, for the OTHER reason: http_429 on every run, because Yahoo fences datacentres as a block. It works from a laptop and never from the runner this lives on, and MarketWatch and CNBC already carry the index's news. Eleven feeds left.",
+  "_new_thresholds_comment": "BOT 8% and OUST 10% are STARTING GUESSES, not measurements. CELH's 8% was set the same way and the reasoning is in triggers.movers: a threshold too low sends a small cap's ordinary Tuesday every week, and the response to that is muting the channel the dip alerts share. Both should be re-set from their own realised daily ranges once there are a few weeks of collected prices to measure."
 }

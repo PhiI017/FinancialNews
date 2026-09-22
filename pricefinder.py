@@ -325,6 +325,8 @@ def probe(symbols=None):
     out = {}
     diagnose_tradingview()
     probe_news()
+    import premium
+    premium.probe_nav('BOT')
     print(f"{'route':<14} {'symbol':<9} {'state':<22} value")
     print("-" * 62)
     for name, fn in ROUTES:
