@@ -260,6 +260,51 @@ NAV_ROUTES = {
 }
 
 
+def nav_from_config(symbol, wl):
+    """
+    ({nav, asof, source}, state) — a NAV the user typed in, age-checked like any other.
+
+    THE BACKSTOP, NOT THE PLAN. The automated routes are surveyed first and this exists so
+    that a fund nobody publishes freely is still trackable — the arithmetic was never the
+    hard part, only the input.
+
+    WHAT MAKES IT SAFE IS THAT IT IS DATED AND THE DATE IS ENFORCED. A hand-entered NAV is
+    a fact about one day and goes stale exactly like a fetched one, faster in fact because
+    nobody is refreshing it. `premium()` applies MAX_NAV_AGE_DAYS to it identically, so a
+    number typed in six weeks ago produces `nav_stale` with its age rather than a confident
+    premium against an old mark.
+    """
+    for pos in wl.get("positions", []):
+        if pos.get("symbol") == symbol and pos.get("nav"):
+            return {"nav": float(pos["nav"]), "asof": pos.get("nav_asof", ""),
+                    "source": "config"}, "ok"
+    return None, "no_config_nav"
+
+
+def nav(symbol, wl=None):
+    """
+    ({nav, asof, source}, state) — the ladder. Automated first, the typed one as backup.
+
+    AUTOMATED ROUTES ARE TRIED FIRST EVEN WHEN NONE OF THEM ANSWERS TODAY, because a newly
+    listed fund is exactly the case that starts being covered later: the screener already
+    has the `nav` column and only lacks the value. When it fills, this uses it with no
+    change, and `source` says which rung answered — the same reason the price ladder
+    reports its own.
+    """
+    tried = []
+    rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
+    if state == "ok" and rows and rows[0].get("nav"):
+        return {"nav": float(rows[0]["nav"]), "asof": time.strftime("%Y-%m-%d"),
+                "source": "tradingview"}, "ok"
+    tried.append(f"tradingview_{'empty' if state == 'ok' else state}")
+
+    row, state = nav_from_config(symbol, wl or {})
+    if state == "ok":
+        return row, "ok"
+    tried.append(f"config_{state}")
+    return None, "+".join(tried)
+
+
 def structure_note(symbol):
     """What the sources SAY the vehicle is. The word 'ETF' is checked, never assumed."""
     rows, state = _tv_columns(symbol, ["description", "type", "typespecs", "close"])

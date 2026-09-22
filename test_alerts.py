@@ -10,6 +10,7 @@ those are the only ones a quiet alerter can hide.
 
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -244,6 +245,44 @@ def an_unconfigured_channel_is_reported_and_never_raises():
     assert notify.configured() == {"ntfy": False, "email": False}
     # A topic is the credential on the public server, so it must not be guessable.
     assert len(notify.random_topic()) >= 20
+
+
+@test
+def every_function_the_alerter_calls_still_exists():
+    """
+    DELETING A BLOCK TOOK TWO FUNCTIONS THAT LIVED INSIDE IT, AND THE TESTS SAID SO.
+
+    Rewriting `premium.NAV_ROUTES` replaced everything between that name and the next
+    function, and `nav` and `nav_from_config` had been written into that gap. Nothing in
+    the edit mentioned them. This is the corollary in CLAUDE.md, the one the project says
+    it learned three times in two days: after deleting or renaming anything, grep the old
+    name across the repo — testing the new thing is not the same as checking what depended
+    on the old one.
+
+    So the dependency is asserted rather than remembered. Checked by NAME through the
+    module, because that is exactly how the caller reaches it and how it broke.
+    """
+    import inspect
+
+    import premium
+    for name in ("nav", "nav_from_config", "premium", "premium_pct", "crossed",
+                 "rungs_from_history", "structure_note", "_tv_columns"):
+        assert hasattr(premium, name), f"premium.{name} went missing"
+        assert callable(getattr(premium, name)), f"premium.{name} is not callable"
+    for const in ("DEFAULT_RUNGS", "WARN_ONLY_ABOVE", "MIN_HISTORY_POINTS",
+                  "MAX_NAV_AGE_DAYS", "NAV_ROUTES"):
+        assert hasattr(premium, const), f"premium.{const} went missing"
+
+    # AND THE CALLER'S SIDE: every premium.X the alerter reaches for must resolve.
+    # A CALL OR A CONSTANT, NEVER PROSE. The first version of this matched "see premium.py"
+    # in a comment and reported a missing `premium.py`, which is the same class of mistake
+    # as the parser that cannot tell a format it does not know from data that is not there.
+    body = inspect.getsource(alerter)
+    used = set(re.findall(r"premium\.([A-Za-z_][A-Za-z0-9_]*)\s*\(", body))
+    used |= set(re.findall(r"premium\.([A-Z][A-Z0-9_]+)\b", body))
+    assert used, "the scan found no premium references at all, so it is not scanning"
+    missing = sorted(u for u in used if not hasattr(premium, u))
+    assert not missing, f"alerter.py calls premium.{missing} which does not exist"
 
 
 @test
