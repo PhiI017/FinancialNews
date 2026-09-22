@@ -1,6 +1,6 @@
 {
   "fired_levels": [],
-  "highest_close": 0.0,
+  "highest_close": 7798.99,
   "history": [
     {
       "at": "2026-09-21",
@@ -34,7 +34,18 @@
         "ntfy": "http_200"
       },
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-09-22",
+      "drawdown_pct": -0.44,
+      "fired": [],
+      "mode": "daily",
+      "sent": {
+        "email": "ok",
+        "ntfy": "UnicodeEncodeError"
+      },
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-09-22 09:58:46"
+  "last_run": "2026-09-22 10:22:55"
 }
