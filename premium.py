@@ -44,6 +44,7 @@ and says which it refused on.
 """
 
 import json
+import os
 import time
 
 import sources
@@ -209,72 +210,54 @@ def crossed(premium_now, rungs, already):
 # them answers. A premium tracker that cannot read a NAV must say `no_nav` in plain words,
 # not quietly report the price and let it read as a premium of zero.
 
+# ── ROUND TWO, AFTER TREATING MY OWN 404s AS MINE ───────────────────────────────────
+#
+# The first survey called four routes dead on an http_404 and concluded no free source
+# carries this NAV. THAT WAS THE WRONG READING OF THE WRONG EVIDENCE, and this project has
+# a rule about it in capital letters: an HTTP 404 is a path that does not exist, which
+# makes it MY malformed URL far more often than the host's verdict about its data. The
+# same mistake was made about Stooq earlier the same day and caught by a control.
+#
+# So: the guessed API paths are replaced with their documented shapes, the ones that took
+# a wrong asset class are re-asked with the right one, and three genuinely new families
+# are added — the fund's own site, which is where a closed-end fund is REQUIRED to publish
+# its NAV, and the SEC, which is the only durable source in this whole file.
+#
+# NOTHING IS CONCLUDED FROM THIS UNTIL IT RUNS ON THE RUNNER.
+
 NAV_ROUTES = {
-    # The provider convention for a closed-end fund's NAV series: an X-wrapped ticker.
-    "tradingview_xnav": ("tv", "{sym}X"),
-    "tradingview_nav_col": ("tv_col", None),
-    "cefconnect": ("url", "https://www.cefconnect.com/api/v3/DailyPricing/{sym}/1M"),
-    "nasdaq_etf": ("url", "https://api.nasdaq.com/api/quote/{sym}/info?assetclass=etf"),
-    "nasdaq_stock": ("url", "https://api.nasdaq.com/api/quote/{sym}/info?assetclass=stocks"),
-    "stockanalysis": ("url", "https://stockanalysis.com/api/symbol/e/{sym}/overview"),
+    # CEF Connect — the first attempt guessed one path out of several.
+    "cefconnect_daily": ("url", "https://www.cefconnect.com/api/v3/DailyPricing/{sym}"),
+    "cefconnect_hist": ("url", "https://www.cefconnect.com/api/v3/pricinghistory/{sym}/1M"),
+    "cefconnect_basic": ("url",
+                         "https://www.cefconnect.com/api/v3/FundBasicInformation/{sym}"),
+    "cefconnect_search": ("url",
+                          "https://www.cefconnect.com/api/v3/FundSearch?ticker={sym}"),
+    # stockanalysis — /e/ is their ETF namespace and this is not an ETF.
+    "stockanalysis_s": ("url", "https://api.stockanalysis.com/api/symbol/s/{sym}/overview"),
+    "stockanalysis_html": ("url", "https://stockanalysis.com/stocks/{sym_lower}/"),
+    # Nasdaq — the first round asked for two asset classes out of five.
+    "nasdaq_mutual": ("url",
+                      "https://api.nasdaq.com/api/quote/{sym}/info?assetclass=mutualfunds"),
+    "nasdaq_summary": ("url",
+                       "https://api.nasdaq.com/api/quote/{sym}/summary?assetclass=stocks"),
+    "nasdaq_profile": ("url", "https://api.nasdaq.com/api/company/{sym}/company-profile"),
+    # THE FUND'S OWN SITE. A registered closed-end fund is required to publish its NAV, and
+    # its own page is where it does. Several spellings because the domain is a guess.
+    "sponsor_com": ("url", "https://robostrategy.com/"),
+    "sponsor_fund": ("url", "https://robostrategy.com/fund/"),
+    "sponsor_www": ("url", "https://www.robostrategy.com/"),
+    # THE SEC, WHICH IS THE ONLY DURABLE ONE HERE. Everything else is a company's goodwill.
+    "sec_lookup": ("sec",
+                   "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany"
+                   "&company=RoboStrategy&type=&dateb=&owner=include&count=10&output=atom"),
+    "sec_fts": ("sec", "https://efts.sec.gov/LATEST/search-index?q=%22RoboStrategy%22"),
+    # THE PRESS RELEASE ROUTE, which the news layer can already read. Closed-end funds
+    # announce NAV in releases; if one is carried, the number is in the text.
+    "news_nav": ("url",
+                 "https://news.google.com/rss/search?q=%22RoboStrategy%22+%22net+asset+value%22"
+                 "&hl=en-US&gl=US&ceid=US:en"),
 }
-
-
-def nav_from_config(symbol, wl):
-    """
-    ({nav, asof, source}, state) — a NAV the user typed in, age-checked like any other.
-
-    ── WHY A HAND-ENTERED NUMBER IS THE RIGHT ANSWER HERE AND NOT A COP-OUT ───────────
-
-    Six automated routes were surveyed on the runner and NONE of them carries a NAV for
-    this fund. TradingView has the columns and they are null; CEF Connect 404s; Nasdaq
-    does not classify it as a fund at all. That is what a recently listed vehicle looks
-    like in free data, and no amount of retrying changes it.
-
-    Meanwhile the fund publishes its own NAV, and the user is already reading its
-    disclosures — the operating-history and leverage language they quoted comes straight
-    out of them. So the scarce input is available to a person and not to this program.
-
-    THE ARITHMETIC IS NOT THE HARD PART AND NEVER WAS. Given a NAV, the premium, the rungs
-    and the alert are exact and cost nothing. Refusing to compute them because the input
-    cannot be scraped would be choosing no answer over a good one.
-
-    WHAT MAKES IT SAFE IS THAT IT IS DATED AND THE DATE IS ENFORCED. A hand-entered NAV
-    is a fact about one day, and it goes stale exactly like a fetched one — faster, since
-    nobody is refreshing it. `premium()` applies MAX_NAV_AGE_DAYS to this identically, so
-    a number typed in six weeks ago produces `nav_stale` with its age rather than a
-    confident premium against an old mark. That is the one failure that would matter, and
-    it is the one the ladder is built to refuse.
-    """
-    for pos in wl.get("positions", []):
-        if pos.get("symbol") == symbol and pos.get("nav"):
-            return {"nav": float(pos["nav"]), "asof": pos.get("nav_asof", ""),
-                    "source": "config"}, "ok"
-    return None, "no_config_nav"
-
-
-def nav(symbol, wl=None):
-    """
-    ({nav, asof, source}, state) — the ladder. Automated first, the typed one as backup.
-
-    AUTOMATED ROUTES ARE TRIED FIRST EVEN THOUGH NONE OF THEM ANSWERS TODAY, because a
-    newly listed fund is exactly the case that starts being covered later: TradingView
-    already has the `nav` column and only lacks the value. When it fills, this starts using
-    it with no change, and `source` says which one answered — the same reason the price
-    ladder reports its rung.
-    """
-    tried = []
-    rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
-    if state == "ok" and rows and rows[0].get("nav"):
-        return {"nav": float(rows[0]["nav"]), "asof": time.strftime("%Y-%m-%d"),
-                "source": "tradingview"}, "ok"
-    tried.append(f"tradingview_{'empty' if state == 'ok' else state}")
-
-    row, state = nav_from_config(symbol, wl or {})
-    if state == "ok":
-        return row, "ok"
-    tried.append(f"config_{state}")
-    return None, "+".join(tried)
 
 
 def structure_note(symbol):
@@ -324,10 +307,32 @@ def probe_nav(symbol="BOT"):
             elif kind == "tv_col":
                 rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
                 print(f"  {name:<20} {state:<12} {rows if rows else ''}")
+            elif kind == "sec":
+                # SEC ASKS FOR A DECLARED CONTACT AND WE DO NOT INVENT ONE. `no_contact`
+                # is a state about US — a one-line repo variable away from working — and
+                # must never read as "the SEC does not carry this".
+                contact = os.getenv("SEC_CONTACT", "")
+                if not contact:
+                    print(f"  {name:<20} no_contact   (set SEC_CONTACT to use this route)")
+                    continue
+                body, state = sources._get(template.format(sym=symbol),
+                                           headers={"User-Agent": contact})
+                head = (body[:300].decode("utf-8", "replace") if body else "")
+                print(f"  {name:<22} {state:<12} {head}")
             else:
-                body, state = sources._get(template.format(sym=symbol))
-                head = (body[:220].decode("utf-8", "replace") if body else "")
-                print(f"  {name:<20} {state:<12} {head}")
+                url = template.format(sym=symbol, sym_lower=symbol.lower())
+                body, state = sources._get(url)
+                text = body.decode("utf-8", "replace") if body else ""
+                # WHAT IS BEING LOOKED FOR IS THE WORD, not the whole page: a 200 that
+                # never says "net asset value" does not carry one, and that is a different
+                # fact from the fetch failing.
+                mark = ""
+                for needle in ("net asset value", "netAssetValue", '"nav"', "NAV"):
+                    i = text.find(needle)
+                    if i >= 0:
+                        mark = f"  <<{needle}>> {text[max(0, i - 40):i + 120]}"
+                        break
+                print(f"  {name:<22} {state:<12} {len(text)}B{mark or '  (no nav text)'}")
         except Exception as e:
             print(f"  {name:<20} raised_{type(e).__name__}: {e}")
     print()
