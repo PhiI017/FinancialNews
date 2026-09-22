@@ -108,6 +108,23 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          # Defined in sources.py since the price ladder was built and never actually
+          # passed through, which is why the holdings block stayed empty after the key
+          # existed. A free, rate-limited, read-only key: same risk class as FRED.
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          # ── X_COOKIES IS DELIBERATELY ABSENT, AND THIS IS THE RECORD OF WHY ──────────
+          #
+          # It is a full-account credential — posting, DMs, settings — and unlike an app
+          # password or a spend-capped API key it cannot be scoped down. This repository
+          # is PUBLIC: anyone can open a pull request against it, and every dependency
+          # this job installs runs with whatever is in this environment. That trade is
+          # fine for a key whose worst case is a few dollars and wrong for one whose
+          # worst case is account takeover.
+          #
+          # `xfetch.py` is committed and ready. It belongs on the PRIVATE repo, where the
+          # self-hosted Mac runner already lives — there the credential sits behind a
+          # repo only its owner can see, and the job can push straight to ntfy without
+          # this repo ever holding it. Adding the secret here would undo that.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           python alerter.py --${{ steps.mode.outputs.mode }} \
