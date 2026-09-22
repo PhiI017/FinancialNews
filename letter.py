@@ -33,10 +33,14 @@ REASON_TEXT = {
 def classify(state):
     """A machine state -> the one word a reader needs. `state` may name several rungs."""
     s = (state or "").lower()
-    if "429" in s:
-        return "rate_limited"
+    # THE ACTIONABLE REASON WINS, even when another one also applies. A combined state
+    # like `yahoo_http_429+finnhub_no_key+stooq_unparsed` contains both, and reporting
+    # "throttled" tells the reader nothing they can do — while "needs a free key" is a
+    # two-minute fix. Checking 429 first, as the first version did, buried it.
     if "no_key" in s:
         return "no_key"
+    if "429" in s:
+        return "rate_limited"
     if "not_covered" in s:
         return "not_covered"
     return "other"

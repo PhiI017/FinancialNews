@@ -142,6 +142,19 @@ def evaluate(facts, wl, state):
         nxt, gap = triggers.next_trigger(-drawdown, [l for l in wl["index"]["dip_levels_pct"]
                                                      if int(l) >= 10])
         idx["next_trigger"], idx["to_next_trigger"] = nxt, gap
+        # THE TRIGGER'S ACTUAL PRICE, COMPUTED HERE AND NEVER BY THE MODEL.
+        #
+        # Measured 2026-09-22: given the level and the percentage but not the price, the
+        # letter wrote "the S&P sits 34 points above your first staged buy trigger". 34
+        # was the distance to the RECORD; the trigger was 746 points away. It had two
+        # numbers and combined the wrong pair, and the sentence reads perfectly.
+        #
+        # This is the same rule the urgent path follows for a different reason:
+        # arithmetic belongs in code. There it was about reliability, here it is about
+        # a plausible wrong number being worse than no number.
+        if nxt:
+            idx["next_trigger_price"] = high * (1 - nxt / 100.0)
+            idx["points_to_trigger"] = idx["close"] - idx["next_trigger_price"]
         spent = set(state.get("fired_levels", [])) | set(fired)
         spent -= set(rearmed)
         state["fired_levels"] = sorted(spent)

@@ -438,6 +438,61 @@ def the_error_codes_leave_the_letter_without_leaving_the_log():
 
 
 @test
+def the_model_is_given_the_trigger_price_rather_than_deriving_one():
+    """
+    IT HAD TWO NUMBERS AND COMBINED THE WRONG PAIR, AND THE SENTENCE READ PERFECTLY.
+
+    Measured 2026-09-22 on a real letter: "the S&P 500 sits 34 points above your first
+    staged buy trigger". 34 was the distance to the RECORD (7,799 less 7,765); the
+    trigger was at 7,019, some 746 points away. Given a level and a percentage but not a
+    price, it derived one, and derived it wrong.
+
+    A prompt instruction not to invent numbers does not cover this — nothing was invented,
+    two real figures were combined incorrectly. The fix is to remove the arithmetic: the
+    price is computed in code and handed over. Same rule the urgent path follows, for a
+    different reason — there it is reliability, here it is that a plausible wrong number
+    is worse than no number.
+    """
+    import summarize
+
+    wl = alerter.load_watchlist()
+    state = {"highest_close": 7799.0, "fired_levels": []}
+    facts = {"index": {"close": 7765.0, "observed_high": 7799.0}, "quotes": [],
+             "positions": [], "macro": {}}
+    _verdict, _state = alerter.evaluate(facts, wl, state)
+    idx = facts["index"]
+
+    assert idx["next_trigger"] == 10, idx
+    # the trigger PRICE, not the percentage — 10% below the record
+    assert abs(idx["next_trigger_price"] - 7019.1) < 1.0, idx["next_trigger_price"]
+    # and the points figure is to the TRIGGER, not to the record
+    assert abs(idx["points_to_trigger"] - 745.9) < 1.0, idx["points_to_trigger"]
+    assert abs(idx["points_to_trigger"] - 34.0) > 100, (
+        "points_to_trigger is the distance to the RECORD — the exact confusion that "
+        "produced the wrong sentence")
+
+    # and both figures reach the prompt, so it never has to work them out
+    prompt = summarize.render({**facts, "date": "2026-09-22"}, "daily")
+    assert "7,019" in prompt and "746" in prompt, prompt[:400]
+
+
+@test
+def a_data_note_names_what_the_reader_can_actually_fix():
+    """
+    A COMBINED STATE CONTAINS BOTH A DEAD END AND A TWO-MINUTE FIX.
+
+    `yahoo_http_429+finnhub_no_key+stooq_unparsed` is throttling AND a missing key. The
+    first version checked 429 first, so the note said "the free price sources throttled
+    this run" — true, useless, and it buried the half the reader could act on.
+    """
+    import letter
+
+    assert letter.classify("yahoo_http_429+finnhub_no_key+stooq_unparsed") == "no_key"
+    assert letter.classify("yahoo_http_429_host_throttled") == "rate_limited"
+    assert "key" in letter.REASON_TEXT["no_key"]
+
+
+@test
 def the_subject_line_carries_the_number():
     """
     "Daily market note" told you nothing the schedule had not already told you.

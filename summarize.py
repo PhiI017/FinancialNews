@@ -195,10 +195,16 @@ def render(facts, kind):
         # with it, the letter can say what the market means FOR THEM — which is the only
         # reason to read a personal newsletter rather than the news.
         if idx.get("next_trigger"):
-            lines.append(f"  Their plan buys in stages at 10, 15, 20 and 25 percent below "
-                         f"the record. The next one is {idx['next_trigger']}%, which needs "
-                         f"a further {idx['to_next_trigger']:.1f}% fall from here. Mention "
-                         f"this only if it is close or if something moved it.")
+            lines.append(
+                f"  Their plan buys in stages at 10, 15, 20 and 25 percent below the "
+                f"record. The next is {idx['next_trigger']}%, at an index level of "
+                f"{idx.get('next_trigger_price', 0):,.0f} — that is "
+                f"{idx.get('points_to_trigger', 0):,.0f} points below today's close, a "
+                f"further {idx['to_next_trigger']:.1f}% fall. USE THESE FIGURES AS GIVEN "
+                f"AND DO NOT COMPUTE YOUR OWN: a previous letter said the index sat '34 "
+                f"points above the trigger' when 34 was the distance to the RECORD and "
+                f"the trigger was 746 points away. Mention this only if it is close or "
+                f"if something moved it.")
         if idx.get("fired"):
             lines.append(f"  IT CROSSED THEIR {idx['fired']} percent DIP TRIGGER TODAY. "
                          f"Lead with this.")
