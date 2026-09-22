@@ -9,6 +9,8 @@ those are the only ones a quiet alerter can hide.
 """
 
 import json
+import csv
+import tempfile
 import os
 import re
 import sys
@@ -332,6 +334,74 @@ def the_biggest_mover_cannot_be_covered_in_a_subordinate_clause():
     facts["quotes"].append({"symbol": "VOO", "price": 712.0, "change_pct": 0.3})
     facts["positions"].append({"symbol": "VOO"})
     assert "VOO +0.30%" not in summarize.render(facts, "daily")
+
+
+@test
+def the_collector_writes_the_private_repo_schema_and_merges():
+    """
+    THE COLLECTOR'S OUTPUT IS ANOTHER REPOSITORY'S INPUT, SO THE SCHEMA IS A CONTRACT.
+
+    `archive.py --load` over there reads these files with no translation step, deliberately:
+    a translation step is a second place for the columns to drift, and the drift is silent
+    because a column in the wrong order still loads and still looks like data.
+
+    And a re-run must collect nothing twice. First-write-wins on the same unique keys the
+    private store enforces — (ticker, date) and (published_at, ticker, headline) — so two
+    machines collecting one day converge instead of fighting, and a day's work is a day's
+    worth of diff rather than a churned file.
+    """
+    import collector
+    assert collector.PRICE_HEADER == ["ticker", "date", "open", "close", "volume", "source"]
+    assert collector.NEWS_HEADER == ["published_at", "ticker", "headline", "source",
+                                     "score", "scored_at", "fetched_at"]
+
+    tmp = os.path.join(tempfile.mkdtemp(), "prices-2026.csv")
+    rows = [["AAPL", "2026-09-18", 1.0, 2.0, 10, "nasdaq"],
+            ["AAPL", "2026-09-19", 2.0, 3.0, 20, "nasdaq"]]
+    added, kept = collector._merge(tmp, collector.PRICE_HEADER, rows)
+    assert (added, kept) == (2, 0), (added, kept)
+    # THE SAME DAY AGAIN ADDS NOTHING, even with a different price — first write wins, as
+    # `INSERT OR IGNORE` does in the store this feeds.
+    added, kept = collector._merge(
+        tmp, collector.PRICE_HEADER, rows + [["AAPL", "2026-09-19", 9.9, 9.9, 1, "nasdaq"]])
+    assert (added, kept) == (0, 2), (added, kept)
+    with open(tmp) as fh:
+        out = list(csv.reader(fh))
+    assert out[0] == collector.PRICE_HEADER
+    assert [r[1] for r in out[1:]] == ["2026-09-18", "2026-09-19"], "rows must sort by key"
+    assert out[2][3] == "3.0", "the first write must win, not the last"
+
+    # A FILE WHOSE COLUMNS ARE NOT OURS IS REFUSED RATHER THAN APPENDED TO.
+    with open(tmp, "w") as fh:
+        fh.write("date,ticker\n2026-09-19,AAPL\n")
+    try:
+        collector._merge(tmp, collector.PRICE_HEADER, rows)
+        assert False, "appending under a foreign header must refuse"
+    except SystemExit as e:
+        assert "Refusing" in str(e), e
+
+
+@test
+def a_headline_with_no_readable_date_is_dropped_not_stamped_with_today():
+    """
+    THE NEWS LAYER'S ONLY VALUE IS THAT IT IS FORWARD-ONLY AND DATED.
+
+    Stamping an unparseable date with today files an old story as today's news, which is
+    worse than a missing row: the row is then evidence of something that did not happen on
+    the day it claims. Missing is recoverable by collecting again; wrong is not.
+    """
+    import collector
+    assert collector._published_day("Mon, 22 Sep 2026 14:03:00 GMT") == "2026-09-22"
+    assert collector._published_day("2026-09-22") == "2026-09-22"
+    for bad in ("", None, "yesterday", "not a date"):
+        assert collector._published_day(bad) is None, bad
+
+    # AND AN UNRECOGNISED REPLY IS EMPTY, NOT AN EXCEPTION AND NOT A GUESS.
+    assert collector.parse_nasdaq("not json") == []
+    assert collector.parse_nasdaq('{"data":null}') == []
+    good = ('{"data":{"tradesTable":{"rows":[{"date":"09/19/2026","open":"$10.50",'
+            '"close":"$11.32","volume":"1,234"}]}}}')
+    assert collector.parse_nasdaq(good) == [("2026-09-19", 10.5, 11.32, 1234.0)]
 
 
 @test
@@ -724,19 +794,36 @@ def the_workflow_carries_no_secret_and_no_self_hosted_runner():
     repo lets a stranger's pull request run code on your machine — the hazard the stocks
     repo documents at length, and the reason this one must stay separate from it.
     """
-    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        ".github", "workflows", "alerts.yml")
+    import glob
+    here = os.path.dirname(os.path.abspath(__file__))
+    # EVERY WORKFLOW IN THE REPOSITORY, NOT THE ONE THIS TEST WAS WRITTEN FOR. The rule is
+    # about the REPO being public, so it cannot be about a filename — a second workflow
+    # added later is exactly the case that would slip through, and one was: `collect.yml`.
+    paths = sorted(glob.glob(os.path.join(here, ".github", "workflows", "*.yml")))
+    assert len(paths) >= 2, f"expected more than one workflow, found {paths}"
+    for path in paths:
+        text = open(path).read()
+        targets = [ln.split("runs-on:", 1)[1].strip()
+                   for ln in text.splitlines() if "runs-on:" in ln]
+        assert targets, f"{os.path.basename(path)} has no runs-on line at all"
+        for target in targets:
+            # CHECK THE `runs-on:` LINES, NOT THE PROSE. The first version grepped the
+            # whole file for "self-hosted" and failed on the comment warning against it —
+            # a test that fires on its own documentation is noise, and noise gets suites
+            # ignored.
+            assert "self-hosted" not in target, (
+                f"{os.path.basename(path)} targets {target} in a PUBLIC repo, where a "
+                f"stranger's pull request could then run code on your machine")
+        # AND NEITHER MAY RUN A FORK'S CODE. `pull_request_target` hands the environment
+        # to a branch anyone can write, which is the one trigger that would undo all of
+        # the above; plain `pull_request` withholds secrets but still executes the fork.
+        for trigger in ("pull_request_target:", "pull_request:"):
+            assert trigger not in text, (
+                f"{os.path.basename(path)} runs on {trigger} — a fork's code, in a public "
+                f"repo. Only schedule and workflow_dispatch belong here.")
+
+    path = os.path.join(here, ".github", "workflows", "alerts.yml")
     body = open(path).read()
-    # CHECK THE `runs-on:` LINES, NOT THE PROSE. The first version of this grepped the
-    # whole file for "self-hosted" and failed on the comment warning against it — a test
-    # that fires on its own documentation is noise, and noise gets suites ignored.
-    targets = [ln.split("runs-on:", 1)[1].strip()
-               for ln in body.splitlines() if "runs-on:" in ln]
-    assert targets, "no runs-on line at all"
-    for target in targets:
-        assert "self-hosted" not in target, (
-            f"this workflow targets {target} and is meant for a PUBLIC repo, where a "
-            f"stranger's pull request could then run code on your machine")
     for leak in ("sk-ant-", "AKIA", "smtp.gmail.com\n          password"):
         assert leak not in body, f"a literal credential is in the workflow: {leak}"
     # every credential arrives as a secret

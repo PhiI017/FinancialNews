@@ -1,0 +1,87 @@
+# Market data for the stocks race, collected where the minutes are free.
+#
+# ⚠ THIS FILE BELONGS IN A PUBLIC REPOSITORY AND THAT IS THE ENTIRE POINT. The race's own
+# collector lives in a PRIVATE repo where every Actions minute is metered; that quota ran
+# out on 2026-09-17 and every scheduled run since has failed in two to four seconds with no
+# runner assigned. Public repos get unlimited free minutes.
+#
+# ⚠ AND THIS REPOSITORY MUST NEVER GET A SELF-HOSTED RUNNER. A pull request can change a
+# workflow, so public plus self-hosted lets a stranger run code on somebody's machine. A
+# test asserts every `runs-on` here is hosted.
+#
+# NOTHING SECRET IS USED AND NONE IS REFERENCED, which is not a coincidence. Prices come
+# from api.nasdaq.com and headlines from per-symbol feeds — both keyless. FUNDAMENTALS ARE
+# DELIBERATELY NOT COLLECTED HERE: they would need an SEC contact address, and a secret in
+# a public repository is a thing to think hard about rather than add casually. They are
+# quarterly, durable and backfillable from EDGAR at any time. Prices and headlines are the
+# forward-only half — a day nobody collected is gone — so the urgent half is also the half
+# that needs no credentials.
+#
+# THE TRIGGERS ARE `schedule` AND `workflow_dispatch` ONLY. Never `pull_request`, and never
+# `pull_request_target`: those run code from a fork, and the second one hands it the
+# environment. Keeping them off is what makes the paragraph above stay true.
+name: collect market data
+
+on:
+  schedule:
+    # 22:40 UTC, the same slot the private collector used: after the US close and before
+    # EDGAR's overnight window. The minute is deliberately not :00 — GitHub fires scheduled
+    # jobs late by a variable amount and the top of the hour is the most contended slot.
+    - cron: "40 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      what:
+        description: "prices | news | both"
+        type: choice
+        options: ["both", "prices", "news"]
+        default: "both"
+      days:
+        description: "How many days back to ask for (10 covers a late close)"
+        type: string
+        default: "10"
+
+permissions:
+  contents: write
+
+concurrency:
+  # TWO COLLECTORS ON ONE BRANCH WRITE THE SAME CSVs AND COMMIT OVER EACH OTHER. Keyed by
+  # ref so a dispatch and the cron serialize; never cancel-in-progress, because a cancelled
+  # collection is a lost session and this is the half that cannot be recovered.
+  group: collect-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Collect
+        run: |
+          case "${{ inputs.what || 'both' }}" in
+            prices) python collector.py --prices ;;
+            news)   python collector.py --news ;;
+            *)      python collector.py ;;
+          esac
+
+      - name: Commit what was collected
+        # THE DATA IS COMMITTED BY ITS OWN STEP AND NOTHING RUNS AFTER IT. Collection is
+        # what cannot be recovered later; anything that could fail afterwards must not be
+        # able to take the day's work with it.
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add marketdata/ || true
+          git diff --cached --quiet && echo "nothing new today" && exit 0
+          git commit -m "marketdata: $(date -u +%Y-%m-%d) [skip ci]"
+          for i in 1 2 3 4; do
+            git push && exit 0
+            sleep $((i * 3))
+            git pull --rebase --autostash || true
+          done
+          echo "could not push after 4 attempts" >&2
+          exit 1
