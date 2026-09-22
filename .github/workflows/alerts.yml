@@ -35,9 +35,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "check | accounts | daily | weekahead | weekly"
+        description: "check | accounts | daily | weekahead | weekly | probe"
         type: choice
-        options: ["check", "accounts", "daily", "weekahead", "weekly"]
+        options: ["check", "accounts", "daily", "weekahead", "weekly", "probe"]
         default: "check"
       dry_run:
         description: "print only — send nothing, spend nothing"

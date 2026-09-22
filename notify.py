@@ -23,9 +23,11 @@ email   Gmail with an APP PASSWORD (not your real password; needs 2FA turned on,
 Absent settings are reported as `not_configured`, never as success.
 """
 
+import json
 import os
 import smtplib
 import ssl
+import urllib.error
 import urllib.request
 from email.message import EmailMessage
 
@@ -36,7 +38,11 @@ TIMEOUT = 20
 
 # ntfy renders these as a priority and an icon. Mapped from our own urgency words so the
 # vocabulary stays in one place rather than being spelled out at each call site.
-PRIORITY = {"urgent": "urgent", "important": "default", "quiet": "low"}
+#
+# THE PRIORITIES ARE NUMBERS, NOT WORDS, because this publishes as JSON. The header API
+# accepts "urgent"; the JSON API accepts 1-5 and silently ignores a string, which would
+# have downgraded every urgent alert to default without failing.
+PRIORITY = {"urgent": 5, "important": 3, "quiet": 2}
 TAGS = {"urgent": "rotating_light", "important": "chart_with_upwards_trend", "quiet": "leaves"}
 
 
@@ -47,25 +53,49 @@ def random_topic(words=4):
 
 
 def push(title, body, level="important", topic=None, click=None):
-    """(ok, state) — one ntfy notification."""
+    """
+    (ok, state) — one ntfy notification, published as JSON.
+
+    ── WHY JSON AND NOT THE HEADER API ──────────────────────────────────────────────
+
+    MEASURED 2026-09-22: every push failed with `UnicodeEncodeError` and the email beside
+    it went out fine. The title was "Daily note — S&P -0.4% from its high"; HTTP header
+    values are latin-1 and an em-dash is not in latin-1. The letter-writing model puts one
+    in most titles, so this was not an edge case — it was the whole channel, dead, while
+    the run reported success everywhere else.
+
+    Stripping the character would have worked and would have been the wrong fix: the next
+    non-latin-1 character the model reaches for (a curly quote, a degree sign, a euro)
+    brings it back. ntfy publishes to the server ROOT with the topic in a JSON body, so
+    the text travels as UTF-8 payload and no header carries prose at all. The class of bug
+    is removed rather than the instance.
+
+    AND IT FAILED LOUDLY, WHICH IS THE ONLY REASON IT WAS FOUND — `delivery: {'email':
+    'ok', 'ntfy': 'UnicodeEncodeError'}` in the log. A notifier that swallowed the
+    exception would have looked identical to a quiet day.
+    """
     topic = topic or os.getenv("NTFY_TOPIC", "")
     if not topic:
         return False, "not_configured"
-    headers = {
-        "Title": title.encode("utf-8"),
-        "Priority": PRIORITY.get(level, "default"),
-        "Tags": TAGS.get(level, "bell"),
+    payload = {
+        "topic": topic,
+        "title": title,
+        "message": body,
+        "priority": PRIORITY.get(level, 3),
+        "tags": [TAGS.get(level, "bell")],
     }
     if click:
-        headers["Click"] = click
+        payload["click"] = click
     req = urllib.request.Request(
-        f"{NTFY_SERVER.rstrip('/')}/{topic}",
-        data=body.encode("utf-8"),
-        headers={k: (v.decode() if isinstance(v, bytes) else v) for k, v in headers.items()},
+        NTFY_SERVER.rstrip("/") + "/",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
         method="POST")
     try:
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
             return (200 <= r.status < 300), f"http_{r.status}"
+    except urllib.error.HTTPError as e:
+        return False, f"http_{e.code}"
     except Exception as e:
         return False, type(e).__name__
 

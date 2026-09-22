@@ -238,6 +238,56 @@ def an_unconfigured_channel_is_reported_and_never_raises():
 
 
 @test
+def a_push_survives_the_characters_the_model_actually_writes():
+    """
+    AN EM-DASH IN THE TITLE KILLED EVERY PHONE ALERT, AND ONLY THE PHONE ALERT.
+
+    Measured 2026-09-22: `delivery: {'email': 'ok', 'ntfy': 'UnicodeEncodeError'}`. HTTP
+    header values are latin-1; the title was "Daily note — S&P -0.4% from its high". The
+    model writes em-dashes in most titles, so the urgent channel was dead in every run
+    while the run itself reported success.
+
+    The test builds the request WITHOUT SENDING IT and asserts the bytes are valid UTF-8
+    JSON carrying the title intact. Asserting on the built payload rather than on a live
+    send is deliberate: this suite makes no network calls, and the bug was in the encoding
+    of the request, which is fully observable before it leaves.
+    """
+    import json as _json
+    import urllib.request
+    os.environ["NTFY_TOPIC"] = "test-topic"
+    built = {}
+    real = urllib.request.urlopen
+
+    def capture(req, *a, **kw):
+        built["url"] = req.full_url
+        built["data"] = req.data
+        built["headers"] = dict(req.headers)
+        raise OSError("not sending")
+
+    urllib.request.urlopen = capture
+    try:
+        ok, state = notify.push("Daily note — S&P -0.4% from its high",
+                                "Body with a curly quote: it\u2019s fine, and 25\u00b0C.",
+                                level="urgent")
+    finally:
+        urllib.request.urlopen = real
+        os.environ.pop("NTFY_TOPIC", None)
+
+    assert state == "OSError", f"the fake send should be what failed, got {state}"
+    # Every header value must survive the latin-1 encoding urllib will apply to it.
+    for k, v in built["headers"].items():
+        str(v).encode("latin-1")
+    payload = _json.loads(built["data"].decode("utf-8"))
+    assert "\u2014" in payload["title"], "the em-dash must reach ntfy, not be stripped"
+    assert "\u2019" in payload["message"] and "\u00b0" in payload["message"]
+    assert payload["topic"] == "test-topic"
+    # ntfy's JSON API takes 1-5 and IGNORES a string, which would silently downgrade
+    # every urgent alert to default without ever failing.
+    assert payload["priority"] == 5, payload["priority"]
+    assert isinstance(payload["tags"], list)
+
+
+@test
 def the_digest_survives_having_no_model():
     """
     NO API KEY MUST DEGRADE THE DIGEST, NOT CANCEL IT.

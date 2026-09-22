@@ -341,6 +341,13 @@ if __name__ == "__main__":
         sys.exit(setup())
     if "--accounts" in argv:
         sys.exit(run_accounts(dry_run=dry))
+    if "--probe" in argv:
+        # A SURVEY, NOT A FETCH. It sends nothing, spends nothing and changes no state —
+        # it reports which keyless price routes answer from the machine it runs on,
+        # because the container this was written in cannot reach any of them.
+        import pricefinder
+        pricefinder.probe()
+        sys.exit(0)
     for flag in ("check", "daily", "weekahead", "weekly"):
         if f"--{flag}" in argv:
             sys.exit(run(flag, dry_run=dry))
