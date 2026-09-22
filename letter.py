@@ -22,11 +22,41 @@ import html
 
 # Grouped so one sentence can cover twenty symbols. Keyed on what the reader should DO,
 # which is the only thing that makes a failure worth printing to them at all.
+# ── THE SENTENCE NAMES WHAT IS MISSING, NOT JUST WHY ────────────────────────────────
+#
+# MEASURED 2026-09-22, in the first letter that carried real prices: the notes said "BTC,
+# CELH, META and 4 more: the free price sources throttled this run" at the bottom of a
+# letter that had just quoted META's price. Every one of those was a throttled NEWS feed.
+#
+# The bucket was keyed on the REASON alone, so a rate-limited headline feed and a
+# rate-limited quote landed in the same sentence, and the sentence had been written when
+# only prices could fail. The letter contradicted itself in a way that reads as fluent
+# English, which is the exact failure this project keeps meeting.
+#
+# Keyed on (what, why) now. Still one sentence per pair, never one per symbol — twenty
+# clauses is how the note got longer than the letter the first time.
 REASON_TEXT = {
-    "rate_limited": "the free price sources throttled this run",
-    "no_key": "needs a free API key that is not set yet",
-    "not_covered": "this source does not carry that symbol",
-    "other": "did not answer",
+    ("price", "rate_limited"): "no price — the free sources throttled this run",
+    ("price", "no_key"): "no price — needs a free API key that is not set yet",
+    ("price", "not_covered"): "no price — no source here carries that symbol",
+    ("price", "other"): "no price this run",
+    ("news", "rate_limited"): "no headlines — that feed throttled this run",
+    ("news", "no_key"): "no headlines — needs a free API key that is not set yet",
+    ("news", "not_covered"): "no headlines — that feed does not carry it",
+    ("news", "other"): "no headlines this run",
+    ("figure", "rate_limited"): "not updated — the source throttled this run",
+    ("figure", "no_key"): "not updated — needs a free API key that is not set yet",
+    ("figure", "not_covered"): "not published by that source",
+    ("figure", "other"): "did not answer",
+}
+
+# WHICH FAILURE MAP DESCRIBES WHAT. Written down rather than inferred from the key name,
+# because a new map added later must be classified on the record — the hand-written-list
+# defect this project has now paid for eight times.
+FAILURE_KINDS = {
+    "quote_failures": "price",
+    "news_failures": "news",
+    "macro_failures": "figure",
 }
 
 
@@ -66,20 +96,20 @@ def data_notes(facts):
     run, so the note was longer than the letter it was attached to.
     """
     buckets = {}
-    for group in ("quote_failures", "macro_failures", "news_failures"):
+    for group, kind in FAILURE_KINDS.items():
         for name, state in (facts.get(group) or {}).items():
-            buckets.setdefault(classify(state), set()).add(name)
+            buckets.setdefault((kind, classify(state)), set()).add(name)
     if facts.get("index_state") not in (None, "ok"):
-        buckets.setdefault(classify(facts.get("index_state")), set()).add("S&P 500")
+        buckets.setdefault(("price", classify(facts.get("index_state"))), set()).add("S&P 500")
 
     notes = []
-    for reason, names in sorted(buckets.items()):
+    for key, names in sorted(buckets.items()):
         shown = sorted(human_name(n, facts) for n in names)
         if len(shown) > 4:
             who = f"{', '.join(shown[:4])} and {len(shown) - 4} more"
         else:
             who = ", ".join(shown)
-        notes.append(f"{who}: {REASON_TEXT[reason]}.")
+        notes.append(f"{who}: {REASON_TEXT[key]}.")
     return notes
 
 

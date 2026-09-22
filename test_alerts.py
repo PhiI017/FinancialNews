@@ -680,7 +680,30 @@ def a_data_note_names_what_the_reader_can_actually_fix():
 
     assert letter.classify("yahoo_http_429+finnhub_no_key+stooq_unparsed") == "no_key"
     assert letter.classify("yahoo_http_429_host_throttled") == "rate_limited"
-    assert "key" in letter.REASON_TEXT["no_key"]
+    assert "key" in letter.REASON_TEXT[("price", "no_key")]
+
+    # AND THE NOTE MUST NAME WHAT IS MISSING, NOT ONLY WHY.
+    #
+    # Measured 2026-09-22: "BTC-USD, CELH, META and 4 more: the free price sources
+    # throttled this run", at the bottom of the first letter that CARRIED those prices.
+    # All of them were throttled NEWS feeds. The bucket was keyed on the reason alone, so
+    # a rate-limited headline feed and a rate-limited quote produced the same sentence —
+    # and the sentence had been written back when only prices could fail. The letter
+    # contradicted its own body in fluent English.
+    notes = letter.data_notes({
+        "quote_failures": {"SCHG": "yahoo_http_429+tradingview_empty"},
+        "news_failures": {"META": "http_429", "CELH": "http_429_host_throttled"},
+        "macro_failures": {"DCOILWTICO": "no_key"},
+        "macro_labels": {"DCOILWTICO": "WTI crude oil"},
+    })
+    joined = " ".join(notes)
+    assert "CELH, META: no headlines" in joined, joined
+    assert "SCHG: no price" in joined, joined
+    # THE ONE THAT MATTERS: a symbol whose price arrived is never called priceless.
+    assert "META: no price" not in joined and "META, " not in joined.split("no price")[-1]
+    assert "WTI crude oil" in joined and "DCOILWTICO" not in joined
+    # Still one sentence per (what, why) pair, never one per symbol.
+    assert len(notes) == 3, notes
 
 
 @test
