@@ -118,7 +118,8 @@ def gather(wl, want_news=True, want_macro=True):
 
     if want_news:
         for pos in facts["positions"]:
-            items, state = sources.headlines(pos["symbol"], limit=6)
+            items, state = sources.headlines(pos["symbol"], limit=6,
+                                             name=pos.get("name", ""))
             if state == "ok":
                 facts["headlines"].extend(items)
             else:

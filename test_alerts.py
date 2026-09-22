@@ -163,7 +163,7 @@ def every_source_reports_where_it_stopped():
     # interesting way lives in the rung beneath. Check the rungs for the distinction and
     # the ladders for reporting it onward.
     for name in ("_yahoo_quote", "_yahoo_index_history", "_stooq_rows",
-                 "fred_series", "headlines", "feed"):
+                 "fred_series", "_rss_items", "feed"):
         src = inspect.getsource(getattr(sources, name))
         assert "return None, " in src or "return (rows" in src, (
             f"sources.{name} has no stated failure state")
@@ -176,6 +176,15 @@ def every_source_reports_where_it_stopped():
         src = inspect.getsource(getattr(sources, name))
         assert "yahoo_" in src and "stooq_" in src, (
             f"sources.{name} collapses two different failures into one state")
+    # `headlines` BECAME A LADDER TOO once every per-ticker feed turned out to be 429 on
+    # the runner, so it is held to the same contract: name each rung it tried.
+    news = inspect.getsource(sources.headlines)
+    for rung in ("seekingalpha_", "google_", "yahoo_"):
+        assert rung in news, f"sources.headlines does not report its {rung} rung"
+    # AND IT REFUSES A LOW-PRECISION QUERY RATHER THAN SERVING ONE. Searching a bare
+    # ticker returns English, not news, and noise offered as coverage is worse than a
+    # stated gap.
+    assert "no_name" in news
 
     # 429 IS RETRYABLE AND WAS NOT. It means "you are right, just slower" — grouping it
     # with the 4xx family returned instantly and gave up, which is exactly what happened

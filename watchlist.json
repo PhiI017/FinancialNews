@@ -1,8 +1,8 @@
 {
   "_comment": "THE ONLY FILE YOU EDIT TO ADD OR REMOVE SOMETHING. Add a line, commit, done.",
   "_status_meanings": {
-    "held": "you own it \u2014 moves are alerted and it appears in every digest",
-    "watching": "you do not own it yet \u2014 alerted the same way, but the LLM is told you are deciding, not holding",
+    "held": "you own it — moves are alerted and it appears in every digest",
+    "watching": "you do not own it yet — alerted the same way, but the LLM is told you are deciding, not holding",
     "muted": "kept in the file for later, never fetched, never alerted"
   },
   "positions": [
@@ -10,43 +10,50 @@
       "symbol": "META",
       "kind": "stock",
       "status": "held",
-      "note": "core holding"
+      "note": "core holding",
+      "name": "Meta Platforms"
     },
     {
       "symbol": "CELH",
       "kind": "stock",
       "status": "held",
-      "note": "small cap, expect noise \u2014 see move_pct"
+      "note": "small cap, expect noise — see move_pct",
+      "name": "Celsius Holdings"
     },
     {
       "symbol": "TTWO",
       "kind": "stock",
       "status": "held",
-      "note": ""
+      "note": "",
+      "name": "Take-Two Interactive"
     },
     {
       "symbol": "VOO",
       "kind": "etf",
       "status": "held",
-      "note": "S&P 500 core"
+      "note": "S&P 500 core",
+      "name": "Vanguard S&P 500 ETF"
     },
     {
       "symbol": "BTC-USD",
       "kind": "crypto",
       "status": "held",
-      "note": "trades weekends; see the weekend note in triggers.py"
+      "note": "trades weekends; see the weekend note in triggers.py",
+      "name": "Bitcoin"
     },
     {
       "symbol": "SCHG",
       "kind": "etf",
       "status": "watching",
-      "note": "candidate growth sleeve"
+      "note": "candidate growth sleeve",
+      "name": "Schwab U.S. Large-Cap Growth ETF"
     },
     {
       "symbol": "SPMO",
       "kind": "etf",
       "status": "watching",
-      "note": "the momentum alternative to SCHG"
+      "note": "the momentum alternative to SCHG",
+      "name": "Invesco S&P 500 Momentum ETF"
     }
   ],
   "_per_symbol_overrides": "move_pct sets the single-day move that counts as urgent for ONE symbol. Omitted means the default in triggers.py.",
@@ -90,11 +97,9 @@
     "US politics: elections, government funding, legislation affecting markets or taxes",
     "anything a head of state, finance minister or central banker says about the economy"
   ],
-  "_feeds_comment": "BROAD NEWS, NOT JUST YOUR TICKERS. A per-symbol feed can only ever mention a company already on your list, so it cannot warn you about a Fed decision, a Hormuz closure or an election result \u2014 the things that move holdings without naming them. Official sources are listed first on purpose: a central bank's own statement is the thing itself, where a news story about it is a report of it. Delete any that get noisy. Every fetch reports its own failure, so a dead feed is named in the letter.",
+  "_feeds_comment": "BROAD NEWS, NOT JUST YOUR TICKERS. A per-symbol feed can only ever mention a company already on your list, so it cannot warn you about a Fed decision, a Hormuz closure or an election result — the things that move holdings without naming them. Official sources are listed first on purpose: a central bank's own statement is the thing itself, where a news story about it is a report of it. Delete any that get noisy. Every fetch reports its own failure, so a dead feed is named in the letter.",
   "feeds": {
     "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
-    "US Treasury": "https://home.treasury.gov/rss/press.xml",
-    "White House": "https://www.whitehouse.gov/briefing-room/feed/",
     "SEC press": "https://www.sec.gov/news/pressreleases.rss",
     "European Central Bank": "https://www.ecb.europa.eu/rss/press.html",
     "BBC World": "https://feeds.bbci.co.uk/news/world/rss.xml",
@@ -108,5 +113,7 @@
     "Yahoo S&P 500": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US"
   },
   "_feed_limit": "headlines taken per feed. Higher costs a little more to summarise.",
-  "feed_limit": 6
+  "feed_limit": 6,
+  "_positions_name_comment": "`name` is what a NEWS SEARCH is given, not a label. A bare ticker is a low-precision query dressed as a targeted one — searching 'VOO' or 'ALL' returns English rather than news — so a symbol with no name here skips the Google News rung and reports `no_name` instead of serving noise as coverage.",
+  "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items."
 }

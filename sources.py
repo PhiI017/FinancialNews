@@ -294,11 +294,13 @@ def fred_series(series_id, api_key=None, last_n=10):
     return (rows, "ok") if rows else (None, "empty")
 
 
-def headlines(symbol, limit=12):
-    """([{title, link, published}], state) — Yahoo's RSS feed for one symbol."""
-    body, state = _get(YAHOO_NEWS.format(symbol=urllib.parse.quote(symbol)))
-    if state != "ok":
-        return None, state
+SEEKING_ALPHA_NEWS = "https://seekingalpha.com/api/sa/combined/{symbol}.xml"
+GOOGLE_NEWS = ("https://news.google.com/rss/search?q={query}"
+               "&hl=en-US&gl=US&ceid=US:en")
+
+
+def _rss_items(body, symbol, limit):
+    """([{title, link, published, symbol}], state) — the shape every one of these uses."""
     try:
         import xml.etree.ElementTree as ET
         root = ET.fromstring(body)
@@ -314,9 +316,72 @@ def headlines(symbol, limit=12):
                           "symbol": symbol})
         if len(items) >= limit:
             break
-    # EMPTY IS A REAL ANSWER HERE, unlike everywhere else in this file: a quiet ticker
-    # genuinely has no headlines today. It is distinguished from `unparsed` above.
+    # EMPTY IS A REAL ANSWER HERE, unlike almost everywhere else in this file: a quiet
+    # ticker genuinely has no headlines today. It is distinguished from `unparsed` above.
     return items, "ok"
+
+
+def headlines(symbol, limit=12, name=""):
+    """
+    ([{title, link, published}], state) — one company's news, first rung that answers.
+
+    ── YAHOO IS LAST NOW, AND IT USED TO BE THE ONLY ONE ───────────────────────────────
+    #
+    EVERY PER-TICKER FEED WAS http_429 ON EVERY RUN since the first, so the company half
+    of this alerter had never once worked — invisible while the prices were missing too,
+    because the broad feeds kept the letters reading well. A broad feed can only mention a
+    company by accident, which is precisely what it is there for and precisely why it
+    cannot cover this.
+
+    Surveyed on the runner 2026-09-22. Seeking Alpha's per-symbol feed answered with 30
+    items led by "Meta Platforms surges 12% amid AI monetization rally" — on the symbol,
+    and an independent confirmation of the +11.34% the screener had just reported. Google
+    News answered with 100. Yahoo 429'd, as it does for everything from a datacentre.
+
+    SEEKING ALPHA IS FIRST BECAUSE IT IS SCOPED BY THE SYMBOL ITSELF, which is the whole
+    difficulty here: the sibling project measured that only 48% of a ticker-tagged Yahoo
+    feed is about that ticker. A URL keyed on the symbol cannot drift that way.
+
+    GOOGLE NEWS NEEDS A NAME AND SAYS SO RATHER THAN GUESSING. Searching for "VOO" or
+    "ALL" returns English, not news; a bare ticker is a low-precision query dressed as a
+    targeted one. Without a configured name the rung reports `no_name` and the ladder
+    moves on, because serving noise as if it were coverage is the failure this whole file
+    is arranged against.
+
+    NASDAQ'S FEED WAS TESTED AND REJECTED. It answered 15 items for `?symbol=META` led by
+    "Stocks Settle Sharply Higher as Crude Prices Plunge" — a market-wide wire that names
+    no company. It takes the parameter and appears to ignore it, which is worse than
+    refusing: it would have filled a company's section with the market's news.
+    """
+    tried = []
+    body, state = _get(SEEKING_ALPHA_NEWS.format(symbol=urllib.parse.quote(symbol)))
+    if state == "ok":
+        items, parsed = _rss_items(body, symbol, limit)
+        if parsed == "ok":
+            return items, "ok"
+        state = parsed
+    tried.append(f"seekingalpha_{state}")
+
+    if name:
+        query = urllib.parse.quote(f'"{name}"')
+        body, state = _get(GOOGLE_NEWS.format(query=query))
+        if state == "ok":
+            items, parsed = _rss_items(body, symbol, limit)
+            if parsed == "ok":
+                return items, "ok"
+            state = parsed
+    else:
+        state = "no_name"
+    tried.append(f"google_{state}")
+
+    body, state = _get(YAHOO_NEWS.format(symbol=urllib.parse.quote(symbol)))
+    if state == "ok":
+        items, parsed = _rss_items(body, symbol, limit)
+        if parsed == "ok":
+            return items, "ok"
+        state = parsed
+    tried.append(f"yahoo_{state}")
+    return None, "+".join(tried)
 
 
 def feed(url, label="", limit=8):
