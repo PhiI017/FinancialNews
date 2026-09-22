@@ -32,6 +32,11 @@ jargon, no hype, no advice to buy or sell.
 
 Rules you must follow:
 - Lead with what actually changed today. If little changed, say so in one line.
+- NEVER OPEN WITH WHAT YOU COULD NOT GET. The letter already carries a short data-notes
+  section listing anything missing, so an opening paragraph about absent prices is both
+  duplicated and the weakest possible use of the first thing they read. Open with the
+  most important thing you DO know. If prices are missing, mention it once, briefly, and
+  near the end — or not at all when the data notes already cover it.
 - Tie news to THEIR positions by name where it touches them.
 - THE HEADLINES INCLUDE BROAD MARKET NEWS, not just their companies. A story about the
   Fed, oil, China, rates or the wider market belongs in the note even when it names none

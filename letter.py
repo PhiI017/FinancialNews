@@ -42,6 +42,18 @@ def classify(state):
     return "other"
 
 
+def human_name(name, facts):
+    """
+    A source's own code -> what a person calls it.
+
+    `DCOILWTICO` is the same class of problem as `yahoo_http_429`: a machine name that
+    reached the reader because nobody translated it. The watchlist already carries the
+    mapping — it is what the series were named in the config — so this is a lookup, not
+    a second hand-written list that can drift from the first.
+    """
+    return (facts.get("macro_labels") or {}).get(name, name)
+
+
 def data_notes(facts):
     """
     [str] — at most one short sentence per REASON, never one per symbol.
@@ -58,7 +70,7 @@ def data_notes(facts):
 
     notes = []
     for reason, names in sorted(buckets.items()):
-        shown = sorted(names)
+        shown = sorted(human_name(n, facts) for n in names)
         if len(shown) > 4:
             who = f"{', '.join(shown[:4])} and {len(shown) - 4} more"
         else:
