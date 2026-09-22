@@ -115,7 +115,38 @@ import sources
 DEFAULT_RUNGS = (20.0, 10.0, 0.0, -10.0)
 WARN_ONLY_ABOVE = 20.0          # the +20 rung is an early warning, never a buy signal
 MIN_HISTORY_POINTS = 60         # before the fund's own distribution may set the rungs
-MAX_NAV_AGE_DAYS = 7            # a NAV older than this is reported, never divided by            # a NAV older than this is reported, never divided by
+
+# ── HOW OLD IS TOO OLD DEPENDS ON HOW OFTEN THE NUMBER IS PUBLISHED ─────────────────
+#
+# A FLAT SEVEN-DAY LIMIT WAS WRONG AND WOULD HAVE MADE THIS NEVER WORK. It was written for
+# a daily-published NAV, and then applied to a fund whose holdings are private companies
+# marked by appraisal — those are re-struck quarterly, not daily. Under a seven-day rule a
+# quarterly NAV is stale eight days out of nine and the premium is simply never computed:
+# a tracker that refuses almost always is the same as no tracker, and it would have looked
+# like caution.
+#
+# THE CADENCE IS DECLARED AND THE LIMIT FOLLOWS FROM IT. Same shape as `macro.cadence_ok`
+# in the sibling project, which states each series' cadence and refuses a mismatch rather
+# than inferring one from the data and being confidently wrong about a quarterly series
+# that happens to have two rows close together.
+#
+# AND THE ASSUMPTION IS STATED EVERY TIME, because the whole method rests on it: between
+# marks the NAV is treated as UNCHANGED, so the premium moves with the price. That holds
+# well for illiquid private holdings and not at all for liquid ones — which is why the
+# cadence has to be declared per position rather than assumed once for everything.
+NAV_CADENCE_DAYS = {
+    "daily": 7,        # a real daily NAV feed; a week old means something broke
+    "weekly": 16,
+    "monthly": 45,
+    "quarterly": 120,  # an appraisal cycle plus the lag before it is published
+}
+DEFAULT_NAV_CADENCE = "quarterly"
+MAX_NAV_AGE_DAYS = NAV_CADENCE_DAYS["daily"]     # kept for callers that state no cadence
+
+
+def stale_after(cadence):
+    """Days before a NAV of this cadence stops being usable. Unknown cadence is strict."""
+    return NAV_CADENCE_DAYS.get(cadence or "", NAV_CADENCE_DAYS["daily"])            # a NAV older than this is reported, never divided by
 
 
 def premium_pct(price, nav):
@@ -125,7 +156,7 @@ def premium_pct(price, nav):
     return (price / nav - 1.0) * 100.0
 
 
-def premium(symbol, price, nav_row):
+def premium(symbol, price, nav_row, cadence=None):
     """
     ({premium_pct, nav, nav_asof, stale_days, ...}, state) — or a state saying why not.
 
@@ -138,9 +169,11 @@ def premium(symbol, price, nav_row):
     age = _age_days(nav_row.get("asof"))
     if age is None:
         return None, "nav_undated"
-    if age > MAX_NAV_AGE_DAYS:
+    limit = stale_after(cadence or nav_row.get("cadence"))
+    if age > limit:
         return {"symbol": symbol, "nav": nav_row["nav"], "nav_asof": nav_row.get("asof"),
-                "stale_days": age}, "nav_stale"
+                "stale_days": age, "stale_after": limit,
+                "cadence": cadence or nav_row.get("cadence")}, "nav_stale"
     if not price:
         return None, "no_price"
     return {
@@ -149,6 +182,8 @@ def premium(symbol, price, nav_row):
         "nav": nav_row["nav"],
         "nav_asof": nav_row.get("asof"),
         "stale_days": age,
+        "stale_after": limit,
+        "cadence": cadence or nav_row.get("cadence"),
         "premium_pct": premium_pct(price, nav_row["nav"]),
         "source": nav_row.get("source", ""),
     }, "ok"
@@ -227,7 +262,9 @@ def crossed(premium_now, rungs, already):
 
 NAV_ROUTES = {
     # CEF Connect — the first attempt guessed one path out of several.
-    "cefconnect_daily": ("url", "https://www.cefconnect.com/api/v3/DailyPricing/{sym}"),
+    "navticker_tv": ("navticker", None),
+    "cefconnect_3m": ("url", "https://www.cefconnect.com/api/v3/pricinghistory/{sym}/3M"),
+    "cefconnect_1y": ("url", "https://www.cefconnect.com/api/v3/pricinghistory/{sym}/1Y"),
     "cefconnect_hist": ("url", "https://www.cefconnect.com/api/v3/pricinghistory/{sym}/1M"),
     "cefconnect_basic": ("url",
                          "https://www.cefconnect.com/api/v3/FundBasicInformation/{sym}"),
@@ -277,8 +314,62 @@ def nav_from_config(symbol, wl):
     for pos in wl.get("positions", []):
         if pos.get("symbol") == symbol and pos.get("nav"):
             return {"nav": float(pos["nav"]), "asof": pos.get("nav_asof", ""),
+                    "cadence": pos.get("nav_cadence", DEFAULT_NAV_CADENCE),
                     "source": "config"}, "ok"
     return None, "no_config_nav"
+
+
+CEFCONNECT_HIST = "https://www.cefconnect.com/api/v3/pricinghistory/{sym}/{period}"
+
+
+def nav_ticker(symbol):
+    """
+    (ticker, state) — the separate symbol a fund's NAV series trades under.
+
+    I GUESSED THIS AND THE GUESS WAS WRONG, WHICH IS THE WHOLE LESSON. The first survey
+    tried "{sym}X" — BOTX — got `no_match`, and I read that as "no NAV series exists".
+    The convention is X{sym}X, and I did not have to know that: CEF Connect states it.
+
+        {"NAVTicker":"XBOTX","Cusip":"77106T107","Ticker":"BOT","Name":"RoboStrategy Inc"}
+
+    ASKING THE SOURCE BEATS KNOWING THE CONVENTION. A guessed ticker that misses is
+    indistinguishable from a fund that has no NAV, and that is exactly the wrong
+    conclusion I drew and published. This reads the name out of the reply instead.
+    """
+    body, state = sources._get(CEFCONNECT_HIST.format(sym=symbol, period="1M"))
+    if state != "ok":
+        return None, state
+    try:
+        data = (json.loads(body) or {}).get("Data") or {}
+    except Exception:
+        return None, "unparsed"
+    ticker = data.get("NAVTicker")
+    return (ticker, "ok") if ticker else (None, "no_nav_ticker")
+
+
+def nav_from_cefconnect(symbol):
+    """({nav, asof, source}, state) — the published NAV series, newest point."""
+    for period in ("1M", "3M", "6M", "1Y"):
+        body, state = sources._get(CEFCONNECT_HIST.format(sym=symbol, period=period))
+        if state != "ok":
+            return None, state
+        try:
+            data = (json.loads(body) or {}).get("Data") or {}
+        except Exception:
+            return None, "unparsed"
+        rows = data.get("PriceHistory") or []
+        # A 200 WITH AN EMPTY LIST IS NOT A FAILURE AND NOT AN ANSWER. For a fund this new
+        # the short windows are genuinely empty, so a longer one is tried before concluding
+        # anything — the opposite of reading the first empty reply as "nothing exists".
+        if not rows:
+            continue
+        last = rows[-1]
+        value = last.get("NAV") or last.get("Nav") or last.get("nav")
+        when = (last.get("Date") or last.get("date") or "")[:10]
+        if value:
+            return {"nav": float(value), "asof": when, "cadence": DEFAULT_NAV_CADENCE,
+                    "source": f"cefconnect_{period}"}, "ok"
+    return None, "empty_all_periods"
 
 
 def nav(symbol, wl=None):
@@ -295,8 +386,25 @@ def nav(symbol, wl=None):
     rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
     if state == "ok" and rows and rows[0].get("nav"):
         return {"nav": float(rows[0]["nav"]), "asof": time.strftime("%Y-%m-%d"),
-                "source": "tradingview"}, "ok"
+                "cadence": "daily", "source": "tradingview"}, "ok"
     tried.append(f"tradingview_{'empty' if state == 'ok' else state}")
+
+    # THE NAV'S OWN TICKER, ASKED FOR RATHER THAN GUESSED. If a NAV series is quoted, it
+    # is quoted under a symbol of its own, and the source names it.
+    xsym, xstate = nav_ticker(symbol)
+    if xsym:
+        rows, state = _tv_columns(xsym, ["close"])
+        if state == "ok" and rows and rows[0].get("close"):
+            return {"nav": float(rows[0]["close"]), "asof": time.strftime("%Y-%m-%d"),
+                    "cadence": "daily", "source": f"tradingview:{xsym}"}, "ok"
+        tried.append(f"navticker_{xsym}_{'empty' if state == 'ok' else state}")
+    else:
+        tried.append(f"navticker_{xstate}")
+
+    row, state = nav_from_cefconnect(symbol)
+    if state == "ok":
+        return row, "ok"
+    tried.append(f"cefconnect_{state}")
 
     row, state = nav_from_config(symbol, wl or {})
     if state == "ok":
@@ -352,6 +460,13 @@ def probe_nav(symbol="BOT"):
             elif kind == "tv_col":
                 rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
                 print(f"  {name:<20} {state:<12} {rows if rows else ''}")
+            elif kind == "navticker":
+                xsym, xstate = nav_ticker(symbol)
+                if not xsym:
+                    print(f"  {name:<22} {xstate}")
+                    continue
+                rows, state = _tv_columns(xsym, ["close", "description"])
+                print(f"  {name:<22} {state:<12} {xsym} -> {rows if rows else ''}")
             elif kind == "sec":
                 # SEC ASKS FOR A DECLARED CONTACT AND WE DO NOT INVENT ONE. `no_contact`
                 # is a state about US — a one-line repo variable away from working — and
@@ -381,3 +496,42 @@ def probe_nav(symbol="BOT"):
         except Exception as e:
             print(f"  {name:<20} raised_{type(e).__name__}: {e}")
     print()
+
+
+def set_nav(symbol, value, asof, path="watchlist.json", cadence=None):
+    """
+    Write one NAV into the config. `python alerter.py --set-nav BOT 25.00 2026-09-19`.
+
+    THE POINT IS THAT NOBODY SHOULD HAVE TO EDIT JSON BY HAND to answer a question this
+    small. A mistyped brace breaks the whole run, the error arrives hours later in a cron
+    log, and the cost of that is out of all proportion to typing a number.
+
+    THE DATE IS REQUIRED AND NOT DEFAULTED TO TODAY. A NAV is a fact about the day it was
+    struck, and quietly stamping it with today's date would turn a three-week-old quarterly
+    mark into a fresh one — defeating the staleness check that is the only thing making a
+    hand-entered number safe to use at all. Refusing is the whole feature.
+    """
+    import datetime
+    import json as _json
+    try:
+        datetime.date.fromisoformat(asof[:10])
+    except Exception:
+        return None, "bad_date_use_YYYY-MM-DD"
+    try:
+        value = float(value)
+    except Exception:
+        return None, "bad_nav"
+    if value <= 0:
+        return None, "nav_must_be_positive"
+
+    blob = _json.load(open(path))
+    for pos in blob.get("positions", []):
+        if pos.get("symbol") == symbol:
+            pos["nav"], pos["nav_asof"] = value, asof[:10]
+            pos["nav_cadence"] = cadence or pos.get("nav_cadence", DEFAULT_NAV_CADENCE)
+            _json.dump(blob, open(path, "w"), indent=2, ensure_ascii=False)
+            age = _age_days(asof[:10])
+            return {"symbol": symbol, "nav": value, "asof": asof[:10],
+                    "cadence": pos["nav_cadence"], "age_days": age,
+                    "usable_for_days": stale_after(pos["nav_cadence"]) - (age or 0)}, "ok"
+    return None, "symbol_not_in_watchlist"

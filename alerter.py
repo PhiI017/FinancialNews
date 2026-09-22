@@ -414,6 +414,20 @@ if __name__ == "__main__":
         sys.exit(setup())
     if "--accounts" in argv:
         sys.exit(run_accounts(dry_run=dry))
+    if "--set-nav" in argv:
+        # `--set-nav BOT 25.00 2026-09-19`
+        i = argv.index("--set-nav")
+        try:
+            sym, value, asof = argv[i + 1], argv[i + 2], argv[i + 3]
+        except IndexError:
+            print("usage: --set-nav SYMBOL NAV YYYY-MM-DD"); sys.exit(2)
+        row, state = premium.set_nav(sym, value, asof)
+        if state != "ok":
+            print(f"not set: {state}"); sys.exit(1)
+        print(f"{row['symbol']} NAV {row['nav']:.4f} as of {row['asof']} "
+              f"({row['cadence']}, {row['age_days']} days old, usable for "
+              f"{row['usable_for_days']} more)")
+        sys.exit(0)
     if "--probe" in argv:
         # A SURVEY, NOT A FETCH. It sends nothing, spends nothing and changes no state —
         # it reports which keyless price routes answer from the machine it runs on,

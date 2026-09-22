@@ -238,6 +238,14 @@ def render(facts, kind):
             f"creating and redeeming shares at NAV to close that gap. Their plan buys at "
             f"{', '.join(f'{r:+.0f}%' for r in row['rungs'])}. Do not tell them to buy "
             f"or sell; say where the premium is and what moved it.")
+        # THE ASSUMPTION THE WHOLE FIGURE RESTS ON, SAID OUT LOUD EVERY TIME.
+        lines.append(
+            f"  STATE THIS PLAINLY, in one clause: the NAV is from {row['nav_asof']}, "
+            f"{row['stale_days']} days ago, and the premium assumes it has not changed "
+            f"since. It is a {row.get('cadence')} figure, so between publications the "
+            f"premium moves because the PRICE moved, not because the fund re-valued its "
+            f"assets. A reader who does not know that will think a falling premium means "
+            f"the holdings were marked down.")
     for sym, state in (facts.get("premium_failures") or {}).items():
         lines.append(f"{sym}: NO NAV — {state}. Say the premium cannot be computed and "
                      f"why; never let the price stand in for it.")
