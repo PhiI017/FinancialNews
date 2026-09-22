@@ -70,8 +70,15 @@ def push(title, body, level="important", topic=None, click=None):
         return False, type(e).__name__
 
 
-def email(subject, body, to=None):
-    """(ok, state) — one plain-text email."""
+def email(subject, body, to=None, html_body=None):
+    """
+    (ok, state) — one email, plain text plus an optional HTML alternative.
+
+    MULTIPART, WITH PLAIN TEXT ALWAYS PRESENT AND ALWAYS FIRST. The HTML is what most
+    clients show; the plain part is what a screen reader gets, what a text-only client
+    gets, and what survives a client that strips styling. Sending HTML alone would make
+    the letter unreadable aloud, which is how this one is actually read.
+    """
     user = os.getenv("SMTP_USER", "")
     password = os.getenv("SMTP_PASS", "")
     to = to or os.getenv("ALERT_EMAIL_TO", "") or user
@@ -82,6 +89,8 @@ def email(subject, body, to=None):
     msg["From"] = user
     msg["To"] = to
     msg.set_content(body)
+    if html_body:
+        msg.add_alternative(html_body, subtype="html")
     try:
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT,
                               context=ssl.create_default_context(), timeout=TIMEOUT) as s:
@@ -96,7 +105,7 @@ def email(subject, body, to=None):
         return False, type(e).__name__
 
 
-def send(subject, body, level="important", channels=("ntfy", "email")):
+def send(subject, body, level="important", channels=("ntfy", "email"), html_body=None):
     """
     {channel: state} — deliver to each channel, independently.
 
@@ -107,7 +116,7 @@ def send(subject, body, level="important", channels=("ntfy", "email")):
     if "ntfy" in channels:
         _, out["ntfy"] = push(subject, body, level=level)
     if "email" in channels:
-        _, out["email"] = email(subject, body)
+        _, out["email"] = email(subject, body, html_body=html_body)
     return out
 
 

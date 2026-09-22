@@ -144,3 +144,28 @@ def urgency(fired_levels, big_movers, macro):
     if macro:
         return "important"
     return "quiet"
+
+
+def next_trigger(depth_pct, levels):
+    """
+    (next_level, how_much_further_to_fall) — or (None, None) past the deepest level.
+
+    PURE ARITHMETIC, DELIBERATELY. "You are 6.8% away from your first buy" is the single
+    most useful sentence this system can produce on an ordinary day, and it must not
+    depend on a model being reachable, in credit, or in a good mood. Same reasoning as
+    the urgent path: the things that matter most are the things that must never need an
+    API call.
+    THE SAME EPSILON AS `dip_state`, AND FOR A SHARPER REASON THAN THE ORIGINAL. At
+    exactly 10.00% down the depth computes as 9.999999999999998, so a bare
+    `depth < level` reported the NEXT buy as the 10% level — the one that had just fired.
+    The letter would have said "this crosses your 10% trigger" and "your next buy is at
+    10%" in the same breath.
+
+    Two functions disagreeing about whether a level has been reached is worse than either
+    being wrong alone: it makes the system look broken at exactly the moment it is
+    telling you something that matters.
+    """
+    for level in sorted(int(x) for x in levels):
+        if depth_pct < level - EPSILON_PCT:
+            return level, level - depth_pct
+    return None, None

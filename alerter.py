@@ -30,6 +30,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import calendar_events
+import letter
 import notify
 import sources
 import summarize
@@ -136,6 +137,11 @@ def evaluate(facts, wl, state):
             idx["close"], high, wl["index"]["dip_levels_pct"], state.get("fired_levels", []))
         idx["drawdown_pct"] = drawdown
         idx["fired"] = fired[-1] if fired else None
+        # BUY LEVELS ONLY — the 5% rung is an early warning, not a step in the plan, so
+        # counting down to it would mean announcing a buy that is not one.
+        nxt, gap = triggers.next_trigger(-drawdown, [l for l in wl["index"]["dip_levels_pct"]
+                                                     if int(l) >= 10])
+        idx["next_trigger"], idx["to_next_trigger"] = nxt, gap
         spent = set(state.get("fired_levels", [])) | set(fired)
         spent -= set(rearmed)
         state["fired_levels"] = sorted(spent)
@@ -198,31 +204,27 @@ def run(mode, dry_run=False):
     elif wants_note:
         note_state = "skipped (dry run — nothing spent)"
 
-    body_lines = []
+    # THE SUBJECT CARRIES THE NUMBER, because half of email is read in the list view and
+    # "Daily market note" says nothing the schedule had not already said.
+    subject = letter.subject(mode, facts, verdict)
+    html_body = None
     if mode == "check":
-        subject = f"Market alert — {verdict['urgency']}"
-        body_lines.append(urgent_text(verdict, facts))
+        body = urgent_text(verdict, facts)
+        notes = letter.data_notes(facts)
+        if notes:
+            body += "\n\n" + " ".join(notes)
     else:
-        subject = {"daily": "Daily market note",
-                   "weekahead": "The week ahead",
-                   "weekly": "The week in review, and what is next"}[mode]
-        idx = facts.get("index") or {}
-        if idx.get("close"):
-            body_lines.append(f"S&P 500 {idx['close']:.2f}, "
-                              f"{idx['drawdown_pct']:+.2f}% from its high of {idx['high']:.2f}.")
-        for q in facts["quotes"]:
-            body_lines.append(f"{q['symbol']} {q['price']:.2f} ({q['change_pct']:+.2f}%)")
-        if note:
-            body_lines.extend(["", note])
-        else:
-            body_lines.extend(["", f"[no written summary: {note_state}]"])
+        body = letter.plain(mode, facts, verdict, note or f"[no written summary: {note_state}]")
+        html_body = letter.rich(mode, facts, verdict, note)
 
+    # THE ENGINEER'S VERSION STILL EXISTS AND STILL NAMES EVERY STATE — it goes to the
+    # run log, which is where somebody debugging looks. What changed is that it stopped
+    # being pasted into a letter meant for a person.
     failed = failures_line(facts)
-    if failed:
-        body_lines.extend(["", failed])
-    body = "\n".join(body_lines)
 
     print(f"--- {mode} / {verdict['urgency']} ---\n{subject}\n{body}\n")
+    if failed:
+        print(failed + "\n")
     if wants_note:
         print(f"summary: {note_state}")
 
@@ -242,7 +244,8 @@ def run(mode, dry_run=False):
         # THE LETTERS ARE EMAIL. A 450-word newsletter on a phone notification is
         # unreadable, and pushing one every weekday is how the urgent channel — which
         # shares the app — gets muted. ntfy carries a one-line pointer instead.
-        sent = notify.send(subject, body, level="important", channels=("email",))
+        sent = notify.send(subject, body, level="important", channels=("email",),
+                           html_body=html_body)
         head = body.split("\n\n")[0][:180]
         sent["ntfy"] = notify.push(subject, head + "\n(full letter in your email)",
                                    level="quiet")[1]

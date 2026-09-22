@@ -91,6 +91,37 @@ def a_dip_level_fires_once_and_rearms_only_on_recovery():
 
 
 @test
+def the_two_trigger_functions_agree_about_where_a_level_is():
+    """
+    A LEVEL CANNOT BE BOTH "JUST FIRED" AND "STILL AHEAD OF YOU".
+
+    `dip_state` fires at exactly 10.00% down thanks to EPSILON_PCT. `next_trigger` did
+    not use it, so at the same depth it reported the NEXT buy as 10% — the one that had
+    just fired. The letter would have said "this crosses your 10% trigger" and "your next
+    buy is at 10%" in the same breath.
+
+    Two functions disagreeing about a boundary is worse than either being wrong alone: it
+    makes the whole thing look broken at the exact moment it is saying something that
+    matters. So they share the epsilon, and this checks them against each other rather
+    than separately.
+    """
+    levels = [10, 15, 20, 25]
+    for close, high in ((6930, 7700), (6545, 7700), (6160, 7700), (5775, 7700)):
+        _dd, fired, _r = triggers.dip_state(close, high, levels, set())
+        depth = (1 - close / high) * 100
+        nxt, _gap = triggers.next_trigger(depth, levels)
+        assert nxt not in fired, (
+            f"at {depth:.2f}% down, level {nxt} is reported as the NEXT buy while "
+            f"dip_state says it already fired {fired}")
+
+    # and on an ordinary day the next buy is the first one, with the real distance
+    nxt, gap = triggers.next_trigger(0.65, levels)
+    assert nxt == 10 and 9.3 < gap < 9.4, (nxt, gap)
+    # past the deepest level there is no next one to name
+    assert triggers.next_trigger(30.0, levels) == (None, None)
+
+
+@test
 def one_move_threshold_cannot_serve_a_mixed_book():
     """
     5% IN VOO IS A MARKET EVENT AND 5% IN CELH IS A TUESDAY.
@@ -361,6 +392,70 @@ def the_letters_go_to_email_and_only_alerts_push():
     assert 'channels=("email",)' in src, "the digests are pushing to the phone"
     assert 'level="quiet"' in src, "no short pointer is sent to the phone"
     assert 'channels=("ntfy", "email")' in src, "the urgent path must still push"
+
+
+@test
+def the_error_codes_leave_the_letter_without_leaving_the_log():
+    """
+    THE FIRST REAL LETTER ENDED WITH TWENTY COPIES OF `yahoo_http_429+stooq_unparsed`.
+
+    Every word of it was true and almost none of it was for a human. Diagnostics and prose
+    were written by the same code, so they got the same weight in a letter meant to be
+    read over breakfast.
+
+    The rule is NOT "hide the failures" — a digest that silently omits oil reads exactly
+    like one where oil did not move, which is why states exist at all. It is that the two
+    audiences get two renderings: one short English sentence per REASON for the reader,
+    every machine state for the run log.
+    """
+    import letter
+
+    facts = {"quote_failures": {s: "yahoo_http_429+stooq_unparsed"
+                                for s in ("META", "CELH", "TTWO", "VOO", "BTC-USD")},
+             "macro_failures": {"DGS10": "no_key", "DFF": "no_key"},
+             "index_state": "yahoo_http_429_host_throttled",
+             "positions": [], "quotes": [], "index": {}}
+
+    notes = letter.data_notes(facts)
+    assert len(notes) <= 3, f"one line per failure is back: {notes}"
+    joined = " ".join(notes)
+    for code in ("429", "http_", "unparsed", "stooq", "yahoo"):
+        assert code not in joined.lower(), f"a machine state reached the reader: {code}"
+    assert "throttled" in joined and "key" in joined, joined
+
+    # THE READER LOSES NO FACT — every failing name is still accounted for, either by
+    # name or by the "and N more" count.
+    assert "META" in joined and "DGS10" in joined
+
+    # AND THE ENGINEER'S VERSION IS UNCHANGED, still naming every state.
+    full = alerter.failures_line(facts)
+    assert "yahoo_http_429" in full and "no_key" in full, full
+
+    # The plain-text letter is what a screen reader gets, so it carries no markup.
+    text = letter.plain("daily", facts, {"fired_levels": []}, "A note.")
+    for markup in ("<", ">", "&nbsp;", "style="):
+        assert markup not in text, f"markup reached the spoken version: {markup}"
+
+
+@test
+def the_subject_line_carries_the_number():
+    """
+    "Daily market note" told you nothing the schedule had not already told you.
+
+    Half of email is read in the list view without opening anything, so the subject is
+    the only line guaranteed to be seen — and a trigger being hit is exactly the thing
+    that must survive being skimmed.
+    """
+    import letter
+
+    # A VALUE WITH NO ROUNDING AMBIGUITY. The first version used -0.65, which Python
+    # renders as -0.7 — the test was asserting my arithmetic, not the behaviour.
+    facts = {"index": {"close": 7315.0, "high": 7700.0, "drawdown_pct": -5.0}}
+    line = letter.subject("daily", facts, {"fired_levels": [], "movers": []})
+    assert "-5.0%" in line, line
+
+    fired = letter.subject("daily", facts, {"fired_levels": [5, 10], "movers": []})
+    assert "10% trigger" in fired, fired
 
 
 def main():
