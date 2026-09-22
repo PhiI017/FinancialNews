@@ -177,12 +177,19 @@ def evaluate(facts, wl, state):
         state["fired_levels"] = sorted(spent)
 
     big = triggers.movers(facts["quotes"], wl.get("overrides", {}))
+    # TWO LISTS, ON PURPOSE. `big` is every move of the session and is what the letter
+    # describes; `push_worthy` is what has not already been sent to a phone. Collapsing
+    # them would empty the digest along with the duplicate alerts.
+    session = next((q.get("asof") for q in facts["quotes"] if q and q.get("asof")), "")
+    push_worthy, state["movers_alerted"] = triggers.unreported_movers(
+        big, state.get("movers_alerted"), session)
     macro_rows = {sid: row["rows"] for sid, row in (facts.get("macro") or {}).items()}
     macro_hits = triggers.macro_moves(macro_rows, wl["macro"].get("thresholds", {}))
 
-    return {"urgency": triggers.urgency(fired, big, macro_hits),
+    return {"urgency": triggers.urgency(fired, push_worthy, macro_hits),
             "fired_levels": fired, "rearmed_levels": rearmed,
-            "drawdown_pct": drawdown, "movers": big, "macro_hits": macro_hits}, state
+            "drawdown_pct": drawdown, "movers": big, "push_movers": push_worthy,
+            "macro_hits": macro_hits}, state
 
 
 def urgent_text(verdict, facts):
@@ -191,7 +198,7 @@ def urgent_text(verdict, facts):
     for level in verdict["fired_levels"]:
         bits.append(f"S&P is {abs(verdict['drawdown_pct']):.1f}% below its high "
                     f"— your {level}% trigger.")
-    for m in verdict["movers"]:
+    for m in verdict.get("push_movers", verdict["movers"]):
         bits.append(f"{m['symbol']} {m['change_pct']:+.1f}% today.")
     for h in verdict["macro_hits"]:
         label = facts.get("macro_labels", {}).get(h["series"], h["series"])

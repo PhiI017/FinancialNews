@@ -238,6 +238,43 @@ def an_unconfigured_channel_is_reported_and_never_raises():
 
 
 @test
+def one_move_is_one_alert_and_a_bigger_move_is_another():
+    """
+    THE FIRST RUN WITH WORKING PRICES PUSHED A REAL ALERT THAT WOULD HAVE REPEATED ALL DAY.
+
+    2026-09-22: META +11.34%, correctly detected, urgently pushed — and `movers` is
+    stateless, so the same alert was due on all sixteen of that day's scheduled runs. The
+    number does not change until the session does. Harmless for as long as every price
+    fetch failed, which is why it surfaced the hour the ladder started working.
+
+    Keyed on the quote's own session, not a clock: a timer re-fires at 3am on a move that
+    has not changed.
+    """
+    rows = [{"symbol": "META", "change_pct": 11.34, "threshold": 5.0, "direction": "up"}]
+    worth, seen = triggers.unreported_movers(rows, {}, "2026-09-19")
+    assert len(worth) == 1, worth
+    # SAME SESSION, SAME MOVE: silence.
+    worth, seen = triggers.unreported_movers(rows, seen, "2026-09-19")
+    assert worth == [], worth
+    # A NEW SESSION IS A NEW FACT.
+    worth, seen2 = triggers.unreported_movers(rows, seen, "2026-09-22")
+    assert len(worth) == 1, worth
+    # AN ESCALATION IS A NEW EVENT — otherwise the only alert you get for a crash is the
+    # one from when it was still ordinary.
+    worse = [{"symbol": "META", "change_pct": 17.0, "threshold": 5.0, "direction": "up"}]
+    worth, seen3 = triggers.unreported_movers(worse, seen2, "2026-09-22")
+    assert len(worth) == 1, worth
+    # ...but a drift that has not grown by a whole threshold is not.
+    drift = [{"symbol": "META", "change_pct": 18.0, "threshold": 5.0, "direction": "up"}]
+    assert triggers.unreported_movers(drift, seen3, "2026-09-22")[0] == []
+    # A REVERSAL IS NOT A REPEAT. Up 6% and down 6% are two different days' worth of news.
+    flip = [{"symbol": "META", "change_pct": -6.0, "threshold": 5.0, "direction": "down"}]
+    assert len(triggers.unreported_movers(flip, seen3, "2026-09-22")[0]) == 1
+    # AND A SYMBOL THAT STOPPED MOVING IS FORGOTTEN, so next week's move alerts cleanly.
+    assert triggers.unreported_movers([], seen3, "2026-09-22")[1] == {}
+
+
+@test
 def the_screener_is_asked_which_instrument_it_priced():
     """
     IT IS ASKED FOR THREE VENUES AND ANSWERS WITH A LIST.

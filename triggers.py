@@ -106,6 +106,58 @@ def movers(quotes, overrides=None, default_pct=DEFAULT_MOVE_PCT):
     return sorted(out, key=lambda r: -abs(r["change_pct"]))
 
 
+def unreported_movers(big_movers, alerted, asof):
+    """
+    ([rows worth pushing], updated_alerted) — the mover equivalent of dip hysteresis.
+
+    ── WHY THIS EXISTS, AND WHY IT APPEARED ONLY TODAY ──────────────────────────────
+
+    `movers` is stateless and says what moved. That was harmless while every price fetch
+    failed. The first run with a working price ladder, 2026-09-22, pushed an urgent alert
+    for META at +11.34% — a real move, correctly detected — and would have pushed THE SAME
+    ONE on all sixteen scheduled runs that day, because the number does not change until
+    the next session does.
+
+    This is the lesson the dip levels already learned and wrote down: a level that fires
+    every run is a level you turn off. Same defect, in the sibling path, reachable only
+    now that the fetch works. The one it was learned on was found by a test; this one was
+    found by shipping.
+
+    ── THE RULE ────────────────────────────────────────────────────────────────────────
+
+    One push per symbol per SESSION, keyed on the quote's own `asof` rather than on a
+    clock — a timer re-fires at 3am on a move that has not changed, and the session is the
+    thing the move is a fact about.
+
+    AN ESCALATION IS A NEW EVENT. A holding that was down 6% at lunch and is down 14% at
+    the close has done something the first alert did not say, so it fires again once the
+    move has grown by another whole threshold. Without that, the only alert you get for a
+    crash is the one from when it was still ordinary.
+
+    AND SO IS A REVERSAL. Up 6% and down 6% in one session are two different facts, not
+    one fact repeated, so the sign is part of the identity.
+
+    `movers` ITSELF IS UNCHANGED AND STILL RETURNS EVERYTHING. The letter must describe
+    every move of the day; it is only the PUSH that must not repeat itself. Deduplicating
+    at the source would have quietly emptied the digest as well.
+    """
+    alerted = dict(alerted or {})
+    worth = []
+    for row in big_movers:
+        sym, pct, limit = row["symbol"], row["change_pct"], row["threshold"]
+        prev = alerted.get(sym)
+        if (prev is None
+                or prev.get("asof") != asof
+                or (pct > 0) != (prev.get("pct", 0.0) > 0)
+                or abs(pct) >= abs(prev.get("pct", 0.0)) + limit):
+            worth.append(row)
+            alerted[sym] = {"asof": asof, "pct": pct}
+    # A SYMBOL THAT HAS STOPPED MOVING IS DROPPED, so it can alert cleanly next time it
+    # does. Keeping it would make a stale entry from last week suppress a fresh move.
+    still = {r["symbol"] for r in big_movers}
+    return worth, {s: v for s, v in alerted.items() if s in still}
+
+
 def macro_moves(series_rows, thresholds):
     """
     [{series, latest, previous, change, threshold}] for macro series that jumped.
