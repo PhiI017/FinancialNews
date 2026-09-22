@@ -58,11 +58,24 @@ def push(title, body, level="important", topic=None, click=None):
 
     ── WHY JSON AND NOT THE HEADER API ──────────────────────────────────────────────
 
-    MEASURED 2026-09-22: every push failed with `UnicodeEncodeError` and the email beside
-    it went out fine. The title was "Daily note — S&P -0.4% from its high"; HTTP header
-    values are latin-1 and an em-dash is not in latin-1. The letter-writing model puts one
-    in most titles, so this was not an edge case — it was the whole channel, dead, while
-    the run reported success everywhere else.
+    CORRECTED 2026-09-22, AND THE FIRST ACCOUNT OF THIS WAS WRONG. It was not "every push
+    failed" and the channel was not dead from the start — the phone had been receiving
+    these fine. The state history says precisely when it stopped, and the cause is worse
+    than a channel that never worked:
+
+        2026-09-21  daily  drawdown=0.0    ntfy http_200
+        2026-09-22  daily  drawdown=0.0    ntfy http_200
+        2026-09-22  daily  drawdown=-0.44  ntfy UnicodeEncodeError
+
+    `letter.subject` only reaches for an em-dash when it HAS an index number — otherwise
+    it falls through to a bare "Daily note". Every run above with drawdown 0.0 had no
+    index data, so no dash, so no failure. THE FIRST RUN AFTER THE FRED KEY STARTED
+    ANSWERING IS THE RUN THE PHONE WENT SILENT.
+
+    So fixing the index data broke the notifications, through a subject line that had been
+    improved in between for an unrelated reason — and the email beside it kept arriving,
+    so the only visible symptom was a phone that had gone quiet on the days there was
+    finally something to say. HTTP header values are latin-1 and an em-dash is not.
 
     Stripping the character would have worked and would have been the wrong fix: the next
     non-latin-1 character the model reaches for (a curly quote, a degree sign, a euro)
