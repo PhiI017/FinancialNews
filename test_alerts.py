@@ -369,13 +369,22 @@ def the_drawdown_is_not_the_days_move():
     question had never been asked of them.
     """
     rows = [("2026-09-17", 7600.0), ("2026-09-18", 7650.5), ("2026-09-19", 7764.7)]
-    real = sources.index_history
+    # `quote` IS STUBBED TOO, AND THE FIRST VERSION OF THIS TEST FORGOT TO. `gather` fetches
+    # every holding, so the test was making real network calls — against a suite whose first
+    # commit message says "no network, nothing sent, nothing spent". It passed because the
+    # calls failed fast, and adding two symbols to the watchlist turned a slow test into a
+    # minutes-long one. A test that reaches the network is a test whose result depends on
+    # the weather.
+    real_idx, real_quote = sources.index_history, sources.quote
     sources.index_history = lambda *a, **kw: (rows, "ok")
+    sources.quote = lambda sym, *a, **kw: ({"symbol": sym, "price": 10.0,
+                                            "prev_close": 10.0, "change_pct": 0.0,
+                                            "asof": "2026-09-19", "source": "stub"}, "ok")
     try:
         wl = alerter.load_watchlist()
         facts = alerter.gather(wl, want_macro=False, want_news=False)
     finally:
-        sources.index_history = real
+        sources.index_history, sources.quote = real_idx, real_quote
     idx = facts["index"]
     assert abs(idx["change_pct"] - 1.4927) < 0.001, idx["change_pct"]
     assert idx["prev_close"] == 7650.5 and idx["asof"] == "2026-09-19"
