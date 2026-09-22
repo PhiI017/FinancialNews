@@ -334,8 +334,13 @@ def _published_day(raw):
 
 if __name__ == "__main__":
     argv = sys.argv[1:]
-    names = [a for a in argv if not a.startswith("--")] or None
-    if "--prices" in argv or not argv or names:
+    names = [a.upper() for a in argv if not a.startswith("--")] or None
+    flags = [a for a in argv if a.startswith("--")]
+    # NAMES ALONE MEAN BOTH, and a flag means only that half. The first version read
+    # "names present" as "do prices", so `--news AAPL` silently collected prices too.
+    want_prices = "--prices" in flags or not flags
+    want_news = "--news" in flags or not flags
+    if want_prices:
         collect_prices(names)
-    if "--news" in argv or not argv:
+    if want_news:
         collect_news(names)
