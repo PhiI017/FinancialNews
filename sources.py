@@ -57,14 +57,15 @@ def reset_throttles():
     _throttled.clear()
 
 
-def _get(url, headers=None, retries=2):
-    """(body_bytes, state). Retries only what is worth retrying."""
+def _get(url, headers=None, retries=2, data=None):
+    """(body_bytes, state). Retries only what is worth retrying. POSTs when given data."""
     host = _host_of(url)
     if _throttled.get(host, 0) >= THROTTLE_AFTER:
         # NAMED DIFFERENTLY FROM A PLAIN 429 ON PURPOSE. "This host refused us" and "we
         # stopped asking this host" are different facts, and the second one is ours.
         return None, "http_429_host_throttled"
-    req = urllib.request.Request(url, headers={"User-Agent": UA, **(headers or {})})
+    req = urllib.request.Request(url, data=data,
+                                 headers={"User-Agent": UA, **(headers or {})})
     last = "unknown"
     for attempt in range(retries + 1):
         try:
@@ -382,37 +383,187 @@ def dedupe(items):
     return out
 
 
-def quote(symbol, lookback_days=7):
-    """
-    ({...,'source'}, state) — Yahoo, then Stooq. The winning rung is in `source`.
 
-    THE FALLBACK IS NOT A NICETY HERE. On a GitHub runner Yahoo answered 429 to every
-    symbol at once, which is the normal condition of a shared datacentre IP rather than
-    an outage. A single-source alerter on this hardware simply does not work.
+# ── THE TWO ROUTES THAT ACTUALLY ANSWER FROM A HOSTED RUNNER ────────────────────────
+#
+# SURVEYED, NOT GUESSED. `pricefinder.py` ran on the runner three times on 2026-09-22 and
+# the result was one-sided: Yahoo's chart host, its sibling host and its spark endpoint
+# all http_429 — the fence is around the family, not a path. Both Stooq paths the survey
+# tried came back 404 on every symbol, which turned out to be OUR malformed URL: the path
+# the ladder already uses answered its usual JavaScript browser check in the same run, so
+# Stooq is no worse and no better than it was. TradingView answered for every equity and
+# Coinbase and Kraken for bitcoin, run after run.
+#
+# THESE LIVE HERE AND THE SURVEY IMPORTS THEM. Two copies of a fetcher is how the thing
+# you tested stops being the thing that runs — the survey must probe the same code the
+# letter depends on, or a fix to one silently leaves the other behind.
+#
+# WHAT WAS VERIFIED BEFORE PROMOTING, because a plausible wrong price is the failure mode
+# this whole project is organised around:
+#
+#   the instrument   the screener is asked for NASDAQ:X, NYSE:X and AMEX:X, since the
+#                    listing venue is not known here, and answers with a LIST. Taking the
+#                    first row prices whatever else shares that ticker. The symbol is read
+#                    back and the venue is recorded.
+#   the staleness    every quote came back `delayed_streaming_900` — fifteen minutes
+#                    behind. Fine for a half-hourly alerter, and on the record rather
+#                    than assumed.
+#   the day's move   `close`, `change` and `change_abs` were pulled together and the prior
+#                    close computed both ways: 665.75 and 665.75 for META, 701.78 twice
+#                    for VOO, 7650.50 twice for the S&P. Internally consistent.
+#   against a source we already trust: TradingView put the S&P at 7,764.7 the same minute
+#                    FRED put it at 7,765. Two independent routes, three tenths of a point
+#                    apart, so the close is the close.
 
-    BOTH FAILURE STATES ARE REPORTED, not just the last one, because "Yahoo throttled and
-    Stooq does not carry this symbol" and "both timed out" call for different fixes.
-    """
-    row, state = _yahoo_quote(symbol, lookback_days)
-    if state == "ok":
-        return row, state
+TRADINGVIEW_SCAN = "https://scanner.tradingview.com/america/scan"
+COINBASE_CANDLES = "https://api.exchange.coinbase.com/products/{symbol}/candles?granularity=86400"
+KRAKEN_OHLC = "https://api.kraken.com/0/public/OHLC?pair={pair}&interval=1440"
 
-    row, fh_state = finnhub_quote(symbol)
-    if fh_state == "ok":
+
+def _is_crypto(symbol):
+    return symbol.upper().endswith("-USD")
+
+
+def tradingview_quote(symbol):
+    """({...}, state) — US equities and ETFs, keyless. Crypto is `not_covered`."""
+    if _is_crypto(symbol):
+        return None, "not_covered"
+    payload = json.dumps({
+        "symbols": {"tickers": [f"NASDAQ:{symbol}", f"NYSE:{symbol}", f"AMEX:{symbol}"]},
+        "columns": ["close", "change", "change_abs", "update_mode"],
+    }).encode("utf-8")
+    body, state = _get(TRADINGVIEW_SCAN, data=payload,
+                       headers={"Content-Type": "application/json"})
+    if state != "ok":
+        return None, state
+    try:
+        rows = json.loads(body).get("data", [])
+    except Exception:
+        return None, "unparsed"
+    want = symbol.upper()
+    for r in rows:
+        venue = r.get("s") or ""
+        if venue.split(":")[-1].upper() != want:
+            continue                      # a different instrument sharing the ticker
+        d = r.get("d") or []
+        if not d or d[0] in (None, ""):
+            continue
+        close = float(d[0])
+        change_abs = float(d[2]) if len(d) > 2 and d[2] not in (None, "") else None
+        if change_abs is None:
+            return None, "no_change_field"
+        prev = close - change_abs
+        row = _price_row(symbol, close, prev, "tradingview")
+        row["venue"] = venue
+        row["update_mode"] = d[3] if len(d) > 3 else ""
         return row, "ok"
+    return None, "no_match" if rows else "empty"
 
-    rows, alt_state = _stooq_rows(symbol)
-    if alt_state != "ok":
-        return None, f"yahoo_{state}+finnhub_{fh_state}+stooq_{alt_state}"
-    price, prev = rows[-1][1], rows[-2][1]
+
+def coinbase_quote(symbol):
+    """
+    ({...}, state) — crypto, from DATED DAILY CANDLES rather than two spot readings.
+
+    THE FIRST SURVEY HAD COINBASE AND KRAKEN SEVENTY CENTS APART ON THE PRICE AND SIX AND
+    A HALF POINTS APART ON THE DAY — +5.72% against -0.92%, same asset, same second.
+    Neither was wrong: one was spot-now against spot-at-a-date, the other a 24-hour ROLLING
+    open. Different questions. `triggers.movers` fires on change_pct, so the rolling number
+    would have pushed a 5.7% bitcoin alert on a flat day with a correct price beside it —
+    and the correct price is what would have made it believable. Both read a dated daily
+    candle now, which is also what makes them able to check each other at all.
+    """
+    if not _is_crypto(symbol):
+        return None, "not_covered"
+    body, state = _get(COINBASE_CANDLES.format(symbol=symbol))
+    if state != "ok":
+        return None, state
+    try:
+        candles = json.loads(body)        # [time, low, high, open, close, volume], newest first
+        if len(candles) < 2:
+            return None, "empty"
+        asof = time.strftime("%Y-%m-%d", time.gmtime(candles[0][0]))
+        return _price_row(symbol, float(candles[0][4]), float(candles[1][4]),
+                          "coinbase", asof), "ok"
+    except Exception:
+        return None, "unparsed"
+
+
+def kraken_quote(symbol):
+    """({...}, state) — crypto, daily candles. The second opinion."""
+    if not _is_crypto(symbol):
+        return None, "not_covered"
+    pair = "XBTUSD" if symbol.upper().startswith("BTC") else symbol.replace("-", "")
+    body, state = _get(KRAKEN_OHLC.format(pair=pair))
+    if state != "ok":
+        return None, state
+    try:
+        result = json.loads(body).get("result") or {}
+        series = next((v for k, v in result.items() if k != "last"), None)
+        if not series or len(series) < 2:
+            return None, "empty"
+        asof = time.strftime("%Y-%m-%d", time.gmtime(series[-1][0]))
+        return _price_row(symbol, float(series[-1][4]), float(series[-2][4]),
+                          "kraken", asof), "ok"
+    except Exception:
+        return None, "unparsed"
+
+
+def _price_row(symbol, price, prev, source, asof=""):
     return {
         "symbol": symbol,
         "price": price,
         "prev_close": prev,
         "change_pct": (price / prev - 1.0) * 100.0 if prev else 0.0,
-        "asof": rows[-1][0],
-        "source": "stooq",
-    }, "ok"
+        "asof": asof or time.strftime("%Y-%m-%d"),
+        "source": source,
+    }
+
+
+def quote(symbol, lookback_days=7):
+    """
+    ({...,'source'}, state) — the first rung that answers. The winner is in `source`.
+
+    THE ORDER IS NOT PREFERENCE, IT IS COVERAGE THEN COST. Yahoo first because it carries
+    everything, Finnhub second because a key makes it reliable when one is set, then the
+    keyless routes the survey proved answer from a hosted runner, then Stooq last because
+    it is fenced there and only works from a laptop.
+
+    ON A HOSTED RUNNER THE FIRST TWO RUNGS ARE BOTH DOWN and have been since day one, so
+    the third is what the letter actually runs on. On a laptop the first one answers and
+    nothing below it is reached. Same ladder, different rung — which is why `source` is
+    reported and not inferred.
+
+    EVERY FAILED RUNG IS NAMED, not just the last. "Throttled, and the screener does not
+    carry this symbol" and "everything timed out" need different fixes, and a single state
+    cannot tell them apart.
+    """
+    tried = []
+    row, state = _yahoo_quote(symbol, lookback_days)
+    if state == "ok":
+        return row, state
+    tried.append(f"yahoo_{state}")
+
+    row, state = finnhub_quote(symbol)
+    if state == "ok":
+        return row, "ok"
+    tried.append(f"finnhub_{state}")
+
+    # THE KEYLESS RUNGS, IN THE ORDER THE SURVEY RANKED THEM. Crypto and equities are
+    # separated because no single free source does both: the screener returns
+    # `not_covered` for a crypto pair and the exchanges for a stock, and `not_covered` is
+    # a fact about the SOURCE that must never be read as a failed fetch.
+    for fn in ((coinbase_quote, kraken_quote) if _is_crypto(symbol) else (tradingview_quote,)):
+        row, state = fn(symbol)
+        if state == "ok":
+            return row, "ok"
+        tried.append(f"{fn.__name__.replace('_quote', '')}_{state}")
+
+    rows, alt_state = _stooq_rows(symbol)
+    if alt_state != "ok":
+        tried.append(f"stooq_{alt_state}")
+        return None, "+".join(tried)
+    price, prev = rows[-1][1], rows[-2][1]
+    return _price_row(symbol, price, prev, "stooq", rows[-1][0]), "ok"
 
 
 def index_history(symbol="^GSPC", years=40):

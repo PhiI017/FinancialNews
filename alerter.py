@@ -90,6 +90,21 @@ def gather(wl, want_news=True, want_macro=True):
     if state == "ok":
         closes = [c for _d, c in rows]
         facts["index"] = {"close": closes[-1], "observed_high": max(closes)}
+        # THE DAY'S MOVE, WHICH WAS MISSING AND GOT INVENTED IN ITS PLACE.
+        #
+        # Measured 2026-09-22: the letter said "the market barely moved today" and called
+        # VOO "essentially flat" on a day the S&P closed up 1.49%. Nothing lied to it —
+        # the only index number it had was the DRAWDOWN FROM THE RECORD, -0.4%, and it
+        # read that small number as the day's change. Two different quantities that both
+        # arrive as a small negative percentage, and only one of them is "today".
+        #
+        # The rows were already here; nobody had asked them the question. Same shape as
+        # the trigger price: the model does not need better instructions about a number
+        # it was never given.
+        if len(closes) > 1 and closes[-2]:
+            facts["index"]["prev_close"] = closes[-2]
+            facts["index"]["change_pct"] = (closes[-1] / closes[-2] - 1.0) * 100.0
+        facts["index"]["asof"] = rows[-1][0]
 
     if want_macro:
         for sid in wl["macro"]["series"]:

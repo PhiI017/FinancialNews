@@ -46,6 +46,14 @@ import time
 import urllib.error
 import urllib.request
 
+import sources
+
+# THE PROMOTED ROUTES ARE IMPORTED, NOT RE-IMPLEMENTED. Two copies of a fetcher is
+# how the thing you surveyed stops being the thing that runs.
+tradingview = sources.tradingview_quote
+coinbase = sources.coinbase_quote
+kraken = sources.kraken_quote
+
 TIMEOUT = 15
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -206,104 +214,6 @@ def stooq_history(symbol):
     if _looks_like_a_browser_check(body):
         return None, "browser_check"
     return None, "answered_something_else"
-
-
-def tradingview(symbol):
-    """
-    TradingView's screener endpoint. Keyless, POSTs JSON, covers US equities and ETFs.
-
-    IT IS ASKED FOR THREE EXCHANGES AND MUST BE TOLD WHICH ONE ANSWERED. The request names
-    NASDAQ:X, NYSE:X and AMEX:X because the listing venue is not known here, and the reply
-    is a list. Taking `rows[0]` without reading `rows[0]["s"]` back is how you end up
-    pricing a different instrument that happens to share a ticker — the exact shape of
-    every silent-wrongness bug in this project. The symbol is checked.
-
-    `update_mode` is carried through because a quote can be delayed, end-of-day or
-    streaming, and a stale number that looks live is worse than a missing one.
-    """
-    if symbol.endswith("-USD"):
-        return None, "not_covered"
-    payload = json.dumps({
-        "symbols": {"tickers": [f"NASDAQ:{symbol}", f"NYSE:{symbol}", f"AMEX:{symbol}"]},
-        "columns": ["close", "change", "update_mode", "description"],
-    }).encode("utf-8")
-    body, state = _fetch("https://scanner.tradingview.com/america/scan",
-                         data=payload, headers={"Content-Type": "application/json"})
-    if state != "ok":
-        return None, state
-    try:
-        rows = json.loads(body).get("data", [])
-    except Exception:
-        return None, "unparsed"
-    want = symbol.upper()
-    for r in rows:
-        got = (r.get("s") or "")
-        if got.split(":")[-1].upper() != want:
-            # NOT AN ERROR AND NOT A HIT. The scanner echoing a ticker we did not ask for
-            # is worth knowing about, so it is skipped rather than silently accepted.
-            continue
-        d = r.get("d") or []
-        if not d or d[0] in (None, ""):
-            continue
-        close, change_pct = float(d[0]), float(d[1] or 0.0)
-        prev = close / (1 + change_pct / 100.0) if change_pct else close
-        row = _row(symbol, close, prev, "tradingview")
-        row["venue"] = got
-        row["update_mode"] = d[2] if len(d) > 2 else ""
-        return row, "ok"
-    return None, "empty" if rows else "no_match"
-
-
-def coinbase(symbol):
-    """
-    Crypto, from DAILY CANDLES rather than two spot readings.
-
-    THE FIRST PROBE HAD BOTH EXCHANGES AGREEING ON THE PRICE TO SEVENTY CENTS AND
-    DISAGREEING ON THE DAY'S MOVE BY SIX AND A HALF POINTS — Coinbase +5.72%, Kraken
-    -0.92%, on the same asset at the same second. Neither was lying. Coinbase was asked
-    for spot now against spot at a date, and Kraken reports a 24-HOUR ROLLING open; those
-    are different questions and only one of them is "what did it do today".
-
-    That is not a cosmetic difference. `triggers.movers` fires on `change_pct`, so the
-    rolling reading would have pushed a 5.7% bitcoin alert to a phone on a day the asset
-    had not moved. Both routes read a dated daily candle now, which makes them comparable
-    and makes the cross-check mean something.
-    """
-    if not symbol.endswith("-USD"):
-        return None, "not_covered"
-    body, state = _fetch(
-        f"https://api.exchange.coinbase.com/products/{symbol}/candles?granularity=86400")
-    if state != "ok":
-        return None, state
-    try:
-        candles = json.loads(body)          # [time, low, high, open, close, volume], newest first
-        if len(candles) < 2:
-            return None, "empty"
-        close, prev = float(candles[0][4]), float(candles[1][4])
-        asof = time.strftime("%Y-%m-%d", time.gmtime(candles[0][0]))
-        return _row(symbol, close, prev, "coinbase", asof), "ok"
-    except Exception:
-        return None, "unparsed"
-
-
-def kraken(symbol):
-    """Crypto, daily candles. A second opinion — one source is not a check on itself."""
-    if not symbol.endswith("-USD"):
-        return None, "not_covered"
-    pair = "XBTUSD" if symbol.startswith("BTC") else symbol.replace("-", "")
-    body, state = _fetch(f"https://api.kraken.com/0/public/OHLC?pair={pair}&interval=1440")
-    if state != "ok":
-        return None, state
-    try:
-        result = json.loads(body).get("result") or {}
-        series = next((v for k, v in result.items() if k != "last"), None)
-        if not series or len(series) < 2:
-            return None, "empty"
-        close, prev = float(series[-1][4]), float(series[-2][4])
-        asof = time.strftime("%Y-%m-%d", time.gmtime(series[-1][0]))
-        return _row(symbol, close, prev, "kraken", asof), "ok"
-    except Exception:
-        return None, "unparsed"
 
 
 def _row(symbol, price, prev, source, asof=""):

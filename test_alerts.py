@@ -238,6 +238,110 @@ def an_unconfigured_channel_is_reported_and_never_raises():
 
 
 @test
+def the_screener_is_asked_which_instrument_it_priced():
+    """
+    IT IS ASKED FOR THREE VENUES AND ANSWERS WITH A LIST.
+
+    The request names NASDAQ:X, NYSE:X and AMEX:X because the listing venue is not known
+    here. Taking the first row back prices whatever else happens to share that ticker — a
+    wrong number in a sentence that reads perfectly, which is this project's whole failure
+    mode. The reply is matched on the symbol.
+    """
+    import json as _json
+    body = _json.dumps({"data": [
+        {"s": "NYSE:METAX", "d": [12.0, 5.0, 0.6, "delayed_streaming_900"]},
+        {"s": "NASDAQ:META", "d": [741.245, 11.34, 75.495, "delayed_streaming_900"]},
+    ]}).encode()
+    real = sources._get
+    sources._get = lambda *a, **kw: (body, "ok")
+    try:
+        row, state = sources.tradingview_quote("META")
+    finally:
+        sources._get = real
+    assert state == "ok", state
+    assert row["price"] == 741.245, row
+    assert row["venue"] == "NASDAQ:META", row["venue"]
+    # close - change_abs, never close/(1+pct): the absolute figure needs no rounding.
+    assert abs(row["prev_close"] - 665.75) < 0.01, row["prev_close"]
+    assert abs(row["change_pct"] - 11.34) < 0.01, row["change_pct"]
+    # A quote can be delayed, and a stale number passing as live is worse than none.
+    assert row["update_mode"] == "delayed_streaming_900"
+
+    # AND A REPLY THAT NAMES ONLY OTHER INSTRUMENTS IS NOT A PRICE.
+    only_others = _json.dumps({"data": [{"s": "NYSE:METAX", "d": [12.0, 5.0, 0.6, "x"]}]}).encode()
+    sources._get = lambda *a, **kw: (only_others, "ok")
+    try:
+        row, state = sources.tradingview_quote("META")
+    finally:
+        sources._get = real
+    assert row is None and state == "no_match", (row, state)
+
+
+@test
+def the_two_crypto_sources_answer_the_same_question():
+    """
+    THEY AGREED ON THE PRICE TO SEVENTY CENTS AND DISAGREED ON THE DAY BY SIX POINTS.
+
+    +5.72% against -0.92%, same asset, same second, in the first survey. One was spot-now
+    against spot-at-a-date, the other a 24-hour ROLLING open — different questions, so the
+    cross-check between them meant nothing. `movers` fires on change_pct, so the rolling
+    reading pushes a 5.7% alert on a flat day with a correct price beside it.
+
+    Both read a dated daily candle now. The test feeds each its own shape and asserts they
+    land on the same move.
+    """
+    import json as _json
+    cb = _json.dumps([[1758499200, 1, 2, 3, 85791.24, 9],
+                      [1758412800, 1, 2, 3, 86596.00, 9]]).encode()
+    kr = _json.dumps({"result": {"XXBTZUSD": [
+        [1758412800, "1", "2", "3", "86596.00", "4", "5", 6],
+        [1758499200, "1", "2", "3", "85791.24", "4", "5", 6]], "last": 1}}).encode()
+    real = sources._get
+    try:
+        sources._get = lambda *a, **kw: (cb, "ok")
+        a, sa = sources.coinbase_quote("BTC-USD")
+        sources._get = lambda *a, **kw: (kr, "ok")
+        b, sb = sources.kraken_quote("BTC-USD")
+    finally:
+        sources._get = real
+    assert sa == sb == "ok", (sa, sb)
+    assert abs(a["change_pct"] - b["change_pct"]) < 0.001, (a["change_pct"], b["change_pct"])
+    assert a["price"] == b["price"] == 85791.24
+    # AND NEITHER PRETENDS TO CARRY A STOCK. `not_covered` is a fact about the source.
+    assert sources.coinbase_quote("META")[1] == "not_covered"
+    assert sources.tradingview_quote("BTC-USD")[1] == "not_covered"
+
+
+@test
+def the_drawdown_is_not_the_days_move():
+    """
+    THE LETTER CALLED A +1.49% DAY "BARELY MOVED".
+
+    Nothing lied to it. The only index percentage it was given was the distance from the
+    all-time high — -0.4% — and it read that as the change on the day. Both arrive as a
+    small percentage and only one of them is "today". The rows were already in hand; the
+    question had never been asked of them.
+    """
+    rows = [("2026-09-17", 7600.0), ("2026-09-18", 7650.5), ("2026-09-19", 7764.7)]
+    real = sources.index_history
+    sources.index_history = lambda *a, **kw: (rows, "ok")
+    try:
+        wl = alerter.load_watchlist()
+        facts = alerter.gather(wl, want_macro=False, want_news=False)
+    finally:
+        sources.index_history = real
+    idx = facts["index"]
+    assert abs(idx["change_pct"] - 1.4927) < 0.001, idx["change_pct"]
+    assert idx["prev_close"] == 7650.5 and idx["asof"] == "2026-09-19"
+
+    # AND THE MODEL IS TOLD WHICH IS WHICH, IN THE PROMPT, NOT LEFT TO INFER IT.
+    idx.update({"high": 7799.0, "drawdown_pct": -0.44})
+    prompt = " ".join(summarize.render(facts, "daily").split())
+    assert "ON THE DAY" in prompt and "+1.49%" in prompt, prompt[-600:]
+    assert "is NOT how far it moved today" in prompt
+
+
+@test
 def a_push_survives_the_characters_the_model_actually_writes():
     """
     AN EM-DASH IN THE TITLE KILLED EVERY PHONE ALERT, AND ONLY THE PHONE ALERT.

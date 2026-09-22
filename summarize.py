@@ -191,6 +191,14 @@ def render(facts, kind):
     if idx.get("close"):
         lines.append(f"S&P 500 at {idx['close']:.2f}, which is {idx['drawdown_pct']:+.2f}% "
                      f"from its all-time closing high of {idx['high']:.2f}.")
+        # THESE TWO PERCENTAGES ARE DIFFERENT QUESTIONS AND THE LETTER ONCE MERGED THEM.
+        if idx.get("change_pct") is not None:
+            lines.append(
+                f"  ON THE DAY ({idx.get('asof', 'the latest session')}) it moved "
+                f"{idx['change_pct']:+.2f}%, from {idx['prev_close']:,.2f}. THIS is the "
+                f"day's move; the figure above is the distance from the record and is NOT "
+                f"how far it moved today. A letter once called a +1.49% day 'barely moved' "
+                f"by reading the -0.4% drawdown as the change.")
         # THEIR OWN PLAN, IN THE PROMPT. Without it the letter talks about the market;
         # with it, the letter can say what the market means FOR THEM — which is the only
         # reason to read a personal newsletter rather than the news.
