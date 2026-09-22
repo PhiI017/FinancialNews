@@ -324,6 +324,7 @@ def probe(symbols=None):
     symbols = symbols or (EQUITIES + CRYPTO)
     out = {}
     diagnose_tradingview()
+    probe_news()
     print(f"{'route':<14} {'symbol':<9} {'state':<22} value")
     print("-" * 62)
     for name, fn in ROUTES:
@@ -350,3 +351,51 @@ def probe(symbols=None):
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
     probe(args or None)
+
+
+# ── THE SAME QUESTION FOR NEWS, BECAUSE THE PER-TICKER FEEDS ARE ALSO ALL DEAD ───────
+#
+# Measured on the runner 2026-09-22, every run: `no news from META (http_429)` and the
+# same for all six other holdings, plus the Yahoo S&P feed. The broad feeds carry the Fed,
+# MarketWatch and CNBC and are why the letters read well — but a broad feed can only ever
+# mention a company by accident, so the catalyst half of what this was built for has never
+# worked once.
+#
+# AND TWO OF THE BROAD FEEDS 404 EVERY RUN: the US Treasury and White House paths in
+# watchlist.json. A 404 is a path that does not exist, which is ours to fix, not theirs —
+# so replacement paths are probed beside the current ones rather than swapped in blind.
+
+NEWS_SYMBOL = "META"
+NEWS_ROUTES = {
+    "yahoo_rss": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=META&region=US&lang=en-US",
+    "google_news": "https://news.google.com/rss/search?q=%22Meta+Platforms%22&hl=en-US&gl=US&ceid=US:en",
+    "bing_news": "https://www.bing.com/news/search?q=%22Meta+Platforms%22&format=RSS",
+    "nasdaq_rss": "https://www.nasdaq.com/feed/rssoutbound?symbol=META",
+    "seekingalpha": "https://seekingalpha.com/api/sa/combined/META.xml",
+    "treasury_now": "https://home.treasury.gov/rss/press.xml",
+    "treasury_alt": "https://home.treasury.gov/news/press-releases/feed",
+    "whitehouse_now": "https://www.whitehouse.gov/briefing-room/feed/",
+    "whitehouse_alt": "https://www.whitehouse.gov/feed/",
+}
+
+
+def probe_news():
+    """Which headline routes answer from here, and how many items each carries."""
+    print("news routes:")
+    for name, url in NEWS_ROUTES.items():
+        body, state = _fetch(url)
+        if state != "ok":
+            print(f"  {name:<16} {state}")
+            continue
+        if _looks_like_a_browser_check(body):
+            print(f"  {name:<16} browser_check")
+            continue
+        items = body.count(b"<item") + body.count(b"<entry")
+        # AN EMPTY FEED IS NOT A WORKING FEED, and 200-with-nothing is the state that
+        # reads as success everywhere and carries no news at all.
+        first = ""
+        if b"<title>" in body:
+            chunk = body.split(b"<title>")[2 if items else 1][:90]
+            first = chunk.split(b"</title>")[0].decode("utf-8", "replace")
+        print(f"  {name:<16} {'ok' if items else 'empty':<14} items={items}  {first}")
+    print()
