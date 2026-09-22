@@ -3,6 +3,7 @@ alerter.py — the entry point. Four modes, one state file.
 
     python alerter.py --setup     what is configured, what is missing, and a safe topic
     python alerter.py --check     urgent scan. Arithmetic only. Cheap, run it often
+    python alerter.py --accounts  the people you trust, pushed to your phone only
     python alerter.py --daily      note after the close
     python alerter.py --weekahead  Monday: what is coming this week
     python alerter.py --weekly     Sunday: the week in review, and next week
@@ -29,6 +30,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import accounts
 import calendar_events
 import letter
 import notify
@@ -273,6 +275,44 @@ def run(mode, dry_run=False):
     return 0
 
 
+def run_accounts(dry_run=False):
+    """
+    Check the trusted accounts and push anything new that touches a position.
+
+    PHONE ONLY, AND NEVER EMAIL. These are single posts, not letters — a notification is
+    the right shape and an inbox is not. It is also the one mode that can send several
+    times a day, which is exactly why `max_per_run` exists.
+    """
+    wl = load_watchlist()
+    state = load_state()
+    cfg = accounts.load()
+    if not (cfg.get("bluesky") or []):
+        print("  no accounts listed yet — add handles to accounts.json")
+        return 0
+
+    posts, seen, failures = accounts.check(wl, state.get("seen_posts", []), cfg)
+    for handle, why in failures.items():
+        print(f"  {handle}: {why}")
+    if not posts:
+        print("  nothing new that touches a position")
+        return 0
+
+    body = accounts.render(posts)
+    print(body)
+    if dry_run:
+        print("DRY RUN — nothing sent, state not written.")
+        return 0
+
+    sent = notify.push(f"{len(posts)} post(s) worth seeing", body, level="important",
+                       click=posts[0]["url"])
+    print("delivery:", sent[1])
+    # THE SEEN LIST IS TRIMMED, or it grows forever and the state file with it. A post
+    # older than the last few hundred cannot come back round anyway.
+    state["seen_posts"] = sorted(seen)[-500:]
+    save_state(state)
+    return 0
+
+
 def setup():
     """What this machine can do, and what it is missing. Sends nothing."""
     wl = load_watchlist()
@@ -299,6 +339,8 @@ if __name__ == "__main__":
     dry = "--dry-run" in argv
     if "--setup" in argv:
         sys.exit(setup())
+    if "--accounts" in argv:
+        sys.exit(run_accounts(dry_run=dry))
     for flag in ("check", "daily", "weekahead", "weekly"):
         if f"--{flag}" in argv:
             sys.exit(run(flag, dry_run=dry))

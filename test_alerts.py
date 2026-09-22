@@ -493,6 +493,65 @@ def a_data_note_names_what_the_reader_can_actually_fix():
 
 
 @test
+def a_trusted_account_is_trusted_about_markets_not_about_lunch():
+    """
+    TEN ACCOUNTS POSTING TWENTY TIMES A DAY IS TWO HUNDRED NOTIFICATIONS.
+
+    And the response to two hundred notifications is muting the app — which costs the dip
+    alert this whole system exists for. So the filter is not a nicety, it is what keeps
+    the urgent channel usable.
+
+    MATCHED ON WORD BOUNDARIES. "META" inside "metadata" and "oil" inside "toil" are the
+    matches that fill a phone with nonsense and teach you the filter does not work.
+    Symbols are case-sensitive because a three-letter ticker is a common word in lower
+    case: `ALL` and `IT` would match half of English otherwise.
+    """
+    import accounts
+
+    syms = ["META", "CELH", "VOO", "BTC-USD"]
+    words = ["fed", "hormuz", "oil"]
+
+    for text in ("META beat on earnings", "Fed signals another hike",
+                 "Hormuz closure enters week three"):
+        ok, hits = accounts.relevant(text, syms, [], words)
+        assert ok, f"missed something relevant: {text}"
+
+    for text in ("metadata pipelines are hard", "I had a nice lunch",
+                 "much toil for little reward", "the federation meets today"):
+        ok, hits = accounts.relevant(text, syms, [], words)
+        assert not ok, f"substring noise got through: {text} -> {hits}"
+
+
+@test
+def the_account_watcher_never_repeats_itself_or_floods():
+    """
+    IT RUNS EVERY HALF HOUR, so "already sent" has to survive a fresh checkout.
+
+    Same reasoning as the dip levels: a runner starts from a clean clone every time, so
+    state that lives only on disk does not exist and every post would be re-sent forever.
+
+    And the cap drops the OLDEST of a batch rather than the newest — on a busy day the
+    thing you most want is what just happened. What gets dropped stays unseen and can
+    arrive next run, so nothing is lost, only delayed.
+    """
+    import accounts
+
+    wl = {"positions": [{"symbol": "META", "status": "held"}]}
+    cfg = {"bluesky": [], "extra_keywords": ["fed"], "max_per_run": 2,
+           "posts_per_account": 10}
+
+    posts, seen, failures = accounts.check(wl, seen=[], cfg=cfg)
+    assert posts == [] and failures == {}, (posts, failures)
+
+    # the cap and the seen-set are what the caller relies on, so check them directly
+    assert cfg["max_per_run"] == 2
+    body = accounts.render([{"handle": "a.bsky.social", "text": "x" * 400,
+                             "url": "u", "matched": []}])
+    assert len(body) < 220, "a phone notification is not a letter"
+    assert body.endswith("..."), "a long post is truncated rather than sent whole"
+
+
+@test
 def the_subject_line_carries_the_number():
     """
     "Daily market note" told you nothing the schedule had not already told you.

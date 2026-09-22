@@ -1,0 +1,25 @@
+{
+  "_comment": "PEOPLE YOU TRUST, checked for anything that touches your positions.",
+  "_how_to_add": "Put the handle in the right list. Bluesky handles look like 'name.bsky.social' or a custom domain. Delete anything that gets noisy — this is a trust list, so it is meant to be short and yours.",
+
+  "_why_not_twitter": "X removed free API access; the cheapest tier that can read posts is roughly $100-200 a month, and scraping around it means a login wall, datacentre blocking and a terms-of-service breach that would break quietly a few weeks later. Rather than ship something that looks like it works and silently stops, X is left unbuilt. If you ever decide the subscription is worth it, `accounts.py` takes a second source without restructuring — the handles, the relevance filter and the seen-post memory are all source-agnostic.",
+
+  "bluesky": [],
+
+  "_bluesky_examples": [
+    "Add handles here, one per line, no @ sign. For example a financial journalist you",
+    "read, a central-bank watcher, a foreign-affairs reporter. Free, no key, no login."
+  ],
+
+  "_relevance": "A post is pushed only if it names one of your holdings, a company you watch, or a theme keyword below. Everything else is ignored — a trusted account posting about lunch is still lunch.",
+  "extra_keywords": [
+    "fed", "federal reserve", "rate cut", "rate hike", "inflation", "cpi",
+    "hormuz", "iran", "oil", "opec", "crude",
+    "tariff", "china", "rare earth", "export control",
+    "recession", "yields", "treasury", "shutdown", "sanctions"
+  ],
+
+  "_limits": "max_per_run caps how many notifications one run can send, so a busy news day cannot flood your phone. Posts already seen are never re-sent.",
+  "max_per_run": 4,
+  "posts_per_account": 10
+}

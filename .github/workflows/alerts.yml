@@ -15,6 +15,10 @@ name: market alerts
 
 on:
   schedule:
+    # The trusted accounts, hourly through the day. Separate from the price scan because
+    # people post outside market hours and a Hormuz headline at 3am is the kind this is
+    # for. `max_per_run` is what keeps that from becoming a flood.
+    - cron: "10 * * * *"
     # Urgent scan through the US session. 13:30-21:00 UTC is 9:30am-5pm Eastern.
     # Half-hourly is a deliberate ceiling: a dip trigger you learn about 30 minutes late
     # is still actionable, and polling harder mostly buys noise.
@@ -31,9 +35,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "check | daily | weekahead | weekly"
+        description: "check | accounts | daily | weekahead | weekly"
         type: choice
-        options: ["check", "daily", "weekahead", "weekly"]
+        options: ["check", "accounts", "daily", "weekahead", "weekly"]
         default: "check"
       dry_run:
         description: "print only — send nothing, spend nothing"
@@ -72,6 +76,8 @@ jobs:
             echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "35 21 * * 1-5" ]; then
             echo "mode=daily" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "10 * * * *" ]; then
+            echo "mode=accounts" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "0 12 * * 1" ]; then
             echo "mode=weekahead" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "0 15 * * 0" ]; then

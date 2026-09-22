@@ -83,19 +83,30 @@
     }
   },
   "themes": [
-    "US-Iran diplomacy, Strait of Hormuz, oil supply",
+    "US-Iran diplomacy, Strait of Hormuz, oil supply and Middle East conflict",
     "US-China trade talks, tariffs, rare earths, AI export controls",
-    "Federal Reserve rate decisions and inflation prints",
-    "AI capital spending by large technology companies"
+    "Federal Reserve rate decisions, inflation prints and Fed official commentary",
+    "AI capital spending by large technology companies",
+    "US politics: elections, government funding, legislation affecting markets or taxes",
+    "anything a head of state, finance minister or central banker says about the economy"
   ],
-  "_feeds_comment": "BROAD MARKET NEWS, not just your tickers. Per-symbol feeds only ever mention a company that is already on your list, so they cannot warn you about something coming from outside it \u2014 a Fed decision, an oil shock, a China headline. These are free public RSS feeds. Delete any that get noisy; add any you trust. Every fetch reports its own failure state, so a dead feed is named in the letter, not silent.",
+  "_feeds_comment": "BROAD NEWS, NOT JUST YOUR TICKERS. A per-symbol feed can only ever mention a company already on your list, so it cannot warn you about a Fed decision, a Hormuz closure or an election result \u2014 the things that move holdings without naming them. Official sources are listed first on purpose: a central bank's own statement is the thing itself, where a news story about it is a report of it. Delete any that get noisy. Every fetch reports its own failure, so a dead feed is named in the letter.",
   "feeds": {
-    "Federal Reserve press releases": "https://www.federalreserve.gov/feeds/press_all.xml",
-    "Yahoo S&P 500": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US",
-    "Yahoo crude oil": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=CL=F&region=US&lang=en-US",
-    "MarketWatch top stories": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
-    "CNBC markets": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664"
+    "Federal Reserve": "https://www.federalreserve.gov/feeds/press_all.xml",
+    "US Treasury": "https://home.treasury.gov/rss/press.xml",
+    "White House": "https://www.whitehouse.gov/briefing-room/feed/",
+    "SEC press": "https://www.sec.gov/news/pressreleases.rss",
+    "European Central Bank": "https://www.ecb.europa.eu/rss/press.html",
+    "BBC World": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "BBC Business": "https://feeds.bbci.co.uk/news/business/rss.xml",
+    "Al Jazeera": "https://www.aljazeera.com/xml/rss/all.xml",
+    "NPR Politics": "https://feeds.npr.org/1014/rss.xml",
+    "NPR Economy": "https://feeds.npr.org/1017/rss.xml",
+    "MarketWatch": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+    "CNBC markets": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",
+    "CNBC economy": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258",
+    "Yahoo S&P 500": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US"
   },
   "_feed_limit": "headlines taken per feed. Higher costs a little more to summarise.",
-  "feed_limit": 8
+  "feed_limit": 6
 }
