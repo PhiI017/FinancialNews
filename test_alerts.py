@@ -368,8 +368,21 @@ def the_collector_writes_the_private_repo_schema_and_merges():
     with open(tmp) as fh:
         out = list(csv.reader(fh))
     assert out[0] == collector.PRICE_HEADER
-    assert [r[1] for r in out[1:]] == ["2026-09-18", "2026-09-19"], "rows must sort by key"
+    # WRITTEN IN THE PRIVATE REPO'S ORDER — date then ticker for prices — because a file
+    # that arrives in a different order than that repo writes churns its whole history on
+    # the first export there.
+    assert [r[1] for r in out[1:]] == ["2026-09-18", "2026-09-19"], "rows must sort by date"
     assert out[2][3] == "3.0", "the first write must win, not the last"
+
+    # AND THE ORDER IS THE PRIVATE REPO'S — date then ticker for prices — because a file
+    # arriving in a different order than that repo writes churns its whole history on the
+    # first export there. Two tickers on one day is what distinguishes the two orders.
+    collector._merge(tmp, collector.PRICE_HEADER,
+                     [["ZZZZ", "2026-09-18", 1.0, 2.0, 1, "nasdaq"]])
+    with open(tmp) as fh:
+        out = list(csv.reader(fh))
+    assert [(r[0], r[1]) for r in out[1:]] == [
+        ("AAPL", "2026-09-18"), ("ZZZZ", "2026-09-18"), ("AAPL", "2026-09-19")], out
 
     # A FILE WHOSE COLUMNS ARE NOT OURS IS REFUSED RATHER THAN APPENDED TO.
     with open(tmp, "w") as fh:
@@ -379,6 +392,46 @@ def the_collector_writes_the_private_repo_schema_and_merges():
         assert False, "appending under a foreign header must refuse"
     except SystemExit as e:
         assert "Refusing" in str(e), e
+
+
+@test
+def a_throttled_host_pauses_the_sweep_instead_of_ending_it():
+    """
+    THE CIRCUIT BREAKER WAS BUILT FOR SEVEN SYMBOLS AND THE COLLECTOR ASKS FOR 508.
+
+    `sources._get` stops asking a host after two refusals and returns
+    `http_429_host_throttled` immediately from then on — right for the alerter, which
+    fetches a handful of symbols sixteen times a day, and exactly wrong for a sweep. Two
+    unlucky refusals early and every remaining ticker returns instantly without being
+    asked: a run that finishes fast, reports one repeated state, and collects nothing on a
+    day whose prices cannot be collected later. The breaker doing its job, and the day
+    gone anyway.
+
+    So a host-level throttle is a reason to WAIT here, and the cap is what stops a host
+    that refuses all day from turning the sweep into an infinite loop.
+    """
+    import collector
+    slept = []
+    real_sleep, real_reset = collector.time.sleep, collector.sources.reset_throttles
+    collector.time.sleep = lambda s: slept.append(s)
+    collector.sources.reset_throttles = lambda: slept.append("reset")
+    try:
+        # AN ORDINARY FAILURE IS NOT A THROTTLE and must not cost thirty seconds a ticker.
+        assert collector._wait_out_throttle("etf_empty+stocks_empty", 0) == (False, 0)
+        assert collector._wait_out_throttle(None, 0) == (False, 0)
+        assert slept == [], slept
+
+        retry, pauses = collector._wait_out_throttle("http_429_host_throttled", 0)
+        assert retry is True and pauses == 1, (retry, pauses)
+        assert slept == [collector.THROTTLE_SLEEP, "reset"], slept
+
+        # AND THE CAP HOLDS, so a host refusing all day ends the sweep rather than
+        # looping on it.
+        assert collector._wait_out_throttle(
+            "http_429_host_throttled", collector.THROTTLE_PAUSES) == (
+                False, collector.THROTTLE_PAUSES)
+    finally:
+        collector.time.sleep, collector.sources.reset_throttles = real_sleep, real_reset
 
 
 @test

@@ -174,17 +174,69 @@ def _merge(path, header, rows):
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(header)
-        for key in sorted(existing):
+        for key in sorted(existing, key=_sort_key(header)):
             w.writerow(existing[key])
     return added, len(existing) - added
+
+
+def _sort_key(header):
+    """
+    THE DEDUPE KEY AND THE SORT ORDER ARE NOT THE SAME THING HERE, on purpose.
+
+    Rows are deduped on (ticker, date) because that is what makes a row unique. They are
+    WRITTEN in the private repo's own order — `date, ticker` for prices — because these
+    files are read there, and a file that arrives in a different order than that repo
+    writes churns its entire history on the first export. Matching it now costs nothing;
+    matching it after the file has a year in it rewrites the year.
+
+    News already dedupes and sorts on the same tuple, so it needs no swap.
+    """
+    if header is PRICE_HEADER:
+        return lambda k: (k[1], k[0])
+    return lambda k: k
+
+
+# ── THE CIRCUIT BREAKER WAS BUILT FOR SEVEN SYMBOLS AND THIS ASKS FOR FIVE HUNDRED ──
+#
+# `sources._get` stops asking a host after two refusals and returns
+# `http_429_host_throttled` immediately from then on. That is exactly right for the
+# alerter, which fetches a handful of symbols sixteen times a day: the first 429 already
+# tells you what the next six will say.
+#
+# IT IS EXACTLY WRONG FOR A SWEEP OF 508. Two unlucky refusals early and every remaining
+# ticker returns instantly without being asked — a run that finishes fast, reports a
+# single repeated state and collects NOTHING, on a day whose prices cannot be re-collected
+# later. The breaker would be doing its job and the day would still be gone.
+#
+# So a throttle here is a reason to WAIT, not to stop: back off, clear the breaker, and
+# carry on down the list. `THROTTLE_PAUSES` caps how many times that can happen so a host
+# that is genuinely refusing all day cannot turn this into an infinite loop — at which
+# point the run gives up and SAYS it gave up, with the count.
+THROTTLE_PAUSES = 6
+THROTTLE_SLEEP = 30
+
+
+def _wait_out_throttle(state, pauses):
+    """(should_retry, pauses) — a host-level refusal is a pause, not the end of the run."""
+    if "throttled" not in (state or "") or pauses >= THROTTLE_PAUSES:
+        return False, pauses
+    print(f"    host throttled; pausing {THROTTLE_SLEEP}s and continuing "
+          f"({pauses + 1}/{THROTTLE_PAUSES})")
+    time.sleep(THROTTLE_SLEEP)
+    sources.reset_throttles()
+    return True, pauses + 1
 
 
 def collect_prices(tickers=None, days=DAILY_WINDOW_DAYS):
     """Fetch and merge. Returns {state: count} so a bad run says WHERE it stopped."""
     tickers = tickers or universe()
     by_year, states = {}, {}
+    pauses = 0
     for i, t in enumerate(tickers, 1):
         rows, state = fetch_prices(t, days)
+        retry, pauses = _wait_out_throttle(state, pauses)
+        if retry:
+            rows, state = fetch_prices(t, days)
         states[state] = states.get(state, 0) + 1
         if state != "ok":
             print(f"  {t}: {state}")
@@ -215,8 +267,12 @@ def collect_news(tickers=None, limit=6):
     tickers = tickers or universe()
     fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     rows, states = [], {}
+    pauses = 0
     for i, t in enumerate(tickers, 1):
         items, state = sources.headlines(t, limit=limit)
+        retry, pauses = _wait_out_throttle(state, pauses)
+        if retry:
+            items, state = sources.headlines(t, limit=limit)
         states[state if state == "ok" else "failed"] = \
             states.get(state if state == "ok" else "failed", 0) + 1
         if state != "ok":
