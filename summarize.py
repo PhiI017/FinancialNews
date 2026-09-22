@@ -218,6 +218,32 @@ def render(facts, kind):
                          f"Lead with this.")
         lines.append("")
 
+    # ── THE PREMIUM, WHICH IS A DIFFERENT RISK FROM THE PRICE AND MUST READ AS ONE ────
+    for sym, row in (facts.get("premiums") or {}).items():
+        if row.get("premium_pct") is None:
+            lines.append(
+                f"{sym}: its NAV is {row.get('stale_days')} days old "
+                f"({row.get('nav_asof')}), so NO PREMIUM CAN BE STATED. Say the figure is "
+                f"stale; do not compute one from it and do not guess.")
+            continue
+        lines.append(
+            f"{sym} trades at {row['price']:.2f} against a net asset value of "
+            f"{row['nav']:.2f} ({row['nav_asof']}), a premium of "
+            f"{row['premium_pct']:+.1f}%.")
+        lines.append(
+            f"  EXPLAIN WHAT THAT MEANS, because it is the point of watching this one: "
+            f"the premium is what the market pays ABOVE the value of what the fund owns, "
+            f"and it can fall on its own while every company the fund holds does fine. "
+            f"This is a CLOSED-END fund, so unlike an ordinary ETF there is no mechanism "
+            f"creating and redeeming shares at NAV to close that gap. Their plan buys at "
+            f"{', '.join(f'{r:+.0f}%' for r in row['rungs'])}. Do not tell them to buy "
+            f"or sell; say where the premium is and what moved it.")
+    for sym, state in (facts.get("premium_failures") or {}).items():
+        lines.append(f"{sym}: NO NAV — {state}. Say the premium cannot be computed and "
+                     f"why; never let the price stand in for it.")
+    if facts.get("premiums") or facts.get("premium_failures"):
+        lines.append("")
+
     macro = facts.get("macro") or {}
     if macro:
         lines.append("Macro:")

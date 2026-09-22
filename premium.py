@@ -85,10 +85,36 @@ import sources
 # THESE ARE A STARTING POSITION, NOT A MEASUREMENT, and they are in the config so they can
 # be changed without touching code. The number that would replace them is the fund's own
 # quartile, once there is enough history to have one.
+# ── AND THE SURVEY ANSWERED THE STRUCTURAL QUESTION, WHICH SHARPENS ALL OF THIS ──────
+#
+# Measured on the runner 2026-09-22. TradingView, asked what BOT IS rather than what it
+# costs:
+#
+#     {'symbol': 'NASDAQ:BOT', 'description': 'RoboStrategy, Inc.',
+#      'type': 'fund', 'typespecs': ['closedend'], 'close': 29.38}
+#
+# IT IS A CLOSED-END FUND, NOT AN ETF. Nasdaq's own API agrees by omission — it answers
+# "Symbol not exists" for assetclass=etf and answers for assetclass=stocks. So the premium
+# is not an anomaly to be arbitraged away; it is a permanent feature of the structure,
+# because there is no creation and redemption at NAV to close it. Nothing pulls the price
+# back to the assets in either direction, ever.
+#
+# THAT MOVES THE BASE RATE FROM ANALOGY TO DIRECT EVIDENCE, and it points down. Closed-end
+# funds as a class have traded at a discount for most of their recorded history, and the
+# pattern for a NEWLY LISTED one is sharper still and very well documented: they list at a
+# premium, because the offering price carries the underwriting costs and the NAV starts
+# below what buyers paid, and they have historically drifted to a discount within months.
+# A new closed-end fund trading above NAV is the normal starting condition, not evidence
+# of anything, and it is the condition that historically resolves downward.
+#
+# A premium also carries its own ceiling: issuing shares above NAV is accretive to existing
+# holders, so a fund trading at a large premium is paid to create the supply that removes
+# it.
+
 DEFAULT_RUNGS = (20.0, 10.0, 0.0, -10.0)
 WARN_ONLY_ABOVE = 20.0          # the +20 rung is an early warning, never a buy signal
 MIN_HISTORY_POINTS = 60         # before the fund's own distribution may set the rungs
-MAX_NAV_AGE_DAYS = 7            # a NAV older than this is reported, never divided by
+MAX_NAV_AGE_DAYS = 7            # a NAV older than this is reported, never divided by            # a NAV older than this is reported, never divided by
 
 
 def premium_pct(price, nav):
@@ -192,6 +218,63 @@ NAV_ROUTES = {
     "nasdaq_stock": ("url", "https://api.nasdaq.com/api/quote/{sym}/info?assetclass=stocks"),
     "stockanalysis": ("url", "https://stockanalysis.com/api/symbol/e/{sym}/overview"),
 }
+
+
+def nav_from_config(symbol, wl):
+    """
+    ({nav, asof, source}, state) — a NAV the user typed in, age-checked like any other.
+
+    ── WHY A HAND-ENTERED NUMBER IS THE RIGHT ANSWER HERE AND NOT A COP-OUT ───────────
+
+    Six automated routes were surveyed on the runner and NONE of them carries a NAV for
+    this fund. TradingView has the columns and they are null; CEF Connect 404s; Nasdaq
+    does not classify it as a fund at all. That is what a recently listed vehicle looks
+    like in free data, and no amount of retrying changes it.
+
+    Meanwhile the fund publishes its own NAV, and the user is already reading its
+    disclosures — the operating-history and leverage language they quoted comes straight
+    out of them. So the scarce input is available to a person and not to this program.
+
+    THE ARITHMETIC IS NOT THE HARD PART AND NEVER WAS. Given a NAV, the premium, the rungs
+    and the alert are exact and cost nothing. Refusing to compute them because the input
+    cannot be scraped would be choosing no answer over a good one.
+
+    WHAT MAKES IT SAFE IS THAT IT IS DATED AND THE DATE IS ENFORCED. A hand-entered NAV
+    is a fact about one day, and it goes stale exactly like a fetched one — faster, since
+    nobody is refreshing it. `premium()` applies MAX_NAV_AGE_DAYS to this identically, so
+    a number typed in six weeks ago produces `nav_stale` with its age rather than a
+    confident premium against an old mark. That is the one failure that would matter, and
+    it is the one the ladder is built to refuse.
+    """
+    for pos in wl.get("positions", []):
+        if pos.get("symbol") == symbol and pos.get("nav"):
+            return {"nav": float(pos["nav"]), "asof": pos.get("nav_asof", ""),
+                    "source": "config"}, "ok"
+    return None, "no_config_nav"
+
+
+def nav(symbol, wl=None):
+    """
+    ({nav, asof, source}, state) — the ladder. Automated first, the typed one as backup.
+
+    AUTOMATED ROUTES ARE TRIED FIRST EVEN THOUGH NONE OF THEM ANSWERS TODAY, because a
+    newly listed fund is exactly the case that starts being covered later: TradingView
+    already has the `nav` column and only lacks the value. When it fills, this starts using
+    it with no change, and `source` says which one answered — the same reason the price
+    ladder reports its rung.
+    """
+    tried = []
+    rows, state = _tv_columns(symbol, ["close", "nav", "nav_discount_premium"])
+    if state == "ok" and rows and rows[0].get("nav"):
+        return {"nav": float(rows[0]["nav"]), "asof": time.strftime("%Y-%m-%d"),
+                "source": "tradingview"}, "ok"
+    tried.append(f"tradingview_{'empty' if state == 'ok' else state}")
+
+    row, state = nav_from_config(symbol, wl or {})
+    if state == "ok":
+        return row, "ok"
+    tried.append(f"config_{state}")
+    return None, "+".join(tried)
 
 
 def structure_note(symbol):

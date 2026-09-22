@@ -44,6 +44,10 @@ REASON_TEXT = {
     ("news", "no_key"): "no headlines — needs a free API key that is not set yet",
     ("news", "not_covered"): "no headlines — that feed does not carry it",
     ("news", "other"): "no headlines this run",
+    ("premium", "rate_limited"): "no premium — the NAV source throttled this run",
+    ("premium", "no_key"): "no premium — needs a free API key that is not set yet",
+    ("premium", "not_covered"): "no premium — no free source publishes this fund's NAV",
+    ("premium", "other"): "no premium — no NAV available; put one in watchlist.json",
     ("figure", "rate_limited"): "not updated — the source throttled this run",
     ("figure", "no_key"): "not updated — needs a free API key that is not set yet",
     ("figure", "not_covered"): "not published by that source",
@@ -56,6 +60,7 @@ REASON_TEXT = {
 FAILURE_KINDS = {
     "quote_failures": "price",
     "news_failures": "news",
+    "premium_failures": "premium",
     "macro_failures": "figure",
 }
 

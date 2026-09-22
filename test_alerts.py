@@ -247,6 +247,95 @@ def an_unconfigured_channel_is_reported_and_never_raises():
 
 
 @test
+def a_stale_nav_is_reported_and_never_divided_by():
+    """
+    A PREMIUM AGAINST AN OLD MARK IS A PLAUSIBLE NUMBER WITH NO MEANING.
+
+    Private holdings are appraised, not traded, so the NAV is an estimate that is refreshed
+    slowly and sometimes not at all. Computing a premium against a six-week-old one gives a
+    confident figure that is simply about a different day — the exact shape of every real
+    bug in this project. `nav_stale` carries the AGE so the letter can say which.
+    """
+    import time
+
+    import premium
+    fresh = {"nav": 25.0, "asof": time.strftime("%Y-%m-%d"), "source": "config"}
+    row, state = premium.premium("BOT", 29.38, fresh)
+    assert state == "ok", state
+    assert abs(row["premium_pct"] - 17.52) < 0.01, row["premium_pct"]
+
+    old_day = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 45 * 86400))
+    row, state = premium.premium("BOT", 29.38, {"nav": 25.0, "asof": old_day})
+    assert state == "nav_stale", state
+    assert row["stale_days"] >= 44, row
+    assert "premium_pct" not in row, "a stale NAV must not produce a premium"
+
+    # THE TWO ABSENCES ARE DIFFERENT FACTS. Nothing published a NAV, versus one exists and
+    # is too old — different responses, so never one word for both.
+    assert premium.premium("BOT", 29.38, None)[1] == "no_nav"
+    assert premium.premium("BOT", 29.38, {"nav": 25.0, "asof": ""})[1] == "nav_undated"
+
+
+@test
+def the_premium_rungs_spend_and_rearm_like_the_dip_ladder():
+    """
+    SAME HYSTERESIS, SAME REASON: a level that fires every run is a level you turn off.
+
+    And the +20 rung is a WARNING, not a buy — a premium coming down from a high is worth
+    reading and is not the thing the plan acts on. Announcing it as a buy would be the
+    5%-dip mistake in a new place.
+    """
+    import premium
+    rungs = (20.0, 10.0, 0.0, -10.0)
+    hit, spent = premium.crossed(17.5, rungs, [])
+    assert hit == [20.0], hit
+    assert all(r >= premium.WARN_ONLY_ABOVE for r in hit), "the +20 rung is warn-only"
+    hit, spent = premium.crossed(17.0, rungs, spent)
+    assert hit == [], "the same rung must not fire twice on a drift"
+    hit, spent = premium.crossed(8.0, rungs, spent)
+    assert hit == [10.0], hit
+    # BACK ABOVE A LEVEL RE-ARMS IT, so a second approach alerts again.
+    hit, spent = premium.crossed(12.0, rungs, spent)
+    assert hit == [] and 10.0 not in spent, spent
+    assert premium.crossed(8.0, rungs, spent)[0] == [10.0]
+
+    # THE FUND'S OWN DISTRIBUTION REFUSES UNTIL THERE IS ONE, rather than taking quartiles
+    # of a handful of readings — which is a guessed dial wearing a statistic's clothes.
+    got, state = premium.rungs_from_history([1.0, 2.0, 3.0])
+    assert got == premium.DEFAULT_RUNGS and state.startswith("too_short_3_of_"), state
+    got, state = premium.rungs_from_history(list(range(100)))
+    assert state == "ok" and got[0] > got[-1], got
+
+
+@test
+def a_fund_without_a_nav_says_so_instead_of_showing_its_price():
+    """
+    THE FAILURE THAT WOULD MATTER MOST HERE IS THE QUIET ONE.
+
+    Six free NAV routes were surveyed on the runner and not one carries this fund's: the
+    screener has the column and it is null, CEF Connect 404s, Nasdaq does not classify it
+    as a fund at all. So the common case is NO NAV, and a premium section that silently
+    fell back to the price would read as a premium of zero — a fund at fair value, stated
+    confidently, on no data.
+    """
+    import letter
+    import premium
+    wl = {"positions": [{"symbol": "BOT", "premium_rungs_pct": [20, 10, 0, -10]}]}
+    row, state = premium.nav_from_config("BOT", wl)
+    assert row is None and state == "no_config_nav", (row, state)
+
+    wl["positions"][0].update({"nav": 25.0, "nav_asof": "2026-09-19"})
+    row, state = premium.nav_from_config("BOT", wl)
+    assert state == "ok" and row["nav"] == 25.0 and row["source"] == "config"
+
+    # AND THE LETTER NAMES IT AS A MISSING PREMIUM, NOT A MISSING PRICE. The same class of
+    # mix-up that told the reader there were no prices in the first letter that had them.
+    joined = " ".join(letter.data_notes({"premium_failures": {"BOT": "tradingview_empty"}}))
+    assert "BOT: no premium" in joined, joined
+    assert "no price" not in joined, joined
+
+
+@test
 def one_move_is_one_alert_and_a_bigger_move_is_another():
     """
     THE FIRST RUN WITH WORKING PRICES PUSHED A REAL ALERT THAT WOULD HAVE REPEATED ALL DAY.

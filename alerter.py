@@ -34,6 +34,7 @@ import accounts
 import calendar_events
 import letter
 import notify
+import premium
 import sources
 import summarize
 import triggers
@@ -83,6 +84,29 @@ def gather(wl, want_news=True, want_macro=True):
             facts["quotes"].append(q)
         else:
             facts["quote_failures"][pos["symbol"]] = state
+
+    # THE PREMIUM LAYER, FOR ANY POSITION THAT DECLARES RUNGS. A closed-end fund's price
+    # and its assets are two different numbers and the gap between them is its own risk —
+    # see premium.py. Only positions with `premium_rungs_pct` are asked about.
+    facts["premiums"], facts["premium_failures"] = {}, {}
+    for pos in wl.get("positions", []):
+        if pos.get("status") == "muted" or not pos.get("premium_rungs_pct"):
+            continue
+        sym = pos["symbol"]
+        nav_row, nav_state = premium.nav(sym, wl)
+        quoted = next((q for q in facts["quotes"] if q and q["symbol"] == sym), None)
+        row, state = premium.premium(sym, (quoted or {}).get("price"), nav_row)
+        if state == "ok":
+            row["rungs"] = tuple(float(r) for r in pos["premium_rungs_pct"])
+            facts["premiums"][sym] = row
+        else:
+            # THE NAV'S OWN FAILURE IS MORE USEFUL THAN THE PREMIUM'S when there was no
+            # NAV at all: `no_nav` says nothing published one, and the ladder's state
+            # says which routes were asked.
+            facts["premium_failures"][sym] = (
+                nav_state if state == "no_nav" and nav_state != "ok" else state)
+            if row:
+                facts["premiums"][sym] = row     # stale: carried, but never divided by
 
     rows, state = sources.index_history(wl["index"]["symbol"])
     facts["index_state"] = state
@@ -184,12 +208,35 @@ def evaluate(facts, wl, state):
     session = next((q.get("asof") for q in facts["quotes"] if q and q.get("asof")), "")
     push_worthy, state["movers_alerted"] = triggers.unreported_movers(
         big, state.get("movers_alerted"), session)
+    # THE PREMIUM RUNGS, spent and re-armed exactly like the index dips.
+    prem_hit, spent_all = [], dict(state.get("premium_rungs_spent") or {})
+    for sym, row in (facts.get("premiums") or {}).items():
+        if row.get("premium_pct") is None:
+            continue                       # stale NAV: reported in the letter, never fired on
+        hit, spent = premium.crossed(row["premium_pct"], row["rungs"],
+                                     spent_all.get(sym, []))
+        spent_all[sym] = sorted(spent)
+        for rung in hit:
+            prem_hit.append({"symbol": sym, "rung": rung,
+                             "premium_pct": row["premium_pct"],
+                             "warn_only": rung >= premium.WARN_ONLY_ABOVE})
+    state["premium_rungs_spent"] = spent_all
+
     macro_rows = {sid: row["rows"] for sid, row in (facts.get("macro") or {}).items()}
     macro_hits = triggers.macro_moves(macro_rows, wl["macro"].get("thresholds", {}))
 
-    return {"urgency": triggers.urgency(fired, push_worthy, macro_hits),
+    # A BUY RUNG IS URGENT; THE +20 WARNING IS NOT. Reaching a level you plan to buy at
+    # is the same class of event as the S&P dip that this whole system exists for. The
+    # warning rung says a premium is compressing, which is worth reading and not worth
+    # a notification at 3am — so it rides in the digest.
+    buys = [p for p in prem_hit if not p["warn_only"]]
+    urgency = triggers.urgency(fired, push_worthy + buys, macro_hits)
+    if urgency == "quiet" and prem_hit:
+        urgency = "important"
+    return {"urgency": urgency,
             "fired_levels": fired, "rearmed_levels": rearmed,
             "drawdown_pct": drawdown, "movers": big, "push_movers": push_worthy,
+            "premium_hits": prem_hit, "premium_buys": buys,
             "macro_hits": macro_hits}, state
 
 
@@ -201,6 +248,9 @@ def urgent_text(verdict, facts):
                     f"— your {level}% trigger.")
     for m in verdict.get("push_movers", verdict["movers"]):
         bits.append(f"{m['symbol']} {m['change_pct']:+.1f}% today.")
+    for p in verdict.get("premium_buys") or []:
+        bits.append(f"{p['symbol']} at {p['premium_pct']:+.1f}% to NAV "
+                    f"— your {p['rung']:+.0f}% level.")
     for h in verdict["macro_hits"]:
         label = facts.get("macro_labels", {}).get(h["series"], h["series"])
         bits.append(f"{label} {h['change']:+.2f} to {h['latest']}.")
