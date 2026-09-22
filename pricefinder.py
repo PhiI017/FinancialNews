@@ -317,6 +317,80 @@ def _row(symbol, price, prev, source, asof=""):
     }
 
 
+
+# ── ONE NUMBER FROM ROUND 2 CONTRADICTS SOMETHING WE ALREADY KNOW ────────────────────
+#
+# TradingView answered for all three equities, with the right venues and the right price
+# levels: VOO at 712.78 against an S&P of 7,765 from FRED is a ratio of 10.89, which is
+# what that fund's ratio to the index actually is. The PRICES look right.
+#
+# The CHANGES do not. VOO +1.57% on a day the same run's letter described as "the market
+# barely moved", and VOO tracks the S&P to within a few basis points daily — a fund cannot
+# rise 1.6% while its index is flat. Beside it, META +11.34% and CELH at EXACTLY +0.00%.
+#
+# So `change` is being read as something other than the day's move, and the most likely
+# shape is that `close` and `change` reference different sessions — the last close against
+# a pre-market delta, which on a Monday morning would give a big number for a heavily
+# traded name and exactly zero for a quiet one. That is the pattern in front of us.
+#
+# THIS IS WHY IT IS NOT PROMOTED YET. `triggers.movers` fires on change_pct, so a wrong
+# one pushes "CELH moved 7%" to a phone on a day it did not — with a correct price beside
+# it, which is exactly what would make it believable. The price is the easy half.
+#
+# This round asks for the fields that let the question be settled rather than argued: the
+# absolute change and the open alongside the percentage, so `prev` can be computed three
+# ways and compared, and SP:SPX asked of the same source in the same request so it can be
+# held against FRED's number for the same day.
+
+
+def tradingview_fields(symbol):
+    """The raw columns, printed. A diagnostic, not a route — it never returns a price."""
+    tickers = ([symbol] if ":" in symbol else
+               [f"NASDAQ:{symbol}", f"NYSE:{symbol}", f"AMEX:{symbol}"])
+    cols = ["close", "change", "change_abs", "open", "update_mode"]
+    body, state = _fetch("https://scanner.tradingview.com/america/scan",
+                         data=json.dumps({"symbols": {"tickers": tickers},
+                                          "columns": cols}).encode("utf-8"),
+                         headers={"Content-Type": "application/json"})
+    if state != "ok":
+        return None, state
+    try:
+        rows = json.loads(body).get("data", [])
+    except Exception:
+        return None, "unparsed"
+    want = symbol.split(":")[-1].upper()
+    for r in rows:
+        if (r.get("s") or "").split(":")[-1].upper() != want:
+            continue
+        d = dict(zip(cols, r.get("d") or []))
+        close, chg, chg_abs, open_ = (d.get("close"), d.get("change"),
+                                      d.get("change_abs"), d.get("open"))
+        if close in (None, ""):
+            continue
+        parts = [f"close={close}", f"change={chg}", f"change_abs={chg_abs}",
+                 f"open={open_}", f"mode={d.get('update_mode')}"]
+        # THREE WAYS TO THE SAME PRIOR CLOSE. If they agree, `change` is the day's move
+        # and the field is safe to use. If they do not, the disagreement names the bug.
+        if chg not in (None, "", 0):
+            parts.append(f"prev_from_pct={float(close) / (1 + float(chg) / 100.0):.2f}")
+        if chg_abs not in (None, ""):
+            parts.append(f"prev_from_abs={float(close) - float(chg_abs):.2f}")
+        print(f"  {r['s']:<16} " + "  ".join(parts))
+        return None, "reported"
+    return None, "no_match"
+
+
+def diagnose_tradingview(symbols=("META", "VOO", "CELH", "SP:SPX")):
+    """Print the raw fields for each symbol, including the index FRED also carries."""
+    print("tradingview raw fields:")
+    for sym in symbols:
+        try:
+            tradingview_fields(sym)
+        except Exception as e:
+            print(f"  {sym}: raised_{type(e).__name__}")
+    print()
+
+
 ROUTES = (
     ("yahoo_query2", yahoo_query2),
     ("yahoo_spark", yahoo_spark),
@@ -339,6 +413,7 @@ def probe(symbols=None):
     """
     symbols = symbols or (EQUITIES + CRYPTO)
     out = {}
+    diagnose_tradingview()
     print(f"{'route':<14} {'symbol':<9} {'state':<22} value")
     print("-" * 62)
     for name, fn in ROUTES:
