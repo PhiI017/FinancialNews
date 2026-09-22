@@ -231,7 +231,7 @@ def collect_prices(tickers=None, days=DAILY_WINDOW_DAYS):
     """Fetch and merge. Returns {state: count} so a bad run says WHERE it stopped."""
     tickers = tickers or universe()
     by_year, states = {}, {}
-    pauses = 0
+    pauses = total_added = 0
     for i, t in enumerate(tickers, 1):
         rows, state = fetch_prices(t, days)
         retry, pauses = _wait_out_throttle(state, pauses)
@@ -240,19 +240,38 @@ def collect_prices(tickers=None, days=DAILY_WINDOW_DAYS):
         states[state] = states.get(state, 0) + 1
         if state != "ok":
             print(f"  {t}: {state}")
-            continue
-        for day, o, c, v in rows:
-            by_year.setdefault(day[:4], []).append(
-                [t, day, o, c, int(v) if v is not None else "", "nasdaq"])
-        if i % 50 == 0:
-            print(f"  ...{i}/{len(tickers)}")
-    total_added = 0
-    for year, rows in sorted(by_year.items()):
-        added, kept = _merge(os.path.join(DATA, f"prices-{year}.csv"), PRICE_HEADER, rows)
-        total_added += added
-        print(f"  prices-{year}.csv: +{added} new, {kept} already there")
+        else:
+            for day, o, c, v in rows:
+                by_year.setdefault(day[:4], []).append(
+                    [t, day, o, c, int(v) if v is not None else "", "nasdaq"])
+        # ── FLUSHED AS IT GOES, BECAUSE A TIMEOUT KILLS THE JOB WHERE IT STANDS ──────
+        #
+        # The first version held every row in memory and wrote once at the end. A sweep of
+        # 508 names takes tens of minutes, `timeout-minutes` terminates the job outright
+        # when it expires, and the commit step after it never runs — so a run that had
+        # fetched 400 tickers would have committed NONE of them. On prices that is merely
+        # annoying, since they backfill; on the news layer beside it, a lost run is a day
+        # of headlines that cannot be collected again.
+        #
+        # Writing every FLUSH_EVERY tickers turns a timeout from total loss into partial
+        # progress, and the merge is first-write-wins so the next run simply continues.
+        if i % FLUSH_EVERY == 0 or i == len(tickers):
+            total_added += _flush_prices(by_year)
+            by_year = {}
+            print(f"  ...{i}/{len(tickers)}, {total_added} new rows so far")
     print(f"prices: {total_added} new rows; states {states}")
     return states
+
+
+FLUSH_EVERY = 50
+
+
+def _flush_prices(by_year):
+    added = 0
+    for year, rows in sorted(by_year.items()):
+        got, _kept = _merge(os.path.join(DATA, f"prices-{year}.csv"), PRICE_HEADER, rows)
+        added += got
+    return added
 
 
 def collect_news(tickers=None, limit=6):
@@ -267,7 +286,7 @@ def collect_news(tickers=None, limit=6):
     tickers = tickers or universe()
     fetched_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     rows, states = [], {}
-    pauses = 0
+    pauses = total = 0
     for i, t in enumerate(tickers, 1):
         items, state = sources.headlines(t, limit=limit)
         retry, pauses = _wait_out_throttle(state, pauses)
@@ -283,10 +302,14 @@ def collect_news(tickers=None, limit=6):
             if not day:
                 continue
             rows.append([day, t, it["title"], f"seekingalpha/{t}", "", "", fetched_at])
-        if i % 50 == 0:
-            print(f"  ...{i}/{len(tickers)}")
-    added, kept = _merge(os.path.join(DATA, "news.csv"), NEWS_HEADER, rows)
-    print(f"news.csv: +{added} new, {kept} already there; states {states}")
+        # THE SAME FLUSH, AND IT MATTERS MORE HERE. Prices backfill; a day of headlines
+        # nobody wrote down is gone for good.
+        if i % FLUSH_EVERY == 0 or i == len(tickers):
+            added, _kept = _merge(os.path.join(DATA, "news.csv"), NEWS_HEADER, rows)
+            total += added
+            rows = []
+            print(f"  ...{i}/{len(tickers)}, {total} new headlines so far")
+    print(f"news.csv: +{total} new; states {states}")
     return states
 
 

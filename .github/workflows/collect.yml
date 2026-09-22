@@ -72,6 +72,14 @@ jobs:
         # THE DATA IS COMMITTED BY ITS OWN STEP AND NOTHING RUNS AFTER IT. Collection is
         # what cannot be recovered later; anything that could fail afterwards must not be
         # able to take the day's work with it.
+        #
+        # `always()` FOR THE SAME REASON, AND IT IS NOT BELT AND BRACES. A sweep of 508
+        # names takes tens of minutes and `timeout-minutes` terminates the job outright,
+        # so without this a run that had already fetched 400 tickers would commit NONE of
+        # them. The collector flushes its csvs as it goes; this is what gets the flushed
+        # rows out of the container. A partial day beats no day, and on the news layer a
+        # lost run is a day of headlines that cannot be collected again.
+        if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
