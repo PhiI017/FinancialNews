@@ -147,6 +147,16 @@ def gather(wl, want_news=True, want_macro=True):
                                              name=pos.get("name", ""))
             if state == "ok":
                 facts["headlines"].extend(items)
+                # EVERY COMPANY HEADLINE GOES TO THE RUN LOG, because otherwise a claim in
+                # the letter cannot be traced to a source. A letter said CELH rose "partly
+                # on news the CEO bought shares" and there was no way to tell whether that
+                # came from a fetched headline or from the model's memory — about the
+                # reader's own money. An unauditable sentence is the same problem as an
+                # unreported failure: it reads exactly like a verified one.
+                for it in items:
+                    print(f"    news {pos['symbol']}: {it['title'][:110]}")
+                if not items:
+                    print(f"    news {pos['symbol']}: none published today")
             else:
                 facts["news_failures"][pos["symbol"]] = state
 

@@ -286,6 +286,55 @@ def every_function_the_alerter_calls_still_exists():
 
 
 @test
+def the_biggest_mover_cannot_be_covered_in_a_subordinate_clause():
+    """
+    CELH ROSE 5.6%, THE LARGEST MOVE OF THE DAY, AND GOT ONE CLAUSE INSIDE AN OIL PARAGRAPH.
+
+    Measured 2026-09-22. TTWO, down 2.1%, got a paragraph of its own. CELH's news HAD been
+    fetched — the run reported no failures at all — so nothing was missing; the letter
+    simply was not asked to cover it.
+
+    The cause was the shape of the prompt: sixty headlines arrived as one flat list of
+    "[SYMBOL] title" lines mixed in with the market feeds, so nothing tied a holding to its
+    own news and nothing obliged the letter to explain what moved. A flat list asks the
+    model to write about whatever reads best, and it did.
+
+    AND THE OPPOSITE FAILURE IS WORSE THAN SILENCE. Made to cover every mover, a model with
+    no headlines will reach for a cause from memory, which is unfalsifiable by reading and
+    concerns the reader's money. So the instruction names both and supplies the out.
+    """
+    facts = {
+        "positions": [{"symbol": "CELH"}, {"symbol": "TTWO"}, {"symbol": "OUST"}],
+        "quotes": [{"symbol": "CELH", "price": 29.6, "change_pct": 5.64},
+                   {"symbol": "TTWO", "price": 205.5, "change_pct": -2.1},
+                   {"symbol": "OUST", "price": 14.0, "change_pct": -7.5}],
+        "headlines": [{"symbol": "CELH", "title": "Celsius CEO buys 50,000 shares"},
+                      {"symbol": "TTWO", "title": "GTA 6 preorders strong"},
+                      {"symbol": "market", "title": "Fed leaves rates unchanged"}],
+        "index": {}, "macro": {}, "premiums": {}, "premium_failures": {},
+    }
+    prompt = summarize.render(facts, "daily")
+
+    # GROUPED BY COMPANY, so a holding's news is its own block and not a line in a heap.
+    assert "  CELH:\n    - Celsius CEO buys 50,000 shares" in prompt, prompt[:900]
+    # A COMPANY WITH NO NEWS IS VISIBLE, not indistinguishable from one left unmentioned.
+    assert "OUST: NO HEADLINES RETRIEVED" in prompt
+    # The market feeds stay separate from the companies.
+    assert "Market-wide:" in prompt
+
+    # EVERY MOVER IS LISTED, LARGEST FIRST, and the one with no news carries the refusal.
+    block = prompt[prompt.index("MOVED TODAY"):]
+    order = [line.strip().split()[0] for line in block.splitlines()[1:4]]
+    assert order == ["OUST", "CELH", "TTWO"], order
+    assert "do NOT supply a reason from memory" in block
+    assert "own paragraph" in block
+    # A 0.3% drift is not a move and must not demand a paragraph.
+    facts["quotes"].append({"symbol": "VOO", "price": 712.0, "change_pct": 0.3})
+    facts["positions"].append({"symbol": "VOO"})
+    assert "VOO +0.30%" not in summarize.render(facts, "daily")
+
+
+@test
 def a_stale_nav_is_reported_and_never_divided_by():
     """
     A PREMIUM AGAINST AN OLD MARK IS A PLAUSIBLE NUMBER WITH NO MEANING.

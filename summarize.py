@@ -275,16 +275,67 @@ def render(facts, kind):
     for sid, state in (facts.get("macro_failures") or {}).items():
         lines.append(f"  {sid}: UNAVAILABLE — {state}")
 
+    # ── HEADLINES GROUPED BY COMPANY, NOT POURED INTO ONE LIST ──────────────────────
+    #
+    # MEASURED 2026-09-22: CELH rose 5.6%, the biggest move of the day, and the letter gave
+    # it one subordinate clause inside a paragraph about oil — while TTWO, down 2.1%, got a
+    # paragraph of its own. Its news HAD been fetched; the run reported no failures at all.
+    #
+    # The cause was the shape of this block. Sixty headlines arrived as one flat list of
+    # "[SYMBOL] title" lines mixed in with the market feeds, so nothing connected a holding
+    # to its own news and nothing obliged the letter to cover the thing that moved. The
+    # model wrote about whatever read most interestingly, which is what a flat list asks
+    # for.
+    #
+    # Grouped, a company with no headlines is VISIBLE as an empty block rather than being
+    # indistinguishable from one the model chose not to mention.
     news = facts.get("headlines", [])
+    held_syms = [p["symbol"] for p in (facts.get("positions") or [])]
+    by_symbol, market = {}, []
+    for h in news:
+        sym = h.get("symbol", "?")
+        (by_symbol.setdefault(sym, []) if sym in held_syms else market).append(h["title"])
     if news:
-        lines.append(f"Headlines ({len(news)}). Treat these as raw, unverified, and "
-                     f"possibly about a different company than the symbol they are filed "
-                     f"under — that happens about half the time:")
-        for h in news:
-            lines.append(f"  [{h.get('symbol', '?')}] {h['title']}")
+        lines.append(f"Headlines ({len(news)}). Raw and unverified, and a feed filed under "
+                     f"a symbol is only about that company around half the time — check "
+                     f"the words before attributing one:")
+        for sym in held_syms:
+            titles = by_symbol.get(sym) or []
+            if titles:
+                lines.append(f"  {sym}:")
+                for t in titles:
+                    lines.append(f"    - {t}")
+            else:
+                lines.append(f"  {sym}: NO HEADLINES RETRIEVED for this company today.")
+        if market:
+            lines.append("  Market-wide:")
+            for t in market:
+                lines.append(f"    - {t}")
     else:
         lines.append("No headlines were retrieved.")
     lines.append("")
+
+    # ── ANYTHING THAT MOVED MUST BE ACCOUNTED FOR, OR SAID TO BE UNACCOUNTED FOR ─────
+    #
+    # The other half of the same bug: covering the day's largest move in a subordinate
+    # clause is a choice the letter should not have. And the alternative failure is worse —
+    # inventing a reason — so the instruction names both and gives the out.
+    moved = [q for q in (facts.get("quotes") or [])
+             if q and abs(q.get("change_pct") or 0) >= 2.0]
+    if moved:
+        lines.append("MOVED TODAY AND MUST EACH BE ADDRESSED, largest first:")
+        for q in sorted(moved, key=lambda r: -abs(r["change_pct"])):
+            titles = by_symbol.get(q["symbol"]) or []
+            lines.append(
+                f"  {q['symbol']} {q['change_pct']:+.2f}% — "
+                + (f"{len(titles)} headline(s) above." if titles
+                   else "NO HEADLINES. Say the move is unexplained by anything retrieved; "
+                        "do NOT supply a reason from memory."))
+        lines.append("  Give the biggest mover its own paragraph. A cause may be stated "
+                     "ONLY if a headline above supports it; otherwise say what moved and "
+                     "that the reason is not in today's news. An invented cause is the one "
+                     "error here that cannot be spotted by reading.")
+        lines.append("")
 
     cal = facts.get("catalysts_text")
     if cal:
