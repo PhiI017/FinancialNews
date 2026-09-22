@@ -109,11 +109,10 @@
     "NPR Economy": "https://feeds.npr.org/1017/rss.xml",
     "MarketWatch": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
     "CNBC markets": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",
-    "CNBC economy": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258",
-    "Yahoo S&P 500": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^GSPC&region=US&lang=en-US"
+    "CNBC economy": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=20910258"
   },
   "_feed_limit": "headlines taken per feed. Higher costs a little more to summarise.",
   "feed_limit": 6,
   "_positions_name_comment": "`name` is what a NEWS SEARCH is given, not a label. A bare ticker is a low-precision query dressed as a targeted one — searching 'VOO' or 'ALL' returns English rather than news — so a symbol with no name here skips the Google News rung and reports `no_name` instead of serving noise as coverage.",
-  "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items."
+  "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items. Yahoo S&P 500 went the same way on the same day, for the OTHER reason: http_429 on every run, because Yahoo fences datacentres as a block. It works from a laptop and never from the runner this lives on, and MarketWatch and CNBC already carry the index's news. Eleven feeds left."
 }
