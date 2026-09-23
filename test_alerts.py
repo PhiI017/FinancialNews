@@ -1155,6 +1155,124 @@ def the_subject_line_carries_the_number():
     assert "10% trigger" in fired, fired
 
 
+@test
+def a_dropped_letter_slot_is_recovered_once_and_never_steals_the_next_day():
+    """
+    THE RECOVERY MUST NOT CAUSE THE FAILURE IT WAS WRITTEN TO PREVENT.
+
+    A letter recovered after midnight is recorded against the slot it belongs to, not the
+    day the process happened to run. Record it against the run day instead and Wednesday's
+    history already contains a "daily", so Wednesday's own 21:35 check finds nothing owed
+    and that day's letter is never written — one missing letter traded for every one after.
+    """
+    from datetime import datetime, timezone
+
+    tue_2200 = datetime(2026, 9, 22, 22, 0, tzinfo=timezone.utc)
+    mode, slot = alerter.overdue_letter({"history": []}, now=tue_2200)
+    assert (mode, slot) == ("daily", "2026-09-22"), (mode, slot)
+
+    # Recovered at 01:00 Wednesday, recorded against TUESDAY.
+    state = {"history": [{"at": "2026-09-22", "mode": "daily", "sent": {"email": "ok"}}]}
+    wed_0100 = datetime(2026, 9, 23, 1, 0, tzinfo=timezone.utc)
+    assert alerter.overdue_letter(state, now=wed_0100) == (None, None)
+
+    # And Wednesday's own slot is still owed.
+    wed_2200 = datetime(2026, 9, 23, 22, 0, tzinfo=timezone.utc)
+    mode, slot = alerter.overdue_letter(state, now=wed_2200)
+    assert (mode, slot) == ("daily", "2026-09-23"), (mode, slot)
+
+
+@test
+def a_letter_is_not_owed_before_its_slot_or_long_after_it():
+    """
+    A LETTER THAT IS NOT LATE IS NOT OWED, and one that is a day late is not wanted.
+
+    The first half is what made 2026-09-23 look broken when it was not: the daily note is
+    due at 21:35 UTC and the question was asked at 15:29. The second half is the grace
+    window — a Tuesday letter delivered at Wednesday lunchtime is about a close two
+    sessions back, and sending it is worse than the silence it replaces.
+    """
+    from datetime import datetime, timezone
+
+    before = datetime(2026, 9, 23, 15, 29, tzinfo=timezone.utc)
+    assert alerter.overdue_letter({"history": []}, now=before) == (None, None)
+
+    stale = datetime(2026, 9, 23, 12, 0, tzinfo=timezone.utc)   # 14h after Tuesday's slot
+    assert alerter.overdue_letter({"history": []}, now=stale) == (None, None)
+
+    # A quiet check writes an empty `sent` and must not count as a letter going out.
+    quiet = {"history": [{"at": "2026-09-22", "mode": "daily", "sent": {}}]}
+    tue_2200 = datetime(2026, 9, 22, 22, 0, tzinfo=timezone.utc)
+    assert alerter.overdue_letter(quiet, now=tue_2200)[0] == "daily"
+
+
+@test
+def the_slot_table_still_matches_the_crons_that_fire_it():
+    """
+    THE SAME NUMBER IN TWO PLACES DRIFTS, and only one of the copies is ever tested.
+
+    LETTER_SLOTS exists because the recovery has to know when a letter was due, and the
+    workflow is where it is actually scheduled. Change the cron without changing the table
+    and the catch-up starts sending a letter that already went out, or refuses one that
+    never did — with nothing failing either way.
+    """
+    import re
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    text = open(os.path.join(here, ".github", "workflows", "alerts.yml")).read()
+    pairs = re.findall(r'github\.event\.schedule \}\}" = "([^"]+)".*?\n\s*echo "mode=(\w+)',
+                       text, re.S)
+    assert pairs, "could not read the schedule-to-mode mapping out of alerts.yml"
+
+    table = {row[0]: row[1:] for row in alerter.LETTER_SLOTS}
+    seen = []
+    for cron, mode in pairs:
+        if mode not in table:
+            continue
+        minute, hour, _dom, _mon, dow = cron.split()
+        weekday = None if "-" in dow or "," in dow or dow == "*" else (int(dow) - 1) % 7
+        assert table[mode] [:3] == (weekday, int(hour), int(minute)), \
+            f"{mode}: cron says {cron!r}, LETTER_SLOTS says {table[mode][:3]}"
+        seen.append(mode)
+    assert sorted(seen) == sorted(table), f"scheduled {seen}, table has {sorted(table)}"
+
+
+@test
+def a_recovered_letter_can_say_which_day_it_is_for():
+    """
+    The catch-up is only safe if `run` can record a letter against a slot that is not
+    today. A default-only signature would quietly file every recovery under the run date.
+    """
+    import inspect
+
+    assert "slot" in inspect.signature(alerter.run).parameters, alerter.run.__doc__
+    src = inspect.getsource(alerter.run)
+    assert 'slot or facts["date"]' in src, "the history entry ignores the slot"
+
+
+@test
+def every_mode_the_workflow_selects_is_a_cron_it_actually_schedules():
+    """
+    A CRON LIVES IN TWO PLACES IN THIS WORKFLOW — the schedule and the string the mode
+    selector compares against — and changing one is the obvious way to break it.
+
+    Nothing raises when they disagree. The branch simply never matches, the run falls
+    through to the default, and the Monday letter goes out as an urgent price check that
+    sends nothing. The failure is a missing email, which is exactly the failure nobody
+    notices for a week.
+    """
+    import re
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    text = open(os.path.join(here, ".github", "workflows", "alerts.yml")).read()
+    scheduled = set(re.findall(r'- cron: "([^"]+)"', text))
+    selected = set(re.findall(r'github\.event\.schedule \}\}" = "([^"]+)"', text))
+    assert scheduled, "no crons found"
+    orphans = selected - scheduled
+    assert not orphans, f"the selector matches crons that are not scheduled: {orphans}"
+
+
+
 def main():
     passed, failed = 0, []
     for fn in TESTS:

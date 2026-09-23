@@ -26,6 +26,7 @@ with a STATED reason and never silently. `--setup` prints exactly which of those
 import json
 import os
 import sys
+from datetime import datetime, timedelta, timezone
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -282,7 +283,82 @@ def failures_line(facts):
     return ("Not retrieved this run: " + "; ".join(out)) if out else ""
 
 
-def run(mode, dry_run=False):
+# ── THE LETTER SLOTS, IN UTC, AND HOW LONG A MISSED ONE STAYS SENDABLE ──────────────
+#
+# Mirrors the crons in alerts.yml. It lives here, beside the check that reads it, rather
+# than only in the workflow, because a number written in two places drifts and only one
+# of the two copies is ever tested.
+#
+#   mode         weekday (None = Mon-Fri)   hour  minute   grace, hours
+LETTER_SLOTS = (
+    ("weekahead", 0,    12, 17, 12),
+    ("weekly",    6,    15, 17, 12),
+    ("daily",     None, 21, 35, 12),
+)
+
+
+def _last_slot(weekday, hour, minute, now):
+    """The most recent time this slot came round at or before `now`, or None."""
+    t = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if t > now:
+        t -= timedelta(days=1)
+    for _ in range(8):
+        runs_today = (t.weekday() < 5) if weekday is None else (t.weekday() == weekday)
+        if runs_today:
+            return t
+        t -= timedelta(days=1)
+    return None
+
+
+def overdue_letter(state, now=None):
+    """
+    (mode, slot_date) for a letter whose slot passed with nothing sent, else (None, None).
+
+    ── GITHUB DROPS MOST SCHEDULED FIRES AND THAT IS NOT A BUG WE CAN FIX ───────────
+
+    MEASURED 2026-09-23. Between 00:00 and 15:29 UTC this workflow's crons were due about
+    twenty-one times — sixteen hourly, five through the US session — and fired THREE: 01:26,
+    07:41, 13:35. The evening letter the day before was due at 21:35 and ran at 23:46, two
+    hours and eleven minutes late. Nothing failed; every run that happened succeeded.
+
+    Scheduled workflows are best-effort on this plan, and the documentation says so. The
+    half-hourly urgent scan losing four fires in five is tolerable — it is a poll, and the
+    next one catches the same drawdown. A LETTER IS NOT A POLL. If the 21:35 slot is the
+    only thing that sends the daily note and that slot is dropped, the note is not late,
+    it never exists, and the reader just does not get an email that day.
+
+    ── SO THE SEND IS TIED TO THE SLOT, NOT TO THE FIRE ─────────────────────────────
+
+    Any run that is only a poll — the half-hourly price check, the hourly accounts sweep —
+    asks first whether a letter's slot has passed with nothing sent, and if so sends that
+    letter instead of doing what it was called for. Losing one poll costs nothing; the
+    next one sees the same drawdown. The hourly sweep runs round the clock, so a dropped
+    21:35 slot has roughly eleven more chances inside its grace window rather than two.
+
+    ── AND `at` IS THE DAY THE LETTER IS ABOUT, NOT THE DAY THE PROCESS RAN ─────────
+
+    That distinction is the whole reason the grace window can cross midnight. A Tuesday
+    letter recovered at 01:00 on Wednesday is recorded against TUESDAY; were it recorded
+    against Wednesday it would satisfy Wednesday's own check and silently suppress that
+    day's letter — a fix that causes the failure it was written to prevent. Nothing else
+    reads `at`, so this costs no schema and no migration.
+
+    It cannot double-send: a letter already recorded against its slot is not overdue, and
+    the send is recorded before the run ends.
+    """
+    now = now or datetime.now(timezone.utc)
+    sent_slots = {(h.get("mode"), h.get("at")) for h in (state.get("history") or [])
+                  if h.get("sent")}
+    for mode, weekday, hour, minute, grace_hours in LETTER_SLOTS:
+        slot = _last_slot(weekday, hour, minute, now)
+        if slot is None or now - slot > timedelta(hours=grace_hours):
+            continue
+        if (mode, slot.strftime("%Y-%m-%d")) not in sent_slots:
+            return mode, slot.strftime("%Y-%m-%d")
+    return None, None
+
+
+def run(mode, dry_run=False, slot=None):
     wl = load_watchlist()
     state = load_state()
     wants_note = mode in ("daily", "weekahead", "weekly")
@@ -352,7 +428,7 @@ def run(mode, dry_run=False):
         print("delivery:", sent)
 
     state.setdefault("history", []).append(
-        {"at": facts["date"], "mode": mode, "urgency": verdict["urgency"],
+        {"at": slot or facts["date"], "mode": mode, "urgency": verdict["urgency"],
          "drawdown_pct": round(verdict["drawdown_pct"], 2),
          "fired": verdict["fired_levels"], "sent": sent})
     save_state(state)
@@ -423,6 +499,18 @@ if __name__ == "__main__":
     dry = "--dry-run" in argv
     if "--setup" in argv:
         sys.exit(setup())
+    # A DROPPED CRON MUST NOT MEAN A MISSING LETTER — see overdue_letter(). Only the
+    # polls give way: a run asked for a letter is doing the thing that matters already,
+    # and the next hourly sweep recovers whatever else is owed.
+    if "--accounts" in argv or "--check" in argv:
+        owed, slot = overdue_letter(load_state())
+        if owed:
+            print(f"catching up: the {owed} letter for {slot} was never sent")
+            if dry:
+                print("DRY RUN — carrying on with the requested mode instead.")
+            else:
+                sys.exit(run(owed, slot=slot))
+
     if "--accounts" in argv:
         sys.exit(run_accounts(dry_run=dry))
     if "--set-nav" in argv:

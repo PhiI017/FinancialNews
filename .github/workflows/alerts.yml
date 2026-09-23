@@ -14,24 +14,35 @@
 name: market alerts
 
 on:
+  # ⚠ NOT ONE OF THESE FIRES ON THE HOUR, AND THAT IS DELIBERATE. GitHub's own
+  # documentation says scheduled runs are delayed during high load and names "the start
+  # of every hour" as the worst of it. Measured here on 2026-09-23: of roughly twenty-one
+  # due fires between midnight and 15:29 UTC, three happened. Nothing failed — the runs
+  # simply never started. Moving off :00 is a mitigation, not a fix, which is why
+  # alerter.overdue_letter() exists: the letters recover themselves when a slot is missed.
   schedule:
     # The trusted accounts, hourly through the day. Separate from the price scan because
     # people post outside market hours and a Hormuz headline at 3am is the kind this is
     # for. `max_per_run` is what keeps that from becoming a flood.
+    #
+    # THIS IS ALSO THE RECOVERY VEHICLE, and that is now the more important of its two
+    # jobs. It runs round the clock, so a letter whose own slot was dropped has roughly
+    # eleven more chances inside its grace window — see alerter.overdue_letter().
     - cron: "10 * * * *"
     # Urgent scan through the US session. 13:30-21:00 UTC is 9:30am-5pm Eastern.
     # Half-hourly is a deliberate ceiling: a dip trigger you learn about 30 minutes late
-    # is still actionable, and polling harder mostly buys noise.
-    - cron: "*/30 13-20 * * 1-5"
+    # is still actionable, and polling harder mostly buys noise. :07 and :37 rather than
+    # :00 and :30 for the load reason above — same cadence, quieter minutes.
+    - cron: "7,37 13-20 * * 1-5"
     # After the close, with the written note.
     - cron: "35 21 * * 1-5"
     # Monday, before the US open: what is coming this week.
-    - cron: "0 12 * * 1"
+    - cron: "17 12 * * 1"
     # Sunday: the week in review, and what is coming next.
-    - cron: "0 15 * * 0"
+    - cron: "17 15 * * 0"
     # ONE WEEKEND SCAN, because bitcoin does not stop when the exchanges do. Equities are
     # unchanged from Friday and simply report no move.
-    - cron: "0 15 * * 6"
+    - cron: "17 15 * * 6"
   workflow_dispatch:
     inputs:
       mode:
@@ -78,9 +89,9 @@ jobs:
             echo "mode=daily" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "10 * * * *" ]; then
             echo "mode=accounts" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.schedule }}" = "0 12 * * 1" ]; then
+          elif [ "${{ github.event.schedule }}" = "17 12 * * 1" ]; then
             echo "mode=weekahead" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.schedule }}" = "0 15 * * 0" ]; then
+          elif [ "${{ github.event.schedule }}" = "17 15 * * 0" ]; then
             echo "mode=weekly" >> "$GITHUB_OUTPUT"
           else
             echo "mode=check" >> "$GITHUB_OUTPUT"
