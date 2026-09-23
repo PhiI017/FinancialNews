@@ -1,20 +1,30 @@
 # Market alerts
 
 Watches your positions and the S&P, pushes the urgent things to your phone, and emails
-three newsletters a week. Runs on GitHub's servers — your computer is never involved.
+eleven letters a week: two every weekday and one on Sunday. Runs on GitHub's servers — your computer is never involved.
 
 ## What it sends
 
 **Urgent, straight to your phone.** The S&P crossing one of your dip triggers (-5, -10,
 -15, -20, -25% from its all-time closing high), any holding moving more than its
 threshold in a day, or a big move in oil, the 10-year or the Fed rate. Checked every
-thirty minutes through the US session, plus once each weekend day because bitcoin does
+thirty minutes from the open until after the bell, plus once each weekend day because bitcoin does
 not stop. **A quiet check sends nothing at all** — an alerter that pings you to say
 nothing happened is one you mute, and a muted alerter misses the day that matters.
 
-**Three emails.** A daily note after the close: what moved and why. A Monday letter: the
-dated events coming that week and what each would mean for your positions. A Sunday
-letter: what happened, then what is coming, with dates.
+**Four letters, two of them on the same day and doing different jobs.** Before the open,
+at 8:45am New York: what is due today and anything overnight that changes how your
+positions start. Before the close, at 3:40pm: what actually moved and why, while there is
+still twenty minutes to do something about it. On Monday the morning letter is instead the
+week ahead — the dated events coming and what each would mean for you. On Sunday, what
+happened and then what is coming, with dates.
+
+**The letter times are New York, not UTC, and that is deliberate.** Written as a fixed
+timer, "before the close" becomes 2:40pm every November when the clocks move. So no timer
+sends a letter: the schedule fires candidates on both sides of the boundary and
+`overdue_letter()` sends whichever slot has passed with nothing sent. The same mechanism
+covers a dropped run — scheduled jobs are best-effort and most of them are dropped, so a
+letter that depended on one timer would simply not exist that day.
 
 The phone gets a one-line pointer for the letters, not the letter. A 450-word newsletter
 as a notification is unreadable, and pushing one every weekday teaches you to swipe away
@@ -25,9 +35,9 @@ the channel the urgent alerts share.
 **The data is free.** Prices and headlines from Yahoo, which needs no key. Oil, yields
 and the Fed rate from FRED, which needs a free key.
 
-**The writing is about 30 cents a month.** Claude Haiku 4.5 at $1 per million input
-tokens and $5 per million output; a daily note is roughly 3,000 in and 700 out, about
-two thirds of a cent. `python alerter.py --setup` prints the arithmetic for whichever
+**The writing is about 35 cents a month.** Claude Haiku 4.5 at $1 per million input
+tokens and $5 per million output; one letter is roughly 3,000 in and 700 out, about two
+thirds of a cent, and there are about fifty a month. `python alerter.py --setup` prints the arithmetic for whichever
 model is set. Change `MODEL` in `summarize.py` if you want a better writer — Sonnet 5 is
 about four times as much and still under a dollar and a half a month.
 
@@ -77,10 +87,11 @@ otherwise looks the same whether the week is quiet or the file is stale.
 
     python alerter.py --setup              what is configured and what is missing
     python alerter.py --check --dry-run    print, send nothing, spend nothing
-    python alerter.py --daily
+    python alerter.py --preopen
+    python alerter.py --preclose
     python alerter.py --weekahead
     python alerter.py --weekly
-    python test_alerts.py                  16 tests, no network, no cost
+    python test_alerts.py                  the suite: no network, no cost
 
 ## The things most likely to bite
 

@@ -1,12 +1,13 @@
 """
 summarize.py — the only part that costs money, and it is optional.
 
-WHAT IT COSTS, MEASURED RATHER THAN WAVED AT. A daily digest sends roughly 3,000 input
-tokens (about sixty headlines plus the prompt and your positions) and gets back about 700.
-On Claude Haiku 4.5 at $1.00 per million input and $5.00 per million output that is about
-$0.0065 a run — call it twenty cents a month for daily, under thirty with the Sunday
-recap. Sonnet 5 is roughly four times that and Opus 5 about fifteen times; both are still
-under $5 a month. `estimate_cost` prints the arithmetic for whatever MODEL is set to.
+WHAT IT COSTS, MEASURED RATHER THAN WAVED AT. One letter sends roughly 3,000 input tokens
+(about sixty headlines plus the prompt and your positions) and gets back about 700. On
+Claude Haiku 4.5 at $1.00 per million input and $5.00 per million output that is about
+$0.0065 a run. TWO LETTERS A WEEKDAY plus the Sunday recap is about fifty runs a month, so
+call it thirty-five cents. Sonnet 5 is roughly four times that and Opus 5 about fifteen
+times; both are still under $5 a month. `estimate_cost` prints the arithmetic for whatever
+MODEL is set to.
 
 THE DEFAULT IS HAIKU BECAUSE "KEEP COSTS NEAR ZERO" WAS A REQUIREMENT, not because it is
 the better model. Change one line below if a richer summary is worth the difference —
@@ -48,12 +49,22 @@ Rules you must follow:
   write about it as though they hold it.
 - No tables, no bullet characters, no markdown headings. Short paragraphs only, because
   this is read aloud by a screen reader.
-- At most 250 words for a daily note, 450 for a weekly or week-ahead one.
+- At most 250 words for a pre-open or pre-close note, 450 for a weekly or week-ahead one.
 
-The letter you are writing is one of three, and they have different jobs:
+The letter you are writing is one of four, and they have different jobs. Two of them
+arrive on the same day and MUST NOT read like the same letter twice:
 
-DAILY — what moved today and why, tied to their positions. If a catalyst lands tomorrow,
-one closing line flagging it. Nothing else forward-looking.
+PREOPEN (weekday, 8:45am New York, before the bell) — entirely about the day that has not
+happened yet. Open with what is due TODAY: anything dated on the calendar, and anything
+overnight that changes how their positions start. Then, in a line or two, where things
+stand going in. Write it for somebody deciding what to do before the market opens, so no
+recap of yesterday beyond what still matters this morning.
+
+PRECLOSE (weekday, 3:40pm New York, twenty minutes before the bell) — about the day that
+has just happened, while there is still time to act on it. Lead with what actually moved
+and why, tied to their positions. If something needs a decision before the close, say so
+plainly in one line near the top. The prices you are given are twenty minutes from the
+close, so describe them as where things stand now and never as the closing price.
 
 WEEKAHEAD (Monday) — almost entirely forward. Open with the two or three dated events in
 the week and what each one would mean for their specific holdings. Say plainly which
@@ -107,7 +118,8 @@ def estimate_cost(in_tokens, out_tokens, model=None):
     rate_in, rate_out = PRICES.get(model, PRICES["claude-haiku-4-5"])
     cost = (in_tokens / 1e6) * rate_in + (out_tokens / 1e6) * rate_out
     return cost, (f"{model}: ~{in_tokens:,} in + {out_tokens:,} out "
-                  f"= ${cost:.4f} this run, about ${cost * 30:.2f} a month daily")
+                  f"= ${cost:.4f} this run, about ${cost * 50:.2f} a month "
+                  f"at two letters a weekday plus the Sunday recap")
 
 
 def available():
@@ -121,7 +133,7 @@ def available():
     return True, ""
 
 
-def summarize(facts, kind="daily", model=None):
+def summarize(facts, kind="preclose", model=None):
     """
     (text, state) — the note, or a stated reason there is none.
 

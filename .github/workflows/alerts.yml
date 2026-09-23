@@ -26,29 +26,50 @@ on:
     # for. `max_per_run` is what keeps that from becoming a flood.
     #
     # THIS IS ALSO THE RECOVERY VEHICLE, and that is now the more important of its two
-    # jobs. It runs round the clock, so a letter whose own slot was dropped has roughly
-    # eleven more chances inside its grace window — see alerter.overdue_letter().
+    # jobs. It runs round the clock, so a letter whose own slot was dropped has many more
+    # chances inside its grace window — see alerter.overdue_letter().
     - cron: "10 * * * *"
-    # Urgent scan through the US session. 13:30-21:00 UTC is 9:30am-5pm Eastern.
-    # Half-hourly is a deliberate ceiling: a dip trigger you learn about 30 minutes late
-    # is still actionable, and polling harder mostly buys noise. :07 and :37 rather than
-    # :00 and :30 for the load reason above — same cadence, quieter minutes.
-    - cron: "7,37 13-20 * * 1-5"
-    # After the close, with the written note.
-    - cron: "35 21 * * 1-5"
-    # Monday, before the US open: what is coming this week.
-    - cron: "17 12 * * 1"
-    # Sunday: the week in review, and what is coming next.
+    # Urgent scan through the US session and past the bell. Half-hourly is a deliberate
+    # ceiling: a dip trigger you learn about 30 minutes late is still actionable, and
+    # polling harder mostly buys noise. :07 and :37 rather than :00 and :30 for the load
+    # reason above — same cadence, quieter minutes.
+    #
+    # IT RUNS TO 21:37 SO THE LAST SCAN IS ALWAYS AFTER THE CLOSE. The session ends at
+    # 20:00 UTC in summer and 21:00 in winter; stopping at 20:37 would mean that from
+    # November the final close of the day is never seen by anything, and the record high
+    # this alerter ratchets would be built only from intraday readings taken 23 minutes
+    # early. The retired after-the-close letter used to cover that by accident.
+    - cron: "7,37 13-21 * * 1-5"
+
+    # ── AND THESE ARE THE LETTERS, IN PAIRS AN HOUR APART. NEITHER IS A MISTAKE ──────
+    #
+    # NOT ONE CRON HERE SENDS A LETTER. Every one of them runs the price check, and
+    # alerter.overdue_letter() sends whatever letter's slot has passed unsent. That is why
+    # the times come in pairs: the letters are due at 8:45am and 3:40pm NEW YORK, which is
+    # an hour apart in UTC either side of the daylight-saving boundary. In summer the
+    # first of each pair sends and the second finds it already gone; in winter the first
+    # finds the slot has not arrived and the second sends. No seasonal edit, ever, and no
+    # letter arriving an hour and twenty minutes before the close because the clocks moved.
+    #
+    # Before the open — 8:45am New York, and the week-ahead letter on Mondays.
+    - cron: "47 12 * * 1-5"
+    - cron: "47 13 * * 1-5"
+    # Before the close — 3:40pm New York, twenty minutes before the bell.
+    - cron: "42 19 * * 1-5"
+    - cron: "42 20 * * 1-5"
+    # Sunday: the week in review, and what is coming. 11am New York.
     - cron: "17 15 * * 0"
+    - cron: "17 16 * * 0"
+
     # ONE WEEKEND SCAN, because bitcoin does not stop when the exchanges do. Equities are
     # unchanged from Friday and simply report no move.
     - cron: "17 15 * * 6"
   workflow_dispatch:
     inputs:
       mode:
-        description: "check | accounts | daily | weekahead | weekly | probe"
+        description: "check | accounts | preopen | preclose | weekahead | weekly | probe"
         type: choice
-        options: ["check", "accounts", "daily", "weekahead", "weekly", "probe"]
+        options: ["check", "accounts", "preopen", "preclose", "weekahead", "weekly", "probe"]
         default: "check"
       dry_run:
         description: "print only — send nothing, spend nothing"
@@ -77,22 +98,23 @@ jobs:
 
       # anthropic ONLY. Everything else is the standard library, which is why this job
       # takes seconds rather than minutes and why a broken wheel cannot stop a price alert.
+      # anthropic for the summary, tzdata so zoneinfo can resolve America/New_York even
+      # on an image whose system tz database is missing — the letter slots are defined in
+      # market time and an unresolvable zone would stop every letter, not just shift one.
       - name: Install
-        run: pip install --quiet anthropic
+        run: pip install --quiet anthropic tzdata
 
       - name: Which mode
         id: mode
         run: |
+          # ONLY ONE BRANCH LEFT, AND THAT IS THE POINT. A schedule used to name the
+          # letter it sent, which meant the same fact — when a letter is due — lived in a
+          # cron string here and in a table in alerter.py, and the two could disagree with
+          # nothing failing. Now every scheduled run is a poll, and the poll decides.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "mode=${{ inputs.mode }}" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.schedule }}" = "35 21 * * 1-5" ]; then
-            echo "mode=daily" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "10 * * * *" ]; then
             echo "mode=accounts" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.schedule }}" = "17 12 * * 1" ]; then
-            echo "mode=weekahead" >> "$GITHUB_OUTPUT"
-          elif [ "${{ github.event.schedule }}" = "17 15 * * 0" ]; then
-            echo "mode=weekly" >> "$GITHUB_OUTPUT"
           else
             echo "mode=check" >> "$GITHUB_OUTPUT"
           fi

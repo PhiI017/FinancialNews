@@ -4,8 +4,9 @@ alerter.py — the entry point. Four modes, one state file.
     python alerter.py --setup     what is configured, what is missing, and a safe topic
     python alerter.py --check     urgent scan. Arithmetic only. Cheap, run it often
     python alerter.py --accounts  the people you trust, pushed to your phone only
-    python alerter.py --daily      note after the close
-    python alerter.py --weekahead  Monday: what is coming this week
+    python alerter.py --preopen    weekday 8:45am New York: what today holds
+    python alerter.py --preclose   weekday 3:40pm New York: where the day landed
+    python alerter.py --weekahead  Monday morning: what is coming this week
     python alerter.py --weekly     Sunday: the week in review, and next week
     python alerter.py --dry-run   with any of the above: print, send nothing, spend nothing
 
@@ -27,7 +28,9 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
+from datetime import time as wall_clock
 import time
+from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -283,30 +286,54 @@ def failures_line(facts):
     return ("Not retrieved this run: " + "; ".join(out)) if out else ""
 
 
-# ── THE LETTER SLOTS, IN UTC, AND HOW LONG A MISSED ONE STAYS SENDABLE ──────────────
+# ── THE LETTER SLOTS, IN NEW YORK TIME, AND HOW LONG A MISSED ONE STAYS SENDABLE ────
 #
-# Mirrors the crons in alerts.yml. It lives here, beside the check that reads it, rather
-# than only in the workflow, because a number written in two places drifts and only one
-# of the two copies is ever tested.
+# ⚠ NEW YORK, NOT UTC, AND THAT IS THE WHOLE REASON THIS TABLE EXISTS. A letter timed to
+# the trading day has to move when the clocks do. "Before the open" written as a UTC cron
+# is 8:45am in summer and 7:45am in winter, and "before the close" is 3:40pm in summer and
+# 2:40pm — an hour and twenty minutes early, twice a year, silently. Nothing raises; the
+# letter simply stops meaning what its name says. So the schedule fires candidates on both
+# sides of the boundary and THIS decides, which needs no seasonal edit and cannot drift.
 #
-#   mode         weekday (None = Mon-Fri)   hour  minute   grace, hours
+# The weekday field is None for Monday-to-Friday, or a tuple of Python weekdays. Monday
+# takes the week-ahead letter INSTEAD of the pre-open one, at the same time of day, because
+# two letters four minutes apart is how a reader learns to archive both unread.
+#
+# GRACE IS SHORT FOR THE TWO DAY LETTERS AND LONG FOR THE TWO WEEK ONES, because being
+# late costs them different amounts. A pre-open note delivered at eleven is still a
+# morning note; delivered at four in the afternoon it is a lie. A pre-close note that
+# slips past the bell simply becomes the after-the-close note this pair replaced.
+#
+#   mode         weekday         hour  minute   grace, hours
 LETTER_SLOTS = (
-    ("weekahead", 0,    12, 17, 12),
-    ("weekly",    6,    15, 17, 12),
-    ("daily",     None, 21, 35, 12),
+    ("weekahead",  (0,),           8, 45,  6),
+    ("preopen",    (1, 2, 3, 4),   8, 45,  3),
+    ("preclose",   None,          15, 40,  4),
+    ("weekly",     (6,),          11,  0, 12),
 )
+
+MARKET_TZ = ZoneInfo("America/New_York")
+
+
+def _runs_on(weekday, day):
+    return (day < 5) if weekday is None else (day in weekday)
 
 
 def _last_slot(weekday, hour, minute, now):
-    """The most recent time this slot came round at or before `now`, or None."""
-    t = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-    if t > now:
-        t -= timedelta(days=1)
-    for _ in range(8):
-        runs_today = (t.weekday() < 5) if weekday is None else (t.weekday() == weekday)
-        if runs_today:
+    """The most recent time this slot came round at or before `now`, or None.
+
+    THE DAY IS STEPPED AS A DATE AND THE TIME RE-ATTACHED, never by subtracting 24 hours
+    from an aware datetime. Absolute arithmetic across a clock change lands on 7:45 or
+    9:45 rather than 8:45, so the one function written to survive the boundary would be
+    the one thing that moved.
+    """
+    local = now.astimezone(MARKET_TZ)
+    day = local.date()
+    for _ in range(9):
+        t = datetime.combine(day, wall_clock(hour, minute), tzinfo=MARKET_TZ)
+        if t <= local and _runs_on(weekday, t.weekday()):
             return t
-        t -= timedelta(days=1)
+        day -= timedelta(days=1)
     return None
 
 
@@ -323,17 +350,22 @@ def overdue_letter(state, now=None):
 
     Scheduled workflows are best-effort on this plan, and the documentation says so. The
     half-hourly urgent scan losing four fires in five is tolerable — it is a poll, and the
-    next one catches the same drawdown. A LETTER IS NOT A POLL. If the 21:35 slot is the
-    only thing that sends the daily note and that slot is dropped, the note is not late,
-    it never exists, and the reader just does not get an email that day.
+    next one catches the same drawdown. A LETTER IS NOT A POLL. If one slot is the only
+    thing that sends the pre-open note and that slot is dropped, the note is not late, it
+    never exists, and the reader just does not get an email that morning.
 
-    ── SO THE SEND IS TIED TO THE SLOT, NOT TO THE FIRE ─────────────────────────────
+    ── SO NO CRON SENDS A LETTER. THIS DOES ────────────────────────────────────────
 
-    Any run that is only a poll — the half-hourly price check, the hourly accounts sweep —
-    asks first whether a letter's slot has passed with nothing sent, and if so sends that
-    letter instead of doing what it was called for. Losing one poll costs nothing; the
-    next one sees the same drawdown. The hourly sweep runs round the clock, so a dropped
-    21:35 slot has roughly eleven more chances inside its grace window rather than two.
+    Every run that is only a poll — the price check, the hourly accounts sweep — asks first
+    whether a letter's slot has passed with nothing sent, and if so sends that letter
+    instead of doing what it was called for. Losing one poll costs nothing; the next one
+    sees the same drawdown. The sweep runs round the clock, so a slot has many more chances
+    inside its grace window than the single fire that used to carry it.
+
+    That also removes the seasonal bug for free. The schedule fires candidates an hour
+    apart on both sides of the daylight-saving boundary; the early one finds the slot has
+    not arrived and does nothing, the right one sends, the late one finds it already sent.
+    One tested function decides, and the crons never need a seasonal edit.
 
     ── AND `at` IS THE DAY THE LETTER IS ABOUT, NOT THE DAY THE PROCESS RAN ─────────
 
@@ -361,14 +393,15 @@ def overdue_letter(state, now=None):
 def run(mode, dry_run=False, slot=None):
     wl = load_watchlist()
     state = load_state()
-    wants_note = mode in ("daily", "weekahead", "weekly")
+    wants_note = mode in ("preopen", "preclose", "weekahead", "weekly")
     facts = gather(wl, want_news=wants_note, want_macro=True)
     verdict, state = evaluate(facts, wl, state)
 
     # HOW FAR AHEAD EACH LETTER LOOKS. The Monday letter is about the week in front of
-    # it; Sunday's covers the week that starts tomorrow; the daily one only flags
-    # something landing within a couple of days, or it becomes a weekly letter every day.
-    window = {"daily": 2, "weekahead": 8, "weekly": 9}.get(mode, 0)
+    # it; Sunday's covers the week that starts tomorrow. The pre-open note looks at today,
+    # because that is the day it is about to happen in; the pre-close note looks one day
+    # further, since what it can still usefully say at 3:40pm is what lands tomorrow.
+    window = {"preopen": 1, "preclose": 2, "weekahead": 8, "weekly": 9}.get(mode, 0)
     if window:
         facts["catalysts_text"], facts["catalysts_warning"] = \
             calendar_events.render(within_days=window)
@@ -534,7 +567,7 @@ if __name__ == "__main__":
         import pricefinder
         pricefinder.probe()
         sys.exit(0)
-    for flag in ("check", "daily", "weekahead", "weekly"):
+    for flag in ("check", "preopen", "preclose", "weekahead", "weekly"):
         if f"--{flag}" in argv:
             sys.exit(run(flag, dry_run=dry))
     print(__doc__.split("──")[0].rstrip())

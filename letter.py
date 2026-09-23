@@ -132,8 +132,9 @@ def subject(mode, facts, verdict):
 
     "Daily market note" told you nothing you did not already know from the schedule.
     """
-    names = {"daily": "Daily note", "weekahead": "The week ahead",
-             "weekly": "Week in review", "check": "Market alert"}
+    names = {"preopen": "Before the open", "preclose": "Before the close",
+             "weekahead": "The week ahead", "weekly": "Week in review",
+             "check": "Market alert"}
     base = names.get(mode, "Market note")
     idx = facts.get("index") or {}
     if verdict and verdict.get("fired_levels"):

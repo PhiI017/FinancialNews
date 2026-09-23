@@ -1156,85 +1156,236 @@ def the_subject_line_carries_the_number():
 
 
 @test
-def a_dropped_letter_slot_is_recovered_once_and_never_steals_the_next_day():
+def a_dropped_letter_slot_is_recovered_once_and_recorded_against_the_right_day():
     """
-    THE RECOVERY MUST NOT CAUSE THE FAILURE IT WAS WRITTEN TO PREVENT.
+    THE RECOVERY MUST NOT BECOME A DOUBLE SEND, and the UTC date is not the letter's date.
 
-    A letter recovered after midnight is recorded against the slot it belongs to, not the
-    day the process happened to run. Record it against the run day instead and Wednesday's
-    history already contains a "daily", so Wednesday's own 21:35 check finds nothing owed
-    and that day's letter is never written — one missing letter traded for every one after.
+    Sunday's letter is due at 11am New York with twelve hours of grace, so a recovery late
+    that evening happens on MONDAY in UTC. Record it against the run's UTC date and the
+    Sunday slot is still unsatisfied — the next hourly sweep, thirty minutes later, sends
+    the whole letter again. Recording it against the slot is what closes that.
     """
     from datetime import datetime, timezone
 
-    tue_2200 = datetime(2026, 9, 22, 22, 0, tzinfo=timezone.utc)
-    mode, slot = alerter.overdue_letter({"history": []}, now=tue_2200)
-    assert (mode, slot) == ("daily", "2026-09-22"), (mode, slot)
+    # 9pm Sunday in New York, which is already Monday in UTC.
+    late = datetime(2026, 6, 22, 1, 0, tzinfo=timezone.utc)
+    assert late.astimezone(alerter.MARKET_TZ).strftime("%a %H:%M") == "Sun 21:00"
 
-    # Recovered at 01:00 Wednesday, recorded against TUESDAY.
-    state = {"history": [{"at": "2026-09-22", "mode": "daily", "sent": {"email": "ok"}}]}
-    wed_0100 = datetime(2026, 9, 23, 1, 0, tzinfo=timezone.utc)
-    assert alerter.overdue_letter(state, now=wed_0100) == (None, None)
+    mode, slot = alerter.overdue_letter({"history": []}, now=late)
+    assert (mode, slot) == ("weekly", "2026-06-21"), (mode, slot)
 
-    # And Wednesday's own slot is still owed.
-    wed_2200 = datetime(2026, 9, 23, 22, 0, tzinfo=timezone.utc)
-    mode, slot = alerter.overdue_letter(state, now=wed_2200)
-    assert (mode, slot) == ("daily", "2026-09-23"), (mode, slot)
+    filed_by_utc_date = {"history": [{"at": "2026-06-22", "mode": "weekly",
+                                      "sent": {"email": "ok"}}]}
+    assert alerter.overdue_letter(filed_by_utc_date, now=late)[0] == "weekly", (
+        "filed under the run's UTC date, the Sunday slot still looks unsent — "
+        "the next sweep would send the letter a second time")
+
+    filed_by_slot = {"history": [{"at": "2026-06-21", "mode": "weekly",
+                                  "sent": {"email": "ok"}}]}
+    assert alerter.overdue_letter(filed_by_slot, now=late) == (None, None)
 
 
 @test
 def a_letter_is_not_owed_before_its_slot_or_long_after_it():
     """
-    A LETTER THAT IS NOT LATE IS NOT OWED, and one that is a day late is not wanted.
+    A LETTER THAT IS NOT LATE IS NOT OWED, and one that is hours late is not wanted.
 
-    The first half is what made 2026-09-23 look broken when it was not: the daily note is
-    due at 21:35 UTC and the question was asked at 15:29. The second half is the grace
-    window — a Tuesday letter delivered at Wednesday lunchtime is about a close two
-    sessions back, and sending it is worse than the silence it replaces.
+    The first half is what made 2026-09-23 look broken when it was not: the note was due
+    that afternoon and the question was asked in the morning. The second is the grace
+    window — a "before the close" note delivered at eight in the evening is about a market
+    that shut four hours ago, and sending it is worse than the silence it replaces.
     """
     from datetime import datetime, timezone
 
-    before = datetime(2026, 9, 23, 15, 29, tzinfo=timezone.utc)
-    assert alerter.overdue_letter({"history": []}, now=before) == (None, None)
+    def ny(y, m, d, hh, mm):
+        return datetime(y, m, d, hh, mm,
+                        tzinfo=alerter.MARKET_TZ).astimezone(timezone.utc)
 
-    stale = datetime(2026, 9, 23, 12, 0, tzinfo=timezone.utc)   # 14h after Tuesday's slot
-    assert alerter.overdue_letter({"history": []}, now=stale) == (None, None)
+    # Tuesday 7am New York: the morning letter is not due for another hour and three
+    # quarters, and yesterday's slots are all long past their grace.
+    assert alerter.overdue_letter({"history": []}, now=ny(2026, 9, 22, 7, 0)) == (None, None)
 
-    # A quiet check writes an empty `sent` and must not count as a letter going out.
-    quiet = {"history": [{"at": "2026-09-22", "mode": "daily", "sent": {}}]}
-    tue_2200 = datetime(2026, 9, 22, 22, 0, tzinfo=timezone.utc)
-    assert alerter.overdue_letter(quiet, now=tue_2200)[0] == "daily"
+    # Tuesday 8pm: the pre-close slot passed four hours and twenty minutes ago.
+    assert alerter.overdue_letter({"history": []}, now=ny(2026, 9, 22, 20, 0)) == (None, None)
+
+    # Twenty minutes after the slot it is owed, and a QUIET CHECK does not count as sent:
+    # `sent` is an empty dict when nothing went out, and an empty dict is not a letter.
+    just_after = ny(2026, 9, 22, 16, 0)
+    assert alerter.overdue_letter({"history": []}, now=just_after)[0] == "preclose"
+    quiet = {"history": [{"at": "2026-09-22", "mode": "preclose", "sent": {}}]}
+    assert alerter.overdue_letter(quiet, now=just_after)[0] == "preclose"
 
 
 @test
-def the_slot_table_still_matches_the_crons_that_fire_it():
+def every_letter_slot_has_a_cron_that_reaches_it_in_both_halves_of_the_year():
     """
-    THE SAME NUMBER IN TWO PLACES DRIFTS, and only one of the copies is ever tested.
+    THE CRONS ARE UTC AND THE LETTERS ARE NEW YORK, so the schedule has to cover a slot
+    that moves an hour twice a year.
 
-    LETTER_SLOTS exists because the recovery has to know when a letter was due, and the
-    workflow is where it is actually scheduled. Change the cron without changing the table
-    and the catch-up starts sending a letter that already went out, or refuses one that
-    never did — with nothing failing either way.
+    Nothing fails when it does not. The pre-close letter would simply start arriving at
+    2:40pm instead of 3:40 every November — an hour and twenty minutes before the bell,
+    with a subject line still saying it is about the close. This walks a summer week and a
+    winter week and asserts that for every slot on every day it runs, some scheduled cron
+    fires between the slot and the end of its grace window.
     """
     import re
+    from datetime import datetime, timedelta, timezone
+
+    PROMPT_MINUTES = 15
+    here = os.path.dirname(os.path.abspath(__file__))
+    text = open(os.path.join(here, ".github", "workflows", "alerts.yml")).read()
+    crons = re.findall(r'- cron: "([^"]+)"', text)
+    assert crons, "no crons found in alerts.yml"
+
+    def field(spec, value):
+        for part in spec.split(","):
+            if part == "*":
+                return True
+            if part.startswith("*/"):
+                if value % int(part[2:]) == 0:
+                    return True
+            elif "-" in part:
+                a, b = part.split("-")
+                if int(a) <= value <= int(b):
+                    return True
+            elif int(part) == value:
+                return True
+        return False
+
+    def fires(cron, t):
+        # Day-of-month is `*` in every cron here, so plain AND is correct; the standard
+        # cron OR between day-of-month and day-of-week only bites when both are restricted.
+        minute, hour, dom, mon, dow = cron.split()
+        assert dom == "*", f"{cron!r} restricts day-of-month; this matcher assumes it does not"
+        return (field(minute, t.minute) and field(hour, t.hour) and field(mon, t.month)
+                and field(dow, (t.weekday() + 1) % 7))
+
+    # A summer Monday and a winter Monday, so both sides of the clock change are walked.
+    for monday in (datetime(2026, 6, 15), datetime(2026, 12, 14)):
+        assert monday.weekday() == 0, monday
+        for offset in range(7):
+            day = (monday + timedelta(days=offset)).date()
+            for mode, weekday, hour, minute, grace in alerter.LETTER_SLOTS:
+                if not alerter._runs_on(weekday, day.weekday()):
+                    continue
+                slot = datetime.combine(day, alerter.wall_clock(hour, minute),
+                                        tzinfo=alerter.MARKET_TZ).astimezone(timezone.utc)
+                # PROMPTLY, NOT MERELY WITHIN THE GRACE WINDOW. The hourly sweep alone
+                # satisfies any slot with an hour of grace, which would make this test
+                # pass while the pre-close letter arrived at ten past four — after the
+                # bell it is named for. Fifteen minutes is the bar.
+                prompt = [c for c in crons
+                          for m in range(PROMPT_MINUTES + 1)
+                          if fires(c, slot + timedelta(minutes=m))]
+                assert prompt, (
+                    f"{mode} is due {hour:02d}:{minute:02d} New York on {day} and no cron "
+                    f"fires within {PROMPT_MINUTES} minutes of "
+                    f"{slot:%Y-%m-%d %H:%M} UTC — it would wait on the hourly sweep")
+                assert grace >= 1, f"{mode} has no recovery window at all"
+
+
+@test
+def the_last_price_scan_of_the_day_happens_after_the_bell_in_both_seasons():
+    """
+    THE RECORD HIGH IS RATCHETED FROM WHATEVER THE LAST SCAN SAW, so if the last scan of
+    the day is before the close, the number every dip trigger is measured against is built
+    from intraday readings that were never closes.
+
+    The session ends at 20:00 UTC in summer and 21:00 in winter. A scan window written for
+    summer is 23 minutes short of the winter bell, and the letter that used to run at
+    21:35 covered that by accident until it was retired. Nothing fails when it is wrong:
+    the triggers simply start firing off a slightly different high.
+    """
+    import re
+    from datetime import datetime, timedelta, timezone
 
     here = os.path.dirname(os.path.abspath(__file__))
     text = open(os.path.join(here, ".github", "workflows", "alerts.yml")).read()
-    pairs = re.findall(r'github\.event\.schedule \}\}" = "([^"]+)".*?\n\s*echo "mode=(\w+)',
-                       text, re.S)
-    assert pairs, "could not read the schedule-to-mode mapping out of alerts.yml"
+    crons = [c for c in re.findall(r'- cron: "([^"]+)"', text) if c.endswith("1-5")]
+    assert crons, "no weekday crons found"
 
-    table = {row[0]: row[1:] for row in alerter.LETTER_SLOTS}
-    seen = []
-    for cron, mode in pairs:
-        if mode not in table:
-            continue
-        minute, hour, _dom, _mon, dow = cron.split()
-        weekday = None if "-" in dow or "," in dow or dow == "*" else (int(dow) - 1) % 7
-        assert table[mode] [:3] == (weekday, int(hour), int(minute)), \
-            f"{mode}: cron says {cron!r}, LETTER_SLOTS says {table[mode][:3]}"
-        seen.append(mode)
-    assert sorted(seen) == sorted(table), f"scheduled {seen}, table has {sorted(table)}"
+    for day, label in ((datetime(2026, 6, 17), "summer"), (datetime(2026, 12, 16), "winter")):
+        close = datetime.combine(day.date(), alerter.wall_clock(16, 0),
+                                 tzinfo=alerter.MARKET_TZ).astimezone(timezone.utc)
+        after = []
+        for cron in crons:
+            minute, hour, _dom, _mon, _dow = cron.split()
+            hours = []
+            for part in hour.split(","):
+                if "-" in part:
+                    a, b = part.split("-")
+                    hours.extend(range(int(a), int(b) + 1))
+                else:
+                    hours.append(int(part))
+            for h in hours:
+                for m in [int(x) for x in minute.split(",") if "-" not in x and "/" not in x]:
+                    t = day.replace(hour=h, minute=m, tzinfo=timezone.utc)
+                    if t >= close:
+                        after.append((cron, f"{h:02d}:{m:02d}"))
+        assert after, (f"in {label} the market closes at {close:%H:%M} UTC and no weekday "
+                       f"cron fires after it — the day's final close is never read")
+
+
+@test
+def the_two_day_letters_keep_market_time_when_the_clocks_move():
+    """
+    A UTC SLOT IS THE BUG THIS TABLE EXISTS TO PREVENT, so assert the times in New York.
+
+    Written as crons these would be 8:45 and 3:40pm in summer and 7:45 and 2:40 in winter.
+    The second pair is not a small drift: a note called "before the close" would go out an
+    hour and twenty minutes early, describing a market with a session still to run.
+    """
+    from datetime import datetime, timezone
+
+    for when in (datetime(2026, 6, 16, 23, 0, tzinfo=timezone.utc),     # summer, EDT
+                 datetime(2026, 12, 15, 23, 0, tzinfo=timezone.utc)):   # winter, EST
+        for mode, weekday, hour, minute, _grace in alerter.LETTER_SLOTS:
+            slot = alerter._last_slot(weekday, hour, minute, when)
+            assert (slot.hour, slot.minute) == (hour, minute), (mode, when, slot)
+            assert slot.tzinfo is alerter.MARKET_TZ
+
+    # And the pre-close slot really is inside the trading session, not before or after it.
+    preclose = dict((r[0], r) for r in alerter.LETTER_SLOTS)["preclose"]
+    assert (9, 30) < (preclose[2], preclose[3]) < (16, 0), preclose
+
+
+@test
+def monday_morning_brings_the_week_ahead_and_not_a_second_letter():
+    """
+    TWO LETTERS FOUR MINUTES APART IS HOW A READER LEARNS TO ARCHIVE BOTH UNREAD.
+
+    The week-ahead note takes Monday's morning slot instead of the pre-open one, at the
+    same time of day, so the morning letter always lands at 8:45 and there is never a
+    Monday with two of them.
+    """
+    from datetime import datetime, timezone
+
+    mon = datetime(2026, 6, 15, 13, 0, tzinfo=timezone.utc)     # 9am New York, a Monday
+    assert alerter.overdue_letter({"history": []}, now=mon)[0] == "weekahead"
+
+    sent = {"history": [{"at": "2026-06-15", "mode": "weekahead", "sent": {"email": "ok"}}]}
+    assert alerter.overdue_letter(sent, now=mon) == (None, None)
+
+    tue = datetime(2026, 6, 16, 13, 0, tzinfo=timezone.utc)
+    assert alerter.overdue_letter({"history": []}, now=tue)[0] == "preopen"
+
+
+@test
+def the_retired_daily_letter_is_gone_from_every_file_that_named_it():
+    """
+    AFTER DELETING SOMETHING, GREP FOR THE OLD NAME — the corollary this project keeps
+    re-learning. A leftover "daily" in the mode list would send a letter with no slot, and
+    one in the summariser's brief would tell the model to write the letter that was
+    replaced.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    for name in ("alerter.py", "letter.py", ".github/workflows/alerts.yml"):
+        text = open(os.path.join(here, name)).read()
+        assert '"daily"' not in text and "--daily" not in text, f"{name} still names the daily mode"
+    brief = open(os.path.join(here, "summarize.py")).read()
+    assert "\nDAILY —" not in brief, "the summariser is still briefed on the daily letter"
+    for kind in ("PREOPEN", "PRECLOSE", "WEEKAHEAD", "WEEKLY"):
+        assert f"\n{kind} " in brief, f"the summariser has no brief for the {kind} letter"
 
 
 @test
