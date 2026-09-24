@@ -14,11 +14,11 @@
       "name": "Meta Platforms"
     },
     {
-      "symbol": "CELH",
+      "symbol": "ADBE",
       "kind": "stock",
       "status": "held",
-      "note": "small cap, expect noise — see move_pct",
-      "name": "Celsius Holdings"
+      "note": "",
+      "name": "Adobe"
     },
     {
       "symbol": "TTWO",
@@ -40,6 +40,13 @@
       "status": "held",
       "note": "trades weekends; see the weekend note in triggers.py",
       "name": "Bitcoin"
+    },
+    {
+      "symbol": "CELH",
+      "kind": "stock",
+      "status": "watching",
+      "note": "small cap, expect noise — see move_pct. Moved from held to watching on 2026-09-24; the 8% threshold stays because the reason for it is the volatility, not the ownership.",
+      "name": "Celsius Holdings"
     },
     {
       "symbol": "SCHG",
