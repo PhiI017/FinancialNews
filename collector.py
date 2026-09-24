@@ -76,6 +76,7 @@ ASSET_CLASSES = ("stocks", "etf")
 # is at the same address today — so there is no window to chase and no run that can lose
 # anything. Contrast the news layer, which is forward-only and where a missed day is gone.
 DIVIDEND_YEARS = 20
+DIVIDEND_PAUSE = 5
 
 
 def universe():
@@ -343,6 +344,43 @@ def collect_news(tickers=None, limit=6):
     return states
 
 
+# ── WHAT THE PROBE ANSWERED, 2026-09-24, AND IT CORRECTS A TWO-WEEK-OLD VERDICT ────
+#
+# The private repo has recorded the Nasdaq ETF dividend route as `unparsed` — 200 OK,
+# our parser did not recognise it — since 2026-09-08, and the fix was assumed to be a
+# better parser. It is not. The body says so in a field nobody had read:
+#
+#     "dividends": {"asOf": null, "headers": null, "rows": null},
+#     "message": "Dividend History for Non-Nasdaq symbols is not available"
+#
+# VOO is NYSE Arca-listed. THE SOURCE DOES NOT CARRY THIS, and it says which and why.
+# `unparsed` means the failure is OURS; this one never was. That distinction is the whole
+# point of having the state, and getting it backwards sent two weeks of effort at a
+# parser for a document containing nothing to parse.
+#
+# Asking the wrong asset class is a different failure again and also arrives as HTTP 200:
+# `{"data":null,"status":{"rCode":400,...,"Symbol not exists."}}`. Three shapes, one
+# status code, and only one of them is a reason to write code.
+NASDAQ_NOT_COVERED = "not available"
+
+
+def nasdaq_dividend_state(body):
+    """`ok` | `not_covered` | `wrong_class` | `unparsed` — read the reply's own words."""
+    try:
+        blob = json.loads(body)
+    except (TypeError, ValueError):
+        return "unparsed"
+    message = (blob.get("message") or "")
+    if (blob.get("status") or {}).get("rCode") == 400:
+        return "wrong_class"
+    rows = ((blob.get("data") or {}).get("dividends") or {}).get("rows")
+    if rows:
+        return "ok"
+    if NASDAQ_NOT_COVERED in message.lower():
+        return "not_covered"
+    return "unparsed"
+
+
 def probe_dividends(tickers=None):
     """
     PRINT THE BODY. Fetch nothing else, parse nothing, decide nothing.
@@ -367,7 +405,8 @@ def probe_dividends(tickers=None):
         for klass in ASSET_CLASSES:
             url = NASDAQ_DIVIDENDS.format(ticker=t, klass=klass)
             body, state = sources._get(url)
-            print(f"\n===== {t} / {klass} -> {state} =====")
+            verdict = nasdaq_dividend_state(body) if state == "ok" else state
+            print(f"\n===== {t} / {klass} -> {state} / {verdict} =====")
             if state != "ok":
                 continue
             print(f"  {len(body)} bytes")
@@ -401,6 +440,12 @@ def collect_dividends(tickers=None, years=DIVIDEND_YEARS):
     rows, states = [], {}
     pauses = total = 0
     for i, t in enumerate(tickers, 1):
+        # A BEAT BETWEEN REQUESTS, because this host throttled a five-name sweep on the
+        # first attempt and the whole job is four funds — SPY, VOO, VTI and VXUS are the
+        # only holdings whose dividends EDGAR cannot supply. Twenty seconds of politeness
+        # for the entire collection is not a cost worth optimising away.
+        if i > 1:
+            time.sleep(DIVIDEND_PAUSE)
         got, state = sources.dividend_history(t, years=years)
         retry, pauses = _wait_out_throttle(state, pauses)
         if retry:

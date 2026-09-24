@@ -1547,6 +1547,49 @@ def the_backfillable_half_is_not_folded_into_the_nightly_run():
 
 
 
+@test
+def a_source_that_says_it_has_no_data_is_not_a_parser_we_have_not_written():
+    """
+    TWO WEEKS WERE AIMED AT A PARSER FOR A DOCUMENT WITH NOTHING IN IT.
+
+    The private repo recorded the Nasdaq ETF dividend route as `unparsed` on 2026-09-08 —
+    200 OK, our parser did not recognise it — and the fix was assumed to be a better
+    parser. The body, printed from a runner on 2026-09-24, says otherwise in a field
+    nobody had read:
+
+        "dividends": {"asOf": null, "headers": null, "rows": null},
+        "message":   "Dividend History for Non-Nasdaq symbols is not available"
+
+    VOO is NYSE Arca-listed. `unparsed` means the failure is OURS and this one never was.
+    Getting that backwards is the most expensive mistake this state can make, because it
+    sends work at code instead of at finding another source.
+
+    Asking the wrong asset class is a THIRD shape and also arrives as HTTP 200, with a 400
+    buried in the status. One status code, three meanings, and only one of them is a bug.
+    """
+    import collector
+
+    not_covered = ('{"data":{"dividends":{"rows":null}},'
+                   '"message":"Dividend History for Non-Nasdaq symbols is not available",'
+                   '"status":{"rCode":200}}')
+    assert collector.nasdaq_dividend_state(not_covered) == "not_covered", (
+        "a source saying it does not carry this is being blamed on our parser")
+
+    wrong_class = '{"data":null,"status":{"rCode":400},"message":null}'
+    assert collector.nasdaq_dividend_state(wrong_class) == "wrong_class"
+
+    real = '{"data":{"dividends":{"rows":[{"amount":"$0.27"}]}},"status":{"rCode":200}}'
+    assert collector.nasdaq_dividend_state(real) == "ok"
+
+    # AND A GENUINELY UNRECOGNISED BODY STAYS `unparsed`. If everything became
+    # `not_covered` the state would have stopped meaning anything.
+    assert collector.nasdaq_dividend_state("not json at all") == "unparsed"
+    assert collector.nasdaq_dividend_state(
+        '{"data":{"dividends":{"rows":null}},"message":"","status":{"rCode":200}}'
+    ) == "unparsed"
+
+
+
 def main():
     passed, failed = 0, []
     for fn in TESTS:
