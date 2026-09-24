@@ -1424,6 +1424,129 @@ def every_mode_the_workflow_selects_is_a_cron_it_actually_schedules():
 
 
 
+@test
+def a_fund_with_no_dividend_block_is_not_a_fund_that_pays_nothing():
+    """
+    THE BIAS THIS ROUTE EXISTS TO REMOVE, RE-CREATED ONE LEVEL DOWN.
+
+    The stocks race credits income from EDGAR `us-gaap` facts and a fund files none, so
+    two of its arms were walked on PRICE return while the rest got TOTAL return —
+    $2,300,855 to the others and zero to those two. Fixing that with a fetcher that
+    returns an empty list when the response carries no dividend block would put the same
+    hole back: "this fund pays nothing" and "I did not recognise the answer" would be the
+    same row, and the second one is ours.
+
+    So `no_events` is a state. The parse is also checked for double-counting, because
+    Yahoo repeats an ex-date across a regular and a special distribution and two rows on
+    one date credit the holder twice.
+    """
+    import json as _json
+
+    real = sources._get
+    try:
+        def envelope(events):
+            body = {"chart": {"result": [{"meta": {"symbol": "VOO"}}]}}
+            if events is not None:
+                body["chart"]["result"][0]["events"] = {"dividends": events}
+            return _json.dumps(body)
+
+        # 1735689600 = 2025-01-01, 1743465600 = 2025-04-01 (UTC)
+        sources._get = lambda *a, **kw: (envelope({
+            "1735689600": {"amount": 1.5378, "date": 1735689600},
+            "1743465600": {"amount": 1.8103, "date": 1743465600},
+        }), "ok")
+        rows, state = sources.dividend_history("VOO")
+        assert state == "ok", state
+        assert rows == [("2025-01-01", 1.5378), ("2025-04-01", 1.8103)], rows
+
+        # The block is absent — ours to notice, never "it pays nothing".
+        sources._get = lambda *a, **kw: (envelope(None), "ok")
+        rows, state = sources.dividend_history("VOO")
+        assert rows is None and state == "no_events", (rows, state)
+
+        # The block is there and unusable — also ours, and a different word.
+        sources._get = lambda *a, **kw: (envelope({"1": {"nope": 1}}), "ok")
+        rows, state = sources.dividend_history("VOO")
+        assert rows is None and state == "unparsed", (rows, state)
+
+        # TWO PAYMENTS ON ONE EX-DATE MUST NOT BOTH LAND. A regular and a special
+        # distribution share a date in Yahoo's feed and would double-credit the holder.
+        sources._get = lambda *a, **kw: (envelope({
+            "a": {"amount": 1.50, "date": 1735689600},
+            "b": {"amount": 0.25, "date": 1735689600},
+        }), "ok")
+        rows, state = sources.dividend_history("VOO")
+        assert len(rows) == 1 and rows[0][0] == "2025-01-01", rows
+
+        # A transport failure is passed through, not turned into "no dividends".
+        sources._get = lambda *a, **kw: (None, "http_429")
+        assert sources.dividend_history("VOO") == (None, "http_429")
+    finally:
+        sources._get = real
+
+
+@test
+def every_collected_file_declares_its_own_unique_key():
+    """
+    A GUESSED KEY DUPLICATES ROWS SILENTLY, AND THIS ONE WOULD HAVE CREDITED CASH TWICE.
+
+    `_key_len` was `2 if header is PRICE_HEADER else 3` — right for the two files that
+    existed, wrong for the first new one wanting a two-column key. `dividends.csv` is
+    keyed on (ticker, ex_date); at three columns it would have deduped on the AMOUNT, so a
+    corrected distribution arrives as a second row for the same date rather than being
+    ignored, and the holder is paid both.
+
+    Ninth instance of this repository's hand-written-list shape. The fix is that an
+    undeclared header is REFUSED rather than defaulted.
+    """
+    import collector
+
+    assert collector._key_len(collector.PRICE_HEADER) == 2
+    assert collector._key_len(collector.NEWS_HEADER) == 3
+    assert collector._key_len(collector.DIVIDEND_HEADER) == 2, (
+        "dividends keyed on more than (ticker, ex_date) double-credits a correction")
+
+    try:
+        collector._key_len(["something", "new"])
+    except SystemExit as e:
+        assert "KEY_LEN" in str(e), str(e)
+    else:
+        raise AssertionError("an undeclared header was given a default key length")
+
+    # And the merge must actually USE it: same ticker and date, different amount, one row.
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, "dividends.csv")
+        collector._merge(path, collector.DIVIDEND_HEADER, [["VOO", "2025-01-01", "1.5", "yahoo"]])
+        added, kept = collector._merge(path, collector.DIVIDEND_HEADER,
+                                       [["VOO", "2025-01-01", "9.9", "yahoo"]])
+        assert added == 0 and kept == 1, (added, kept)
+
+
+@test
+def the_backfillable_half_is_not_folded_into_the_nightly_run():
+    """
+    PRICES AND HEADLINES ARE FORWARD-ONLY; DISTRIBUTIONS ARE NOT.
+
+    A headline nobody fetched on the day is gone. A distribution from 2019 is at the same
+    address today, so it is asked for in full every time and needs no window, no nightly
+    schedule and no flush-or-lose. Folding it into "no flags" would turn a 20-minute
+    nightly job into an hour for data that does not expire — and the cost would be paid on
+    the one job whose lateness actually costs something.
+    """
+    import collector
+    import inspect
+
+    src = inspect.getsource(collector)
+    tail = src[src.index('if __name__ == "__main__":'):]
+    assert 'want_dividends = "--dividends" in flags' in tail, (
+        "dividends are no longer opt-in")
+    assert "or not flags" not in tail.split("want_dividends")[1].split("\n")[0], (
+        "dividends joined the default run, which is the forward-only half")
+    assert collector.DIVIDEND_YEARS >= 10, collector.DIVIDEND_YEARS
+
+
+
 def main():
     passed, failed = 0, []
     for fn in TESTS:

@@ -31,9 +31,9 @@ on:
   workflow_dispatch:
     inputs:
       what:
-        description: "prices | news | both"
+        description: "prices | news | both | dividends"
         type: choice
-        options: ["both", "prices", "news"]
+        options: ["both", "prices", "news", "dividends"]
         default: "both"
       days:
         description: "How many days back to ask for (10 covers a late close)"
@@ -72,9 +72,13 @@ jobs:
           # so a wrong assumption costs an hour to discover and an hour to re-test. Five
           # names exercise every step: fetch, parse, merge, write, commit.
           case "${{ inputs.what || 'both' }}" in
-            prices) python collector.py --prices ${{ inputs.tickers }} ;;
-            news)   python collector.py --news ${{ inputs.tickers }} ;;
-            *)      python collector.py ${{ inputs.tickers }} ;;
+            prices)    python collector.py --prices ${{ inputs.tickers }} ;;
+            news)      python collector.py --news ${{ inputs.tickers }} ;;
+            # NOT ON THE SCHEDULE, AND THAT IS THE POINT. Distributions are backfillable
+            # — the 2019 one is at the same address today — so this is dispatched when it
+            # is wanted rather than paid for nightly alongside the forward-only half.
+            dividends) python collector.py --dividends ${{ inputs.tickers }} ;;
+            *)         python collector.py ${{ inputs.tickers }} ;;
           esac
 
       - name: Commit what was collected

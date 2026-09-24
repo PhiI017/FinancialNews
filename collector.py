@@ -54,6 +54,7 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "marketdata")
 UNIVERSE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "universe.txt")
 
 PRICE_HEADER = ["ticker", "date", "open", "close", "volume", "source"]
+DIVIDEND_HEADER = ["ticker", "ex_date", "amount", "source"]
 NEWS_HEADER = ["published_at", "ticker", "headline", "source",
                "score", "scored_at", "fetched_at"]
 
@@ -69,6 +70,11 @@ NASDAQ_HISTORICAL = ("https://api.nasdaq.com/api/quote/{ticker}/historical"
 # wrong one returns a clean 200 with no rows, which reads exactly like a delisted name —
 # so both are tried before a ticker is called empty.
 ASSET_CLASSES = ("stocks", "etf")
+
+# Twenty years, asked for in full on every run. Distributions are DURABLE — the 2019 one
+# is at the same address today — so there is no window to chase and no run that can lose
+# anything. Contrast the news layer, which is forward-only and where a missed day is gone.
+DIVIDEND_YEARS = 20
 
 
 def universe():
@@ -151,8 +157,30 @@ def _read_csv(path, header):
         return {tuple(r[:_key_len(header)]): r for r in rdr if r}
 
 
+# ── THE UNIQUE KEY PER FILE, DECLARED BESIDE THE HEADER RATHER THAN DEFAULTED ──────
+#
+# `_key_len` used to be `2 if header is PRICE_HEADER else 3`, which is correct for the two
+# files that existed and wrong for the first new one that wants a two-column key. Adding
+# `dividends.csv` was that file: keyed on three columns it would have deduped on the
+# AMOUNT, so a corrected distribution would arrive as a SECOND row for the same ex-date
+# and the holder would be credited twice. Nothing would have raised.
+#
+# Ninth instance of this repo's hand-written-list shape, and the cheapest one to close: an
+# unknown header is refused rather than given a plausible default.
+KEY_LEN = {
+    tuple(PRICE_HEADER): 2,        # ticker, date
+    tuple(NEWS_HEADER): 3,         # published_at, ticker, headline
+    tuple(DIVIDEND_HEADER): 2,     # ticker, ex_date — NOT the amount
+}
+
+
 def _key_len(header):
-    return 2 if header is PRICE_HEADER else 3
+    try:
+        return KEY_LEN[tuple(header)]
+    except KeyError:
+        raise SystemExit(
+            f"no unique key declared for a file with columns {list(header)}. Add one to "
+            f"KEY_LEN — a guessed key silently duplicates rows or silently drops them.")
 
 
 def _merge(path, header, rows):
@@ -189,7 +217,8 @@ def _sort_key(header):
     writes churns its entire history on the first export. Matching it now costs nothing;
     matching it after the file has a year in it rewrites the year.
 
-    News already dedupes and sorts on the same tuple, so it needs no swap.
+    News already dedupes and sorts on the same tuple, so it needs no swap, and neither
+    does `dividends.csv` — (ticker, ex_date) is both its key and the order a reader wants.
     """
     if header is PRICE_HEADER:
         return lambda k: (k[1], k[0])
@@ -313,6 +342,52 @@ def collect_news(tickers=None, limit=6):
     return states
 
 
+def collect_dividends(tickers=None, years=DIVIDEND_YEARS):
+    """
+    Cash distributions per share, the half of total return an ETF's filings never carry.
+
+    ── THIS IS A BIAS INSIDE A LIVE RACE, NOT A MISSING NICETY ──────────────────────
+
+    The stocks race credits income from EDGAR `us-gaap` facts. A fund files none, so two
+    of its arms have been walked on PRICE RETURN while the rest get TOTAL RETURN —
+    $2,300,855 of income to the others and zero to those two, measured 2026-09-24.
+
+    ── BACKFILLABLE, SO IT IS COLLECTED DIFFERENTLY TO THE NEWS LAYER ──────────────
+
+    A distribution announced in 2019 is still at the same address today, which is the same
+    property that let the congressional fetcher discard its PDFs. So this asks for TWENTY
+    YEARS every time and lets the merge drop what it already holds, rather than chasing a
+    window like `collect_prices` does. It is also why it does NOT need to run nightly: a
+    missed day costs nothing and a missed HEADLINE cannot be recovered at all.
+
+    THE STATES ARE REPORTED PER TICKER AND `no_events` IS NOT ZERO. A fund that pays
+    nothing and a response with no dividend block are different claims; collapsing them
+    re-creates the exact bias this function removes, one level further down.
+    """
+    tickers = tickers or universe()
+    rows, states = [], {}
+    pauses = total = 0
+    for i, t in enumerate(tickers, 1):
+        got, state = sources.dividend_history(t, years=years)
+        retry, pauses = _wait_out_throttle(state, pauses)
+        if retry:
+            got, state = sources.dividend_history(t, years=years)
+        states[state] = states.get(state, 0) + 1
+        if state != "ok":
+            print(f"  {t}: {state}")
+        else:
+            for when, amount in got:
+                rows.append([t, when, f"{amount:.6f}", "yahoo"])
+        if i % FLUSH_EVERY == 0 or i == len(tickers):
+            added, _kept = _merge(os.path.join(DATA, "dividends.csv"),
+                                  DIVIDEND_HEADER, rows)
+            total += added
+            rows = []
+            print(f"  ...{i}/{len(tickers)}, {total} new payments so far")
+    print(f"dividends.csv: +{total} new; states {states}")
+    return states
+
+
 def _published_day(raw):
     """
     'Mon, 22 Sep 2026 14:03:00 GMT' -> '2026-09-22'. None when it cannot be read.
@@ -340,7 +415,14 @@ if __name__ == "__main__":
     # "names present" as "do prices", so `--news AAPL` silently collected prices too.
     want_prices = "--prices" in flags or not flags
     want_news = "--news" in flags or not flags
+    # DIVIDENDS ARE OPT-IN AND NOT PART OF "no flags". They are backfillable and slow —
+    # twenty years for every name — while prices and headlines are the forward-only half
+    # that has to run every night. Folding them into the default would turn a 20-minute
+    # nightly job into an hour for data that does not expire.
+    want_dividends = "--dividends" in flags
     if want_prices:
         collect_prices(names)
     if want_news:
         collect_news(names)
+    if want_dividends:
+        collect_dividends(names)

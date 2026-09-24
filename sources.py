@@ -271,6 +271,62 @@ def _yahoo_index_history(symbol="^GSPC", years=40):
     return rows, "ok"
 
 
+def dividend_history(symbol, years=20):
+    """
+    ([(ex_date, amount_per_share)], state) — cash distributions, oldest first.
+
+    ── WHY THIS EXISTS, AND IT IS A BIAS INSIDE A LIVE RACE ─────────────────────────
+
+    The stocks race credits dividend income from EDGAR's `us-gaap` facts. AN ETF FILES
+    NONE, so `ctl_index` and `sleeve_global_6040` have been walked on PRICE RETURN while
+    every stock-holding arm gets TOTAL RETURN — measured 2026-09-24 at $2,300,855 of
+    income to the others and zero to those two. `doctor.py` has failed on it since
+    2026-09-08 and could not fix it: the ETF dividend route it suggested answers 200 and
+    does not parse, and the host is unreachable from the machine the code is written on.
+
+    THIS IS A DIFFERENT ROUTE AND NOT A NEW PARSER. `events=div` rides in the SAME chart
+    envelope that `_yahoo_index_history` already reads successfully every day from this
+    runner — one more key on a `result` object this repository has been parsing for weeks,
+    rather than a format nobody has looked at.
+
+    `no_events` IS A STATE AND NOT AN EMPTY LIST. A fund that paid nothing and a response
+    that carries no dividend block are different claims, and the second one silently
+    becomes "this fund pays no distributions" if they share a return value — which is
+    exactly the bias this function exists to remove, re-created one level down.
+    """
+    url = YAHOO_CHART.format(symbol=urllib.parse.quote(symbol))
+    url += f"?interval=1d&range={max(1, int(years))}y&events=div"
+    body, state = _get(url)
+    if state != "ok":
+        return None, state
+    try:
+        result = json.loads(body)["chart"]["result"][0]
+    except Exception:
+        return None, "unparsed"
+    events = (result.get("events") or {}).get("dividends")
+    if events is None:
+        return None, "no_events"
+
+    rows = []
+    for item in events.values() if isinstance(events, dict) else events:
+        try:
+            when = time.strftime("%Y-%m-%d", time.gmtime(int(item["date"])))
+            amount = float(item["amount"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if amount > 0:
+            rows.append((when, amount))
+    if not rows:
+        # The block was there and nothing in it was usable — ours, not the source's.
+        return None, "unparsed"
+    # ONE ROW PER EX-DATE, LARGEST WINS. Yahoo occasionally repeats a date across the
+    # regular and a special distribution; two rows would double-credit the holder.
+    best = {}
+    for when, amount in rows:
+        best[when] = max(amount, best.get(when, 0.0))
+    return sorted(best.items()), "ok"
+
+
 def fred_series(series_id, api_key=None, last_n=10):
     """([(date, value)], state) — a FRED series. `no_key` is a state, not a silence."""
     api_key = api_key or os.getenv("FRED_API_KEY")
