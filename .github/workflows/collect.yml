@@ -31,9 +31,9 @@ on:
   workflow_dispatch:
     inputs:
       what:
-        description: "prices | news | both | dividends"
+        description: "prices | news | both | dividends | dividend-probe"
         type: choice
-        options: ["both", "prices", "news", "dividends"]
+        options: ["both", "prices", "news", "dividends", "dividend-probe"]
         default: "both"
       days:
         description: "How many days back to ask for (10 covers a late close)"
@@ -78,6 +78,11 @@ jobs:
             # — the 2019 one is at the same address today — so this is dispatched when it
             # is wanted rather than paid for nightly alongside the forward-only half.
             dividends) python collector.py --dividends ${{ inputs.tickers }} ;;
+            # PRINTS A BODY AND NOTHING ELSE. The route it looks at has been recorded
+            # `unparsed` for weeks in the private repo and could not be fixed there,
+            # because that container cannot reach the host and the bytes were discarded
+            # with the verdict. Look, then write the parser.
+            dividend-probe) python collector.py --probe-dividends ${{ inputs.tickers }} ;;
             *)         python collector.py ${{ inputs.tickers }} ;;
           esac
 

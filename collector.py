@@ -66,6 +66,7 @@ DAILY_WINDOW_DAYS = 10
 
 NASDAQ_HISTORICAL = ("https://api.nasdaq.com/api/quote/{ticker}/historical"
                      "?assetclass={klass}&fromdate={frm}&todate={to}&limit=9999")
+NASDAQ_DIVIDENDS = "https://api.nasdaq.com/api/quote/{ticker}/dividends?assetclass={klass}"
 # A ticker can be a stock or an ETF and the endpoint needs to be told which. Asking the
 # wrong one returns a clean 200 with no rows, which reads exactly like a delisted name —
 # so both are tried before a ticker is called empty.
@@ -342,6 +343,38 @@ def collect_news(tickers=None, limit=6):
     return states
 
 
+def probe_dividends(tickers=None):
+    """
+    PRINT THE BODY. Fetch nothing else, parse nothing, decide nothing.
+
+    ── WHY A COMMAND EXISTS WHOSE ONLY JOB IS TO SHOW BYTES ─────────────────────────
+
+    The private repo's probe has recorded this route as `unparsed` — 200 OK, nothing
+    recognised — since 2026-09-08, and nobody could fix it because nobody could SEE what
+    it was being handed: the host is unreachable from the machine the code is written on
+    and the body was thrown away the instant the state was printed.
+
+    "Writing a parser for a document nobody has looked at is how this repo produces
+    plausible numbers that are wrong." So this looks first. A parser written from a guess
+    about this shape would return [] for the real one, and [] here means "this fund paid
+    nothing", which is the bias the whole exercise exists to remove.
+
+    BOTH ASSET CLASSES, because asking the wrong one returns a clean 200 with no rows and
+    that reads exactly like a fund that has never paid — the same trap `fetch_prices`
+    already walks around.
+    """
+    for t in (tickers or ["VOO", "SPY"]):
+        for klass in ASSET_CLASSES:
+            url = NASDAQ_DIVIDENDS.format(ticker=t, klass=klass)
+            body, state = sources._get(url)
+            print(f"\n===== {t} / {klass} -> {state} =====")
+            if state != "ok":
+                continue
+            print(f"  {len(body)} bytes")
+            print(body[:2400])
+    return {}
+
+
 def collect_dividends(tickers=None, years=DIVIDEND_YEARS):
     """
     Cash distributions per share, the half of total return an ETF's filings never carry.
@@ -420,6 +453,9 @@ if __name__ == "__main__":
     # that has to run every night. Folding them into the default would turn a 20-minute
     # nightly job into an hour for data that does not expire.
     want_dividends = "--dividends" in flags
+    if "--probe-dividends" in flags:
+        probe_dividends(names)
+        raise SystemExit(0)
     if want_prices:
         collect_prices(names)
     if want_news:
