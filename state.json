@@ -280,9 +280,20 @@
       "mode": "check",
       "sent": {},
       "urgency": "important"
+    },
+    {
+      "at": "2026-09-25",
+      "drawdown_pct": -1.22,
+      "fired": [],
+      "mode": "preclose",
+      "sent": {
+        "email": "ok",
+        "ntfy": "http_200"
+      },
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-09-25 18:06:20",
+  "last_run": "2026-09-25 21:28:14",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
