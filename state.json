@@ -299,9 +299,17 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-09-25",
+      "drawdown_pct": -1.22,
+      "fired": [],
+      "mode": "check",
+      "sent": {},
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-09-25 22:46:06",
+  "last_run": "2026-09-25 23:30:11",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
