@@ -528,9 +528,17 @@
         "ntfy": "http_200"
       },
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-09-30",
+      "drawdown_pct": -1.64,
+      "fired": [],
+      "mode": "check",
+      "sent": {},
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-09-30 22:32:37",
+  "last_run": "2026-09-30 23:11:13",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
