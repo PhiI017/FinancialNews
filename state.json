@@ -6,17 +6,6 @@
       "at": "2026-09-22",
       "drawdown_pct": -0.44,
       "fired": [],
-      "mode": "daily",
-      "sent": {
-        "email": "ok",
-        "ntfy": "UnicodeEncodeError"
-      },
-      "urgency": "quiet"
-    },
-    {
-      "at": "2026-09-22",
-      "drawdown_pct": -0.44,
-      "fired": [],
       "mode": "check",
       "sent": {
         "email": "ok",
@@ -535,9 +524,20 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-01",
+      "drawdown_pct": -1.89,
+      "fired": [],
+      "mode": "preclose",
+      "sent": {
+        "email": "ok",
+        "ntfy": "http_200"
+      },
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-10-01 19:04:14",
+  "last_run": "2026-10-01 21:47:00",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
