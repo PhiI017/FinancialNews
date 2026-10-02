@@ -4124,6 +4124,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,ADBE,Samsung reveals Galaxy Tab S12 series preloaded with Adobe Photoshop,seekingalpha/ADBE,,,2026-10-01 01:52:39
 2026-09-30,AES,"US lawmakers, including Sen. Warren, push regulators to block $33B AES buyout: Reuters",seekingalpha/AES,,,2026-10-01 01:52:39
 2026-09-30,AKAM,Akamai: The $11.6 Billion Anthropic Deal Is Worth Far Less - And Potentially Far More - Than It Looks,seekingalpha/AKAM,,,2026-10-01 01:52:39
+2026-09-30,AMD,AMD Stock Crosses $1 Trillion - And The Market Still Underestimates The Dark Horse,seekingalpha/AMD,,,2026-10-02 02:07:53
 2026-09-30,AMD,AMD Stock Crosses $1 Trillion -- And The Market Still Underestimates The Dark Horse,seekingalpha/AMD,,,2026-10-01 01:52:39
 2026-09-30,AMD,"AMD: Expensive, But Growth Is Still Fast Enough To Keep The Bull Case Alive",seekingalpha/AMD,,,2026-10-01 01:52:39
 2026-09-30,AMD,AMD: Lisa Su Proved Me Wrong (Rating Upgrade),seekingalpha/AMD,,,2026-10-01 01:52:39
@@ -4217,6 +4218,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,HPE,Hewlett Packard Enterprise: The Comeback Has A Catch,seekingalpha/HPE,,,2026-10-01 01:52:39
 2026-09-30,HRL,"Hormel Foods Corporation (HRL) Brakebush Brothers, Inc., - M&A Call - Slideshow",seekingalpha/HRL,,,2026-10-01 01:52:39
 2026-09-30,HRL,Hormel Foods Corporation (HRL) M&A Call Transcript,seekingalpha/HRL,,,2026-10-01 01:52:39
+2026-09-30,HRL,Hormel Foods Corporation's Tasty Purchase Doesn't Make The Firm Appetizing Enough,seekingalpha/HRL,,,2026-10-02 02:07:53
 2026-09-30,HRL,Hormel Foods to buy Brakebush Brothers for about $1.055B,seekingalpha/HRL,,,2026-10-01 01:52:39
 2026-09-30,HRL,Hormel expects the Brakebush acquisition to boost profits over time,seekingalpha/HRL,,,2026-10-01 01:52:39
 2026-09-30,HWM,Howmet Aerospace added to Citi's 90-day upside catalyst watch,seekingalpha/HWM,,,2026-10-01 01:52:39
@@ -4228,6 +4230,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,JBL,Jabil outlines FY 2027 revenue of $44.5B and core EPS of $17.55 as AI-related revenue targets $22.1B,seekingalpha/JBL,,,2026-10-01 01:52:39
 2026-09-30,JBL,Jabil retreats 10% amid fiscal 2027 outlook,seekingalpha/JBL,,,2026-10-01 01:52:39
 2026-09-30,JBL,Jabil's Plunge Is A Gift For Value Investor,seekingalpha/JBL,,,2026-10-01 01:52:39
+2026-09-30,JBL,Jabil's Plunge Is A Gift For Value Investors,seekingalpha/JBL,,,2026-10-02 02:07:53
 2026-09-30,JBL,"Jabil's solid Q4, annual outlook fail to impress investors",seekingalpha/JBL,,,2026-10-01 01:52:39
 2026-09-30,JNJ,FDA launches recruitment drive to add members to advisory panels,seekingalpha/JNJ,,,2026-10-01 01:52:39
 2026-09-30,JNJ,"Pharmaceutical industry lobbying group names new CEO, Eric Cantor",seekingalpha/JNJ,,,2026-10-01 01:52:39
@@ -4293,6 +4296,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,ORCL,House Dem questions Big Tech over secret AI data center NDAs: WSJ,seekingalpha/ORCL,,,2026-10-01 01:52:39
 2026-09-30,ORCL,"Meta Is Priced For Success, Oracle For Failure: Take The Other Side Of Both",seekingalpha/ORCL,,,2026-10-01 01:52:39
 2026-09-30,ORCL,Oracle: Buy Now As Others Are Fearful,seekingalpha/ORCL,,,2026-10-01 01:52:39
+2026-09-30,OXY,Occidental Petroleum: Great Inventories To Ride Lower Structural Capex In The Industry,seekingalpha/OXY,,,2026-10-02 02:07:53
 2026-09-30,PANW,Palo Alto Networks: The Valuation Has Lost Touch With Reality,seekingalpha/PANW,,,2026-10-01 01:52:39
 2026-09-30,PFE,FDA launches recruitment drive to add members to advisory panels,seekingalpha/PFE,,,2026-10-01 01:52:39
 2026-09-30,PFE,"Pharmaceutical industry lobbying group names new CEO, Eric Cantor",seekingalpha/PFE,,,2026-10-01 01:52:39
@@ -4331,6 +4335,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,UNH,UnitedHealth's seasonal pattern points to strong year-end window,seekingalpha/UNH,,,2026-10-01 01:52:39
 2026-09-30,UNH,"UnitedHealth: The Recovery Is Working, The Stock Isn't",seekingalpha/UNH,,,2026-10-01 01:52:39
 2026-09-30,UPS,UPS unveils a risk management tool for businesses,seekingalpha/UPS,,,2026-10-01 01:52:39
+2026-09-30,URI,United Rentals: Depth And Diversification Mean This Isn't A Housing Cycle Play,seekingalpha/URI,,,2026-10-02 02:07:53
 2026-09-30,V,"Visa, Mastercard, Stripe, Coinbase-backed Open USD goes live",seekingalpha/V,,,2026-10-01 01:52:39
 2026-09-30,VEEV,"Veeva Systems: Same Old Story, Same Rating Once Again",seekingalpha/VEEV,,,2026-10-01 01:52:39
 2026-09-30,VOO,3 Market Predictions For October,seekingalpha/VOO,,,2026-10-01 01:52:39
@@ -4348,3 +4353,216 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-09-30,WDC,Data Center Bottlenecks: Unpacking Western Digital's Buy Opportunity,seekingalpha/WDC,,,2026-10-01 01:52:39
 2026-09-30,WDC,Western Digital Corporation (WDC) Discusses How WD Red Pro HDDs Support AI-Powered NAS Systems for High-Intensity Data Demands Prepared Remarks Transcript,seekingalpha/WDC,,,2026-10-01 01:52:39
 2026-09-30,ZTS,"Zoetis: Priced For The Worst, Worth Buying",seekingalpha/ZTS,,,2026-10-01 01:52:39
+2026-10-01,AAPL,"Apple's fall launch sparks optimism, but memory costs offset some upside: MS",seekingalpha/AAPL,,,2026-10-02 02:07:53
+2026-10-01,ABBV,AbbVie long-term data buoys Rinvoq for vitiligo,seekingalpha/ABBV,,,2026-10-02 02:07:53
+2026-10-01,ABNB,"Airbnb's new AI search could drive growth, sponsored listings -- Jefferies",seekingalpha/ABNB,,,2026-10-02 02:07:53
+2026-10-01,ABNB,"Airbnb: Retreat Improves Valuation, But Sustained Inflation Makes Me Nervous",seekingalpha/ABNB,,,2026-10-02 02:07:53
+2026-10-01,ACN,Accenture expects FY 2027 EPS of $14.39 to $14.81 as it plans about $5B of acquisitions,seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ACN,Accenture plc (ACN) Q4 2026 Earnings Call Transcript,seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ACN,Accenture plc 2026 Q4 - Results - Earnings Call Presentation,seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ACN,"Accenture shares jump 21% after quarterly revenue beat, upbeat outlook",seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ACN,Accenture surges 16% after strong results,seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ACN,"Earnings Snapshot: Accenture beats FQ4 revenue and bookings estimates, but issues soft FY2027 guidance",seekingalpha/ACN,,,2026-10-02 02:07:53
+2026-10-01,ADBE,Adobe Could Go Nowhere For A Long Time,seekingalpha/ADBE,,,2026-10-02 02:07:53
+2026-10-01,ADSK,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/ADSK,,,2026-10-02 02:07:53
+2026-10-01,AEE,"Ameren Corporation (AEE) Presents at Wolfe Research Utilities, Midstream & Clean Energy Conference 2026-New York - Slideshow",seekingalpha/AEE,,,2026-10-02 02:07:53
+2026-10-01,AMD,"AMD: At All-Time Highs, We're Expanding Our Short Position",seekingalpha/AMD,,,2026-10-02 02:07:53
+2026-10-01,AMD,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/AMD,,,2026-10-02 02:07:53
+2026-10-01,AMD,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/AMD,,,2026-10-02 02:07:53
+2026-10-01,AMD,SA Asks: Does AMD still have upside after its latest rally?,seekingalpha/AMD,,,2026-10-02 02:07:53
+2026-10-01,AMZN,Anthropic plans to go public before Thanksgiving: report,seekingalpha/AMZN,,,2026-10-02 02:07:53
+2026-10-01,APP,AppLovin: This Action Is An Opportunity For Another Trade,seekingalpha/APP,,,2026-10-02 02:07:53
+2026-10-01,APP,AppLovin: Why I Think The Bears Are Wrong,seekingalpha/APP,,,2026-10-02 02:07:53
+2026-10-01,ARES,Ares raises more than quadruple target for secondaries fund (updated),seekingalpha/ARES,,,2026-10-02 02:07:53
+2026-10-01,ATO,Atmos Energy: Quality Company At A Fair Price,seekingalpha/ATO,,,2026-10-02 02:07:53
+2026-10-01,AVGO,Broadcom to lend Anthropic up to $42B to lease chips: report,seekingalpha/AVGO,,,2026-10-02 02:07:53
+2026-10-01,AVGO,Broadcom: Get Ready For A Breakout,seekingalpha/AVGO,,,2026-10-02 02:07:53
+2026-10-01,AVGO,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/AVGO,,,2026-10-02 02:07:53
+2026-10-01,AXON,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/AXON,,,2026-10-02 02:07:53
+2026-10-01,BA,"Boeing engineers approve labor deal, removing potential strike threat",seekingalpha/BA,,,2026-10-02 02:07:53
+2026-10-01,BA,Boeing receives order for four MH-139A Grey Wolf helicopters,seekingalpha/BA,,,2026-10-02 02:07:53
+2026-10-01,BA,Boeing: The Turnaround Is Real; The Value Is Less Clear,seekingalpha/BA,,,2026-10-02 02:07:53
+2026-10-01,BA,FAA is said to weigh Boeing 737 Max software review as Max 10 faces delay,seekingalpha/BA,,,2026-10-02 02:07:53
+2026-10-01,BA,Trump praises Boeing for 737 Max aircraft durability,seekingalpha/BA,,,2026-10-02 02:07:53
+2026-10-01,BAC,Bank of America unit to pay $39M to settle low interest ‌rates lawsuit - report,seekingalpha/BAC,,,2026-10-02 02:07:53
+2026-10-01,BBY,Best Buy: Looking Like A Great Bargain Now With Rising Comps (Upgrade),seekingalpha/BBY,,,2026-10-02 02:07:53
+2026-10-01,BRK.B,"Berkshire Hathaway boosts stake in Lennar, piling into U.S. housing",seekingalpha/BRK.B,,,2026-10-02 02:07:53
+2026-10-01,BRK.B,September short interest: Most and least shorted financial stocks above $2B,seekingalpha/BRK.B,,,2026-10-02 02:07:53
+2026-10-01,BX,Blackstone announces $1B investment to launch defense technology company,seekingalpha/BX,,,2026-10-02 02:07:53
+2026-10-01,C,Citigroup Q3 Preview: Earnings Should Be Alright Despite Macro Risks (Upgrade),seekingalpha/C,,,2026-10-02 02:07:53
+2026-10-01,CAH,"McKesson, Cardinal Health extend distribution agreements with CVS Health",seekingalpha/CAH,,,2026-10-02 02:07:53
+2026-10-01,CB,September short interest: Most and least shorted financial stocks above $2B,seekingalpha/CB,,,2026-10-02 02:07:53
+2026-10-01,CCL,Carnival: Fuel/Macro Risks Overblown; Resilient Cruise Demand At Higher Prices,seekingalpha/CCL,,,2026-10-02 02:07:53
+2026-10-01,CEG,Wall Street Breakfast Podcast: Constellation's Big Power Play,seekingalpha/CEG,,,2026-10-02 02:07:53
+2026-10-01,CEG,Wall Street Lunch: All About AI,seekingalpha/CEG,,,2026-10-02 02:07:53
+2026-10-01,CHRW,C.H. Robinson Worldwide is added to Wells Fargo's Tactical Ideas List,seekingalpha/CHRW,,,2026-10-02 02:07:53
+2026-10-01,CI,Cigna: Deeply Undervalued With Expected Double-Digit EPS Growth Ahead,seekingalpha/CI,,,2026-10-02 02:07:53
+2026-10-01,CI,The Cigna Group (CI) Analyst/Investor Day Transcript,seekingalpha/CI,,,2026-10-02 02:07:53
+2026-10-01,CMG,Chipotle Mexican may have received a $40-$45/share bid last month - Betaville,seekingalpha/CMG,,,2026-10-02 02:07:53
+2026-10-01,CMG,"Chipotle: Takeover Talk Aside, The Margin Math Is Why I Still Say Buy",seekingalpha/CMG,,,2026-10-02 02:07:53
+2026-10-01,CNC,Humana shrinks Medicare Advantage footprint,seekingalpha/CNC,,,2026-10-02 02:07:53
+2026-10-01,COHR,Coherent's Next AI Growth Engine Is Emerging,seekingalpha/COHR,,,2026-10-02 02:07:53
+2026-10-01,COP,"ConocoPhillips says weighing sale of Norway business, U.K. Teesside asset",seekingalpha/COP,,,2026-10-02 02:07:53
+2026-10-01,COP,Venture Global signs 20-year LNG supply deal with ConocoPhillips,seekingalpha/COP,,,2026-10-02 02:07:53
+2026-10-01,CRWD,"CrowdStrike, Okta, Rubrik all reach one-year highs as AI continues to rally cyber sector",seekingalpha/CRWD,,,2026-10-02 02:07:53
+2026-10-01,CTVA,Corteva stock adjusts following court clearance of Vylor Inc. separation,seekingalpha/CTVA,,,2026-10-02 02:07:53
+2026-10-01,CTVA,Corteva: No Longer Worth Owning Post-Spinoff (Rating Downgrade),seekingalpha/CTVA,,,2026-10-02 02:07:53
+2026-10-01,CVS,Humana shrinks Medicare Advantage footprint,seekingalpha/CVS,,,2026-10-02 02:07:53
+2026-10-01,CVS,"McKesson, Cardinal Health extend distribution agreements with CVS Health",seekingalpha/CVS,,,2026-10-02 02:07:53
+2026-10-01,DASH,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/DASH,,,2026-10-02 02:07:53
+2026-10-01,DELL,Dell with Japan's largest power generator plan AI infrastructure project,seekingalpha/DELL,,,2026-10-02 02:07:53
+2026-10-01,DHI,Morgan Stanley initiates coverage of six homebuilders largely with cautious view,seekingalpha/DHI,,,2026-10-02 02:07:53
+2026-10-01,DIS,Disney partners with Indonesia's Vidio for new subscription bundle,seekingalpha/DIS,,,2026-10-02 02:07:53
+2026-10-01,DIS,"Disney to reorganize TV business, plans hundreds of additional job cuts—Wall Street Journal",seekingalpha/DIS,,,2026-10-02 02:07:53
+2026-10-01,DIS,Disney's cruise ship expansion may give investors a smooth ride,seekingalpha/DIS,,,2026-10-02 02:07:53
+2026-10-01,DIS,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/DIS,,,2026-10-02 02:07:53
+2026-10-01,DLTR,Dollar Tree gains new bull as bargains lure in more 'well-heeled' customers,seekingalpha/DLTR,,,2026-10-02 02:07:53
+2026-10-01,DOC,Healthpeak Properties declares $0.1017 dividend,seekingalpha/DOC,,,2026-10-02 02:07:53
+2026-10-01,DUK,Duke Energy declares $1.085 dividend,seekingalpha/DUK,,,2026-10-02 02:07:53
+2026-10-01,ECHO,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/ECHO,,,2026-10-02 02:07:53
+2026-10-01,ED,Consolidated Edison upgraded at Wells Fargo as buffer against AI trade rotation,seekingalpha/ED,,,2026-10-02 02:07:53
+2026-10-01,EFX,FHFA plans to ease Fannie Mae and Freddie Mac's credit data requirement - report,seekingalpha/EFX,,,2026-10-02 02:07:53
+2026-10-01,EQIX,"Equinix Joins AI Capex Race, Consolidation Triggers Upgraded Buy Rating",seekingalpha/EQIX,,,2026-10-02 02:07:53
+2026-10-01,EW,Edwards gains FDA approval of AUTUS pulmonary valve for pediatric patients,seekingalpha/EW,,,2026-10-02 02:07:53
+2026-10-01,EXPD,"Expeditors International of Washington, Inc. (EXPD) Discusses Denied Party Screening: Preparing for What Comes Next Prepared Remarks Transcript",seekingalpha/EXPD,,,2026-10-02 02:07:53
+2026-10-01,FDS,FactSet: Countering Disruption Fears By Using AI To Boost Margins,seekingalpha/FDS,,,2026-10-02 02:07:53
+2026-10-01,FICO,FHFA plans to ease Fannie Mae and Freddie Mac's credit data requirement - report,seekingalpha/FICO,,,2026-10-02 02:07:53
+2026-10-01,FICO,Fair Isaac rebounds 12% after steep selloff,seekingalpha/FICO,,,2026-10-02 02:07:53
+2026-10-01,FICO,Fair Isaac: 75% Decline Is Enough,seekingalpha/FICO,,,2026-10-02 02:07:53
+2026-10-01,FOXA,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/FOXA,,,2026-10-02 02:07:53
+2026-10-01,FRT,"Federal Realty buys Birmingham, Alabama, retail property for $508M",seekingalpha/FRT,,,2026-10-02 02:07:53
+2026-10-01,GE,FAA is said to weigh Boeing 737 Max software review as Max 10 faces delay,seekingalpha/GE,,,2026-10-02 02:07:53
+2026-10-01,GL,"Globe Life: Discounted Valuation, Growing Dividends, And Aggressive Buybacks",seekingalpha/GL,,,2026-10-02 02:07:53
+2026-10-01,GM,"GM reports strong U.S. pickup, SUV demand in third quarter",seekingalpha/GM,,,2026-10-02 02:07:53
+2026-10-01,GM,General Motors Is On A Bumpy Ride In A Rough Market,seekingalpha/GM,,,2026-10-02 02:07:53
+2026-10-01,GOOG,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/GOOG,,,2026-10-02 02:07:53
+2026-10-01,GOOG,Google reportedly faces internal doubts over Gemini 4 performance,seekingalpha/GOOG,,,2026-10-02 02:07:53
+2026-10-01,GOOG,"Google's continued push into frontier with Gemini 4 Argon is encouraging, BNP says",seekingalpha/GOOG,,,2026-10-02 02:07:53
+2026-10-01,GOOG,"Is Alphabet's Argon AI Model Benchmaxxed? Probably, But The Stock Remains A Buy",seekingalpha/GOOG,,,2026-10-02 02:07:53
+2026-10-01,GOOGL,Chegg falls after Google wins dismissal of case,seekingalpha/GOOGL,,,2026-10-02 02:07:53
+2026-10-01,GOOGL,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/GOOGL,,,2026-10-02 02:07:53
+2026-10-01,GOOGL,"Google's continued push into frontier with Gemini 4 Argon is encouraging, BNP says",seekingalpha/GOOGL,,,2026-10-02 02:07:53
+2026-10-01,GOOGL,"Is Alphabet's Argon AI Model Benchmaxxed? Probably, But The Stock Remains A Buy",seekingalpha/GOOGL,,,2026-10-02 02:07:53
+2026-10-01,GOOGL,Lawmaker asks U.S. AI firms about possible Chinese theft of model weights: reports,seekingalpha/GOOGL,,,2026-10-02 02:07:53
+2026-10-01,HBAN,Huntington Bancshares: Interest Rate Pressures Reduce Upside,seekingalpha/HBAN,,,2026-10-02 02:07:53
+2026-10-01,HPE,HPE in spotlight as Citi ups price target after investor event,seekingalpha/HPE,,,2026-10-02 02:07:53
+2026-10-01,HRL,Hormel Foods: Brakebush Acquisition Is Positive News,seekingalpha/HRL,,,2026-10-02 02:07:53
+2026-10-01,HUM,Humana shrinks Medicare Advantage footprint,seekingalpha/HUM,,,2026-10-02 02:07:53
+2026-10-01,IBKR,Interactive Brokers reports 6% Y/Y growth in September revenue trades,seekingalpha/IBKR,,,2026-10-02 02:07:53
+2026-10-01,IBM,"SA Asks: Is IBM a buy, hold or sell right now?",seekingalpha/IBM,,,2026-10-02 02:07:53
+2026-10-01,INTC,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/INTC,,,2026-10-02 02:07:53
+2026-10-01,INTC,TSMC Vs. Intel: Goliath Is Defeating David,seekingalpha/INTC,,,2026-10-02 02:07:53
+2026-10-01,INTU,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/INTU,,,2026-10-02 02:07:53
+2026-10-01,JPM,September short interest: Most and least shorted financial stocks above $2B,seekingalpha/JPM,,,2026-10-02 02:07:53
+2026-10-01,KDP,Keurig Dr Pepper names a CEO for the coffee business ahead of the business split,seekingalpha/KDP,,,2026-10-02 02:07:53
+2026-10-01,KMB,Kimberly-Clark announces COO transition ahead of Kenvue deal,seekingalpha/KMB,,,2026-10-02 02:07:53
+2026-10-01,LEN,"Berkshire Hathaway boosts stake in Lennar, piling into U.S. housing",seekingalpha/LEN,,,2026-10-02 02:07:53
+2026-10-01,LEN,Morgan Stanley initiates coverage of six homebuilders largely with cautious view,seekingalpha/LEN,,,2026-10-02 02:07:53
+2026-10-01,LLY,Foghorn plunges as Lilly exits collaboration,seekingalpha/LLY,,,2026-10-02 02:07:53
+2026-10-01,LLY,Lilly Foundayo is predicted to cut diabetes risk by 57% in late-stage study,seekingalpha/LLY,,,2026-10-02 02:07:53
+2026-10-01,LMT,Lockheed Martin’s F-35 begins permanent deployment in Finland,seekingalpha/LMT,,,2026-10-02 02:07:53
+2026-10-01,MA,September short interest: Most and least shorted financial stocks above $2B,seekingalpha/MA,,,2026-10-02 02:07:53
+2026-10-01,MCD,Dot-com echoes: McDonald’s stock slumps for 8th straight week,seekingalpha/MCD,,,2026-10-02 02:07:53
+2026-10-01,MCD,McDonald's And Its Real Value,seekingalpha/MCD,,,2026-10-02 02:07:53
+2026-10-01,MCK,"McKesson, Cardinal Health extend distribution agreements with CVS Health",seekingalpha/MCK,,,2026-10-02 02:07:53
+2026-10-01,META,Agentic AI might affect software targeting consumers or small-to-medium-sized businesses: BofA,seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,META,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,META,Lawmaker asks U.S. AI firms about possible Chinese theft of model weights: reports,seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,META,Meta Is Undervalued With Muse As A Catalyst,seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,META,Meta: Agentic AI Push And Enterprise Ambitions Warrant Skepticism,seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,META,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/META,,,2026-10-02 02:07:53
+2026-10-01,MKC,"McCormick & Company, Incorporated (MKC) Q3 2026 Earnings Call Transcript",seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MKC,"McCormick & Company, Incorporated 2026 Q3 - Results - Earnings Call Presentation",seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MKC,"McCormick Non-GAAP EPS of $0.86 beats by $0.10, revenue of $2.02B beats by $40M",seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MKC,McCormick Q3 Review: I Don't Expect Anything Major To Change Before The Merger,seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MKC,McCormick outlines $1.5B-$2B debt paydown plan within 2 years while targeting 100-120 bps gross margin expansion in 2026,seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MKC,McCormick rallies after seeing organic sales growth and margin expansion in FQ3,seekingalpha/MKC,,,2026-10-02 02:07:53
+2026-10-01,MRVL,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/MRVL,,,2026-10-02 02:07:53
+2026-10-01,MS,September short interest: Most and least shorted financial stocks above $2B,seekingalpha/MS,,,2026-10-02 02:07:53
+2026-10-01,MSFT,Microsoft in focus as Wells Fargo adds to Tactical Ideas list,seekingalpha/MSFT,,,2026-10-02 02:07:53
+2026-10-01,MSFT,"Microsoft unveils new transcription, voice models",seekingalpha/MSFT,,,2026-10-02 02:07:53
+2026-10-01,MSFT,Microsoft: A Multi-Year Compounder With Seat Growth And Azure Acceleration,seekingalpha/MSFT,,,2026-10-02 02:07:53
+2026-10-01,MSFT,Microsoft: Beware Of Meta's Muse Hype,seekingalpha/MSFT,,,2026-10-02 02:07:53
+2026-10-01,MU,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,MU,Micron Is Keeping Shareholders Happy,seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,MU,Micron Isn't Stepping Off The Gas,seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,MU,Micron Q4: Nothing Negative Here,seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,MU,Sandisk remains solid as Micron's Q4 results reveal tight NAND supply through 2028: Citi,seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,MU,Wall Street Lunch: All About AI,seekingalpha/MU,,,2026-10-02 02:07:53
+2026-10-01,NCLH,NCL Corporation prices upsized $950M senior notes due 2031,seekingalpha/NCLH,,,2026-10-02 02:07:53
+2026-10-01,NEE,"NextEra Energy, Inc. (NEE) Presents at Wolfe Research Utilities, Midstream & Clean Energy Conference 2026-New York - Slideshow",seekingalpha/NEE,,,2026-10-02 02:07:53
+2026-10-01,NEE,"NextEra Energy, Inc. (NEE) Presents at Wolfe Research Utilities, Midstream & Clean Energy Conference 2026-New York Transcript",seekingalpha/NEE,,,2026-10-02 02:07:53
+2026-10-01,NEE,"NextEra Energy, partners tapped to develop $22B Texas power plant for data center",seekingalpha/NEE,,,2026-10-02 02:07:53
+2026-10-01,NFLX,"Netflix Co-CEO Sarandos says growth slower than desired, touts live content",seekingalpha/NFLX,,,2026-10-02 02:07:53
+2026-10-01,NFLX,Netflix: Decoding The Threat Posed By YouTube,seekingalpha/NFLX,,,2026-10-02 02:07:53
+2026-10-01,NKE,"Earnings Snapshot: Nike Q1 China, Direct sales drag revenue 4% lower; FY27 guidance soft",seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,"Nike GAAP EPS of $0.48 beats by $0.04, revenue of $11.21B misses by $110M",seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,Nike Q1: The Company Of The Past Is Gone,seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,Nike in charts: Footwear revenue declines 6% Y/Y,seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,Nike's Earnings: Run Away While You Can (Rating Downgrade),seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,"Nike's turnaround faces more headwinds as China sales slide, sees further sales decline in FY27",seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NVDA,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/NVDA,,,2026-10-02 02:07:53
+2026-10-01,NVDA,Michael Burry likens Nvidia's AI boom to 1960s computer leasing bubble,seekingalpha/NVDA,,,2026-10-02 02:07:53
+2026-10-01,NVR,Morgan Stanley initiates coverage of six homebuilders largely with cautious view,seekingalpha/NVR,,,2026-10-02 02:07:53
+2026-10-01,OKE,ONEOK: Second Guidance Raise And Brazos Deal Make The Pullback Compelling,seekingalpha/OKE,,,2026-10-02 02:07:53
+2026-10-01,ON,Onsemi agrees to buy Synaptics for $123/share in cash in revised deal,seekingalpha/ON,,,2026-10-02 02:07:53
+2026-10-01,ORCL,Agentic AI might affect software targeting consumers or small-to-medium-sized businesses: BofA,seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,ORCL,"China's Tencent taps Oracle for 100,000 AI chips in $7B lease deal - report",seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,ORCL,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,ORCL,Oracle Just Sent A Notice That Has Everyone Staring At The Wrong Place,seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,ORCL,Oracle says no critical infrastructure damaged at Project Jupiter site,seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,ORCL,Wall Street Lunch: All About AI,seekingalpha/ORCL,,,2026-10-02 02:07:53
+2026-10-01,OXY,"Occidental Petroleum raised to Buy at Goldman on strong debt reduction, dividend growth potential",seekingalpha/OXY,,,2026-10-02 02:07:53
+2026-10-01,PAYX,"Nasdaq rises nearly 2% in September, helped by late-month tech rally",seekingalpha/PAYX,,,2026-10-02 02:07:53
+2026-10-01,PCG,PG&E plans 5K-mile powerline undergrounding to cut wildfire risk,seekingalpha/PCG,,,2026-10-02 02:07:53
+2026-10-01,PEP,PepsiCo Q3 Earnings Preview: Operational Tailwinds Might Not Be Enough To Appease Investors,seekingalpha/PEP,,,2026-10-02 02:07:53
+2026-10-01,PFE,Florida AG sues Pfizer over 'misconduct' related to COVID vaccine risks,seekingalpha/PFE,,,2026-10-02 02:07:53
+2026-10-01,PFE,Pfizer eczema therapy archives significant skin clearance in mid-stage trial,seekingalpha/PFE,,,2026-10-02 02:07:53
+2026-10-01,PHM,Morgan Stanley initiates coverage of six homebuilders largely with cautious view,seekingalpha/PHM,,,2026-10-02 02:07:53
+2026-10-01,PHM,PulteGroup: Well Managed In The Face Of Macro Pressure,seekingalpha/PHM,,,2026-10-02 02:07:53
+2026-10-01,PLTR,Palantir Remains Our Top Tech Pick Of The 2020s,seekingalpha/PLTR,,,2026-10-02 02:07:53
+2026-10-01,PSKY,Paramount Skydance falls 10% amid $41B debt pricing for Warner Bros. deal,seekingalpha/PSKY,,,2026-10-02 02:07:53
+2026-10-01,PSKY,Paramount Skydance prices over $41B senior notes and debt offering,seekingalpha/PSKY,,,2026-10-02 02:07:53
+2026-10-01,PSKY,Paramount in talks to keep Mark Thompson at CNN,seekingalpha/PSKY,,,2026-10-02 02:07:53
+2026-10-01,REGN,Regeneron And Sanofi Announce A Win-Win Collaboration Expansion,seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,REGN,"Regeneron Pharmaceuticals, Inc. (REGN) Discusses Expanded Collaboration on Next-Generation Long-Acting Immunology Antibodies - Slideshow",seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,REGN,"Regeneron Pharmaceuticals, Inc. (REGN) Discusses Expanded Collaboration on Next-Generation Long-Acting Immunology Antibodies Transcript",seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,REGN,Regeneron drops after early-stage trial data for ovarian cancer therapy,seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,REGN,Regeneron drug said to cut muscle loss when combined with Novo's semaglutide,seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,REGN,Sanofi to pay Regeneron up to $8B to expand long-acting drug pipeline,seekingalpha/REGN,,,2026-10-02 02:07:53
+2026-10-01,ROST,"Ross Stores: The Valuation Cannot Be Justified, Despite The Strong Performance",seekingalpha/ROST,,,2026-10-02 02:07:53
+2026-10-01,RTX,RTX names Amy Comer to lead Pratt & Whitney Military Engines,seekingalpha/RTX,,,2026-10-02 02:07:53
+2026-10-01,RTX,RTX wins up to $24.4B contract for SM-6 missile production,seekingalpha/RTX,,,2026-10-02 02:07:53
+2026-10-01,SCHW,Charles Schwab announces secondary listing on Texas Stock Exchange,seekingalpha/SCHW,,,2026-10-02 02:07:53
+2026-10-01,SLB,SLB N.V.: Setting Itself Up For Growth With Added Data Center Ambitions,seekingalpha/SLB,,,2026-10-02 02:07:53
+2026-10-01,SNDK,Sandisk Is Selling The Top Of Its Edge Business,seekingalpha/SNDK,,,2026-10-02 02:07:53
+2026-10-01,SNDK,Sandisk remains solid as Micron's Q4 results reveal tight NAND supply through 2028: Citi,seekingalpha/SNDK,,,2026-10-02 02:07:53
+2026-10-01,SNDK,Sandisk: Reduced Cyclicality And A Forward FCF Yield Of 10% Bolster The Investment Case,seekingalpha/SNDK,,,2026-10-02 02:07:53
+2026-10-01,SNPS,"Synopsys rallies 13% as Wall Street digests Amazon deal, OpenAI partnership",seekingalpha/SNPS,,,2026-10-02 02:07:53
+2026-10-01,SNPS,Synopsys target raised by $50 at Deutsche Bank,seekingalpha/SNPS,,,2026-10-02 02:07:53
+2026-10-01,SNPS,Synopsys: Building Recurring Revenue For The Custom Silicon Era,seekingalpha/SNPS,,,2026-10-02 02:07:53
+2026-10-01,SNPS,Synopsys: New Investor Day Targets Prove Consensus Estimates Are Too Low,seekingalpha/SNPS,,,2026-10-02 02:07:53
+2026-10-01,SPY,"Bonds Are Breaking, But I'm Not Worried (For Now)",seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,SPY,S&P 500 2026 September Dividends Reveal Most Promising Sectors (And It's Not Tech),seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,SPY,SA analyst: Fed rate-hike fears ease as Q4 begins,seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,SPY,The S&P’s strongest historical quarter starts with yields at multi decade highs,seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,SPY,Unprofitable Superintelligence,seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,SPY,Why I Made Gold A Full Position In My Portfolio,seekingalpha/SPY,,,2026-10-02 02:07:53
+2026-10-01,STZ,Constellation Brands Could Be At Its Valuation Floor Ahead Of Earnings,seekingalpha/STZ,,,2026-10-02 02:07:53
+2026-10-01,TER,"Teradyne: AI Testing Growth Is Impressive, But The Valuation Keeps Me Cautious",seekingalpha/TER,,,2026-10-02 02:07:53
+2026-10-01,TROW,T. Rowe Price announces new dynamic emerging markets bond ETF,seekingalpha/TROW,,,2026-10-02 02:07:53
+2026-10-01,TSLA,Tesla sees stronger September registrations across Europe,seekingalpha/TSLA,,,2026-10-02 02:07:53
+2026-10-01,TTD,Fox tops communications services stocks in short interest; Alphabet sees the lowest exposure,seekingalpha/TTD,,,2026-10-02 02:07:53
+2026-10-01,TYL,Tyler Technologies in focus as Oppenheimer reiterates Outperform rating after meeting,seekingalpha/TYL,,,2026-10-02 02:07:53
+2026-10-01,UNH,Humana shrinks Medicare Advantage footprint,seekingalpha/UNH,,,2026-10-02 02:07:53
+2026-10-01,VOO,"Bonds Are Breaking, But I'm Not Worried (For Now)",seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VOO,"Macro Insights: 5% Yield, AI Spending Sanity, And The Bullish Counter-Thesis",seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VOO,S&P 500 2026 September Dividends Reveal Most Promising Sectors (And It's Not Tech),seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VOO,SA analyst: Fed rate-hike fears ease as Q4 begins,seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VOO,The S&P’s strongest historical quarter starts with yields at multi decade highs,seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VOO,Unprofitable Superintelligence,seekingalpha/VOO,,,2026-10-02 02:07:53
+2026-10-01,VRT,Vertiv's Data Center Focus Is A Huge Competitive Advantage: Buy The Stock,seekingalpha/VRT,,,2026-10-02 02:07:53
+2026-10-01,WBD,Paramount Skydance prices over $41B senior notes and debt offering,seekingalpha/WBD,,,2026-10-02 02:07:53
+2026-10-01,WBD,Paramount in talks to keep Mark Thompson at CNN,seekingalpha/WBD,,,2026-10-02 02:07:53
+2026-10-01,WDAY,Workday slips even as it launches in UAE,seekingalpha/WDAY,,,2026-10-02 02:07:53
+2026-10-01,XOM,"BP upgraded, Exxon downgraded at Wells Fargo as relative valuation favors BP",seekingalpha/XOM,,,2026-10-02 02:07:53
