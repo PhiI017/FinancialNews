@@ -3,17 +3,6 @@
   "highest_close": 7798.99,
   "history": [
     {
-      "at": "2026-09-22",
-      "drawdown_pct": -0.44,
-      "fired": [],
-      "mode": "daily",
-      "sent": {
-        "email": "ok",
-        "ntfy": "http_200"
-      },
-      "urgency": "quiet"
-    },
-    {
       "at": "2026-09-23",
       "drawdown_pct": -0.44,
       "fired": [],
@@ -526,10 +515,26 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-02",
+      "drawdown_pct": -1.7,
+      "fired": [],
+      "mode": "preclose",
+      "sent": {
+        "email": "ok",
+        "ntfy": "http_200"
+      },
+      "urgency": "urgent"
     }
   ],
-  "last_run": "2026-10-02 18:43:44",
-  "movers_alerted": {},
+  "last_run": "2026-10-02 20:39:43",
+  "movers_alerted": {
+    "BOT": {
+      "asof": "2026-10-02",
+      "pct": 8.731924360400445
+    }
+  },
   "premium_rungs_spent": {
     "BOT": []
   }
