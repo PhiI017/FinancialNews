@@ -84,6 +84,34 @@
       "status": "watching",
       "name": "Ouster",
       "note": "lidar small cap — expect noise, see move_pct"
+    },
+    {
+      "symbol": "AMZN",
+      "kind": "stock",
+      "status": "held",
+      "note": "held from the 2026-10-02 holdings screenshot",
+      "name": "Amazon"
+    },
+    {
+      "symbol": "HOOD",
+      "kind": "stock",
+      "status": "held",
+      "note": "held from the 2026-10-02 holdings screenshot",
+      "name": "Robinhood Markets"
+    },
+    {
+      "symbol": "BE",
+      "kind": "stock",
+      "status": "held",
+      "note": "held from the 2026-10-02 holdings screenshot",
+      "name": "Bloom Energy"
+    },
+    {
+      "symbol": "NAUT",
+      "kind": "stock",
+      "status": "held",
+      "note": "held from the 2026-10-02 holdings screenshot; ~$2 micro-cap biotech, so move_pct is a deliberate starting GUESS — see _new_thresholds_comment",
+      "name": "Nautilus Biotechnology"
     }
   ],
   "_per_symbol_overrides": "move_pct sets the single-day move that counts as urgent for ONE symbol. Omitted means the default in triggers.py.",
@@ -99,6 +127,15 @@
     },
     "OUST": {
       "move_pct": 10.0
+    },
+    "HOOD": {
+      "move_pct": 10.0
+    },
+    "BE": {
+      "move_pct": 8.0
+    },
+    "NAUT": {
+      "move_pct": 12.0
     }
   },
   "index": {
@@ -151,6 +188,6 @@
   "feed_limit": 6,
   "_positions_name_comment": "`name` is what a NEWS SEARCH is given, not a label. A bare ticker is a low-precision query dressed as a targeted one — searching 'VOO' or 'ALL' returns English rather than news — so a symbol with no name here skips the Google News rung and reports `no_name` instead of serving noise as coverage.",
   "_feeds_dead_comment": "US Treasury (home.treasury.gov/rss/press.xml) and White House (whitehouse.gov/briefing-room/feed/) were REMOVED on 2026-09-22: both 404 from a hosted runner, and so did the obvious alternative path for each. A 404 is a path that does not exist, which makes it ours; but a replacement nobody has seen answer is a guess, and a feed that fails every run is noise in the letter's data notes. Put either back the moment a URL is seen returning items. Yahoo S&P 500 went the same way on the same day, for the OTHER reason: http_429 on every run, because Yahoo fences datacentres as a block. It works from a laptop and never from the runner this lives on, and MarketWatch and CNBC already carry the index's news. Eleven feeds left.",
-  "_new_thresholds_comment": "BOT 8% and OUST 10% are STARTING GUESSES, not measurements. CELH's 8% was set the same way and the reasoning is in triggers.movers: a threshold too low sends a small cap's ordinary Tuesday every week, and the response to that is muting the channel the dip alerts share. Both should be re-set from their own realised daily ranges once there are a few weeks of collected prices to measure.",
+  "_new_thresholds_comment": "BOT 8% and OUST 10% are STARTING GUESSES, not measurements. CELH's 8% was set the same way and the reasoning is in triggers.movers: a threshold too low sends a small cap's ordinary Tuesday every week, and the response to that is muting the channel the dip alerts share. Both should be re-set from their own realised daily ranges once there are a few weeks of collected prices to measure. HOOD 10% AND AMZN'S ABSENCE ARE MEASURED, NOT GUESSED (2026-10-02, from 1,293 and 2,530 daily closes in stocks_model): HOOD's median absolute daily move is 2.50% and its p95 is 8.79%, so the 5% default would fire on 18.5% of days — 47 times a year, which is exactly the ordinary-Tuesday flood that gets a channel muted; 10% fires on 3.6% of days, about nine times a year. AMZN's median is 1.08% and p95 4.15%, so the 5% default already fires only 3.0% of days and an override would be noise about noise. BE 8% and NAUT 12% ARE STILL GUESSES — neither has a single close in the store, because neither is in the S&P 500 and that is the only universe collected. NAUT trades near $2, where a ten-cent wobble is 5%. Re-set both from their own realised ranges once prices exist.",
   "_bot_nav_comment": "BOT IS A CLOSED-END FUND, NOT AN ETF — confirmed on the runner 2026-09-22 (TradingView type 'fund', typespecs ['closedend']; Nasdaq answers 'Symbol not exists' for assetclass=etf). No creation/redemption at NAV, so nothing pulls the price back to the assets and the premium is structural. THE NAV COMES FROM CEF CONNECT, whose own figures read: 2026-06-30 NAV 10.51 against a price of 39.75, a premium of +278%; 2026-07-31 NAV 11.32 against 25.98, +130%. It is a QUARTERLY APPRAISAL of private holdings, so between marks the premium moves because the PRICE moved, not because anything was re-valued — nav_cadence says so and the letter repeats it every time. premium_rungs_pct: +100 WARNS and is not a buy; 50, 25 and 0 are the levels. They are spaced by the loss taken if the premium converges — p/(1+p) — so +50 means a 33% fall to reach NAV. None of the positive rungs is an endorsement; the closed-end base rate says the defensible entry is at or below NAV. Change them here, not in code."
 }
