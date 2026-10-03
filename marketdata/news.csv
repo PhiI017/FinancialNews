@@ -4501,6 +4501,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-01,NKE,Nike in charts: Footwear revenue declines 6% Y/Y,seekingalpha/NKE,,,2026-10-02 02:07:53
 2026-10-01,NKE,Nike's Earnings: Run Away While You Can (Rating Downgrade),seekingalpha/NKE,,,2026-10-02 02:07:53
 2026-10-01,NKE,"Nike's turnaround faces more headwinds as China sales slide, sees further sales decline in FY27",seekingalpha/NKE,,,2026-10-02 02:07:53
+2026-10-01,NKE,"Nike: Management Is Taking Right Actions, But Bleeding Is Worse Than I Expected (Downgrade)",seekingalpha/NKE,,,2026-10-03 01:45:11
 2026-10-01,NVDA,"Chip, AI stocks pare gains as rising Treasury yields weigh on market",seekingalpha/NVDA,,,2026-10-02 02:07:53
 2026-10-01,NVDA,Michael Burry likens Nvidia's AI boom to 1960s computer leasing bubble,seekingalpha/NVDA,,,2026-10-02 02:07:53
 2026-10-01,NVR,Morgan Stanley initiates coverage of six homebuilders largely with cautious view,seekingalpha/NVR,,,2026-10-02 02:07:53
@@ -4566,3 +4567,163 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-01,WBD,Paramount in talks to keep Mark Thompson at CNN,seekingalpha/WBD,,,2026-10-02 02:07:53
 2026-10-01,WDAY,Workday slips even as it launches in UAE,seekingalpha/WDAY,,,2026-10-02 02:07:53
 2026-10-01,XOM,"BP upgraded, Exxon downgraded at Wells Fargo as relative valuation favors BP",seekingalpha/XOM,,,2026-10-02 02:07:53
+2026-10-02,AAPL,Apple updates Full Disk Access controls in macOS in response to probing AI agents,seekingalpha/AAPL,,,2026-10-03 01:45:11
+2026-10-02,AAPL,Google raises Pixel 10a price to $599 as memory costs climb,seekingalpha/AAPL,,,2026-10-03 01:45:11
+2026-10-02,AAPL,Ondas tops technology stocks in short interest; Ubiquiti sees the lowest exposure,seekingalpha/AAPL,,,2026-10-03 01:45:11
+2026-10-02,ABBV,Most and least shorted mid- to mega-cap healthcare stocks at the end of September,seekingalpha/ABBV,,,2026-10-03 01:45:11
+2026-10-02,ABNB,"KeyBanc upgrades Airbnb to overweight, sets $191 price target",seekingalpha/ABNB,,,2026-10-03 01:45:11
+2026-10-02,ACN,Accenture Has Just Shared Game-Changing News,seekingalpha/ACN,,,2026-10-03 01:45:11
+2026-10-02,ACN,"Accenture: It Has Stopped Raining, But AI Still Threatens Pricing",seekingalpha/ACN,,,2026-10-03 01:45:11
+2026-10-02,ACN,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/ACN,,,2026-10-03 01:45:11
+2026-10-02,ACN,The Reasons Why I Do Not Like Accenture's Q4 Results (Rating Downgrade),seekingalpha/ACN,,,2026-10-03 01:45:11
+2026-10-02,ADSK,Autodesk: Market Is Mispricing This Asset-Light AI Beneficiary,seekingalpha/ADSK,,,2026-10-03 01:45:11
+2026-10-02,ALB,Albemarle: Fundamentals Improve On All Fronts,seekingalpha/ALB,,,2026-10-03 01:45:11
+2026-10-02,AMAT,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/AMAT,,,2026-10-03 01:45:11
+2026-10-02,AMD,SA Asks: Does AMD still have upside after its latest rally? (Update),seekingalpha/AMD,,,2026-10-03 01:45:11
+2026-10-02,AMZN,"Amazon seeks to offload $8B of Nvidia chips to investors, FT reports",seekingalpha/AMZN,,,2026-10-03 01:45:11
+2026-10-02,AMZN,Amazon's and Microsoft's cloud units set to fall under EU's Digital Markets Act: report,seekingalpha/AMZN,,,2026-10-03 01:45:11
+2026-10-02,ANET,Ondas tops technology stocks in short interest; Ubiquiti sees the lowest exposure,seekingalpha/ANET,,,2026-10-03 01:45:11
+2026-10-02,APP,AppLovin loses request for temporary restraining order against Unity,seekingalpha/APP,,,2026-10-03 01:45:11
+2026-10-02,APP,AppLovin: The Market Is Likely Wrong,seekingalpha/APP,,,2026-10-03 01:45:11
+2026-10-02,APP,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/APP,,,2026-10-03 01:45:11
+2026-10-02,ARES,"TW, SEIC, STEP favored by Wells Fargo in new coverage of brokers, asset managers, and exchanges",seekingalpha/ARES,,,2026-10-03 01:45:11
+2026-10-02,AVGO,Broadcom gathers $60B financing package to fund AI chips for Anthropic: report,seekingalpha/AVGO,,,2026-10-03 01:45:11
+2026-10-02,AVGO,Broadcom: The Anthropic Panic Looks Overblown,seekingalpha/AVGO,,,2026-10-03 01:45:11
+2026-10-02,BA,Boeing F/A-XX Win: A Surprise Blow For Northrop,seekingalpha/BA,,,2026-10-03 01:45:11
+2026-10-02,BA,Boeing MAX 10 moves closer to certification after FAA software review,seekingalpha/BA,,,2026-10-03 01:45:11
+2026-10-02,BIIB,Biogen phase 2 litifilimab data boosts lupus candidate,seekingalpha/BIIB,,,2026-10-03 01:45:11
+2026-10-02,BLK,"TW, SEIC, STEP favored by Wells Fargo in new coverage of brokers, asset managers, and exchanges",seekingalpha/BLK,,,2026-10-03 01:45:11
+2026-10-02,BNY,BNY in talks with Kraken parent for digital asset infrastructure pact - report,seekingalpha/BNY,,,2026-10-03 01:45:11
+2026-10-02,BRK.B,Berkshire Hathaway: The Abel Era Needs More Than Continuity,seekingalpha/BRK.B,,,2026-10-03 01:45:11
+2026-10-02,CMCSA,Comcast's NBCUniversal reportedly slashes streaming tech jobs,seekingalpha/CMCSA,,,2026-10-03 01:45:11
+2026-10-02,CME,CME Group suspends plan for 24/7 10-barrel crude oil contract,seekingalpha/CME,,,2026-10-03 01:45:11
+2026-10-02,CME,"CME Group's ADV reaches new September, Q3 records",seekingalpha/CME,,,2026-10-03 01:45:11
+2026-10-02,CME,"TW, SEIC, STEP favored by Wells Fargo in new coverage of brokers, asset managers, and exchanges",seekingalpha/CME,,,2026-10-03 01:45:11
+2026-10-02,COHR,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/COHR,,,2026-10-03 01:45:11
+2026-10-02,CRWD,CrowdStrike: The AI Growth Story Is Overextended,seekingalpha/CRWD,,,2026-10-03 01:45:11
+2026-10-02,CTAS,"UniFirst finishes FTC information request, parties evaluate remedies - CTFN",seekingalpha/CTAS,,,2026-10-03 01:45:11
+2026-10-02,CTSH,Cognizant continues to experience high demand ahead of incoming AI revenue streams: Wedbush,seekingalpha/CTSH,,,2026-10-03 01:45:11
+2026-10-02,DAL,Alaska Airlines expands international push as Seattle rivalry with Delta intensifies,seekingalpha/DAL,,,2026-10-03 01:45:11
+2026-10-02,DAL,Delta Air Lines: A Buy Despite Margin Resilience Test,seekingalpha/DAL,,,2026-10-03 01:45:11
+2026-10-02,DAL,United Airlines targets top Delta and American flyers with aggressive status-match push,seekingalpha/DAL,,,2026-10-03 01:45:11
+2026-10-02,DLR,Digital Realty Trust: One Of The Best REITs To Benefit From AI,seekingalpha/DLR,,,2026-10-03 01:45:11
+2026-10-02,EIX,Edison International cut to Sell equivalent at Jefferies as Eaton Fire liability set to intensify,seekingalpha/EIX,,,2026-10-03 01:45:11
+2026-10-02,EME,EMCOR declares $0.40 dividend,seekingalpha/EME,,,2026-10-03 01:45:11
+2026-10-02,F,Ford Motor sales dip 6.6% in Q3,seekingalpha/F,,,2026-10-03 01:45:11
+2026-10-02,FCX,Freeport-McMoRan hits Q3 copper targets; copper futures head for weekly loss,seekingalpha/FCX,,,2026-10-03 01:45:11
+2026-10-02,FSLR,"First Solar files patent infringement lawsuit against China's JA Solar, Corning subsidiary",seekingalpha/FSLR,,,2026-10-03 01:45:11
+2026-10-02,GD,Most and least shorted industrial stocks with market caps above $2B as of end-September,seekingalpha/GD,,,2026-10-03 01:45:11
+2026-10-02,GIS,"Dividend Roundup: Mastercard, General Mills, Verizon, AT&T, and more",seekingalpha/GIS,,,2026-10-03 01:45:11
+2026-10-02,GLW,"First Solar files patent infringement lawsuit against China's JA Solar, Corning subsidiary",seekingalpha/GLW,,,2026-10-03 01:45:11
+2026-10-02,GOOG,Alphabet: Delivering And Getting Cheaper,seekingalpha/GOOG,,,2026-10-03 01:45:11
+2026-10-02,GOOG,Google raises Pixel 10a price to $599 as memory costs climb,seekingalpha/GOOG,,,2026-10-03 01:45:11
+2026-10-02,GOOG,"Google, Planet Labs launch prototype AI satellite on SpaceX rocket",seekingalpha/GOOG,,,2026-10-03 01:45:11
+2026-10-02,GOOGL,Alphabet: Delivering And Getting Cheaper,seekingalpha/GOOGL,,,2026-10-03 01:45:11
+2026-10-02,GOOGL,"Google, Planet Labs launch prototype AI satellite on SpaceX rocket",seekingalpha/GOOGL,,,2026-10-03 01:45:11
+2026-10-02,GS,Goldman Sachs stock enters bear market territory,seekingalpha/GS,,,2026-10-03 01:45:11
+2026-10-02,GS,"Stocks to watch on Friday: NVDA, GS, NKE, and more",seekingalpha/GS,,,2026-10-03 01:45:11
+2026-10-02,HPE,Hewlett Packard Enterprise climbs 7% to new 52-week high,seekingalpha/HPE,,,2026-10-03 01:45:11
+2026-10-02,IBKR,"TW, SEIC, STEP favored by Wells Fargo in new coverage of brokers, asset managers, and exchanges",seekingalpha/IBKR,,,2026-10-03 01:45:11
+2026-10-02,IBM,"SA Asks: Is IBM a buy, hold or sell right now? (Update)",seekingalpha/IBM,,,2026-10-03 01:45:11
+2026-10-02,ISRG,"Intuitive Surgical: Strong Growth, But Valuation Comes At A Premium",seekingalpha/ISRG,,,2026-10-03 01:45:11
+2026-10-02,ISRG,Intuitive Surgical: The 17% Selloff Is A Buy,seekingalpha/ISRG,,,2026-10-03 01:45:11
+2026-10-02,JNJ,Medicare drug pricing model to affect only four firms after Trump’s MFN policy,seekingalpha/JNJ,,,2026-10-03 01:45:11
+2026-10-02,JNJ,Most and least shorted mid- to mega-cap healthcare stocks at the end of September,seekingalpha/JNJ,,,2026-10-03 01:45:11
+2026-10-02,KMB,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/KMB,,,2026-10-03 01:45:11
+2026-10-02,KO,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/KO,,,2026-10-03 01:45:11
+2026-10-02,LITE,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/LITE,,,2026-10-03 01:45:11
+2026-10-02,LLY,"Eli Lilly's Jaypirca gains additional indication for untreated leukemia, lymphoma",seekingalpha/LLY,,,2026-10-03 01:45:11
+2026-10-02,LLY,Medicare drug pricing model to affect only four firms after Trump’s MFN policy,seekingalpha/LLY,,,2026-10-03 01:45:11
+2026-10-02,LLY,Most and least shorted mid- to mega-cap healthcare stocks at the end of September,seekingalpha/LLY,,,2026-10-03 01:45:11
+2026-10-02,LRCX,Lam Research: This Rally Has Legs (Earnings Preview),seekingalpha/LRCX,,,2026-10-03 01:45:11
+2026-10-02,LRCX,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/LRCX,,,2026-10-03 01:45:11
+2026-10-02,MA,"Dividend Roundup: Mastercard, General Mills, Verizon, AT&T, and more",seekingalpha/MA,,,2026-10-03 01:45:11
+2026-10-02,META,Apple updates Full Disk Access controls in macOS in response to probing AI agents,seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,META,"Meta Muse keeps growing in popularity, but monetization is still a question, BNP says",seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,META,Meta Platforms: Things May Get Ugly,seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,META,"Meta: Muse Is Nice, But Not Enough",seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,META,"Meta: Muse Is Priced In, And That Is The Problem",seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,META,Why Muse May Never Need Ads,seekingalpha/META,,,2026-10-03 01:45:11
+2026-10-02,MRK,Medicare drug pricing model to affect only four firms after Trump’s MFN policy,seekingalpha/MRK,,,2026-10-03 01:45:11
+2026-10-02,MRNA,"Moderna to join Nasdaq-100, replacing Warner Bros. Discovery",seekingalpha/MRNA,,,2026-10-03 01:45:11
+2026-10-02,MS,Morgan Stanley Still Justifies A Buy Heading Into Q3,seekingalpha/MS,,,2026-10-03 01:45:11
+2026-10-02,MSFT,Amazon's and Microsoft's cloud units set to fall under EU's Digital Markets Act: report,seekingalpha/MSFT,,,2026-10-03 01:45:11
+2026-10-02,MSFT,"Catalyst Watch: Microsoft event, FOMC talk, and the finish line for Paramount-Warner Bros.",seekingalpha/MSFT,,,2026-10-03 01:45:11
+2026-10-02,MSFT,Ondas tops technology stocks in short interest; Ubiquiti sees the lowest exposure,seekingalpha/MSFT,,,2026-10-03 01:45:11
+2026-10-02,MTD,Mettler-Toledo International: Why The Valuation Is Problematic,seekingalpha/MTD,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron And MUU: The Structural Shift Thesis Is Strengthening,seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron: A Top AI Chip Stock With Potential To Double On HBM Demand,seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron: It's Different This Time - Buy At 6x Earnings Before AI Agents Rerate It,seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron: More Great Earnings Don't Change Our Mind,seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron: The $50 Billion CapEx Misconception (Why The Memory Floor Is Rising),seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,MU,Micron: The Memory Cycle Won't Last Forever,seekingalpha/MU,,,2026-10-03 01:45:11
+2026-10-02,NKE,Nike seeks supply chain overhaul to improve profitability -- report,seekingalpha/NKE,,,2026-10-03 01:45:11
+2026-10-02,NKE,Nike: China Reset Overshadows North American Resilience; Reiterate Neutral,seekingalpha/NKE,,,2026-10-03 01:45:11
+2026-10-02,NKE,"Running to stand still: Nike's performance business still can't outrun Jordan, China, Sportswear",seekingalpha/NKE,,,2026-10-03 01:45:11
+2026-10-02,NKE,"Stocks to watch on Friday: NVDA, GS, NKE, and more",seekingalpha/NKE,,,2026-10-03 01:45:11
+2026-10-02,NKE,Wall Street Breakfast Podcast: No Sprint For Nike Yet,seekingalpha/NKE,,,2026-10-03 01:45:11
+2026-10-02,NOC,Boeing F/A-XX Win: A Surprise Blow For Northrop,seekingalpha/NOC,,,2026-10-03 01:45:11
+2026-10-02,NOC,Northrop Grumman downgraded at RBC on lower growth outlook; Arxis upgraded,seekingalpha/NOC,,,2026-10-03 01:45:11
+2026-10-02,NOW,ServiceNow: No Progress On Margins And Fully Valued (Rating Downgrade),seekingalpha/NOW,,,2026-10-03 01:45:11
+2026-10-02,NOW,ServiceNow: Still A 'Strong Buy' As AI Revenues Gain Traction,seekingalpha/NOW,,,2026-10-03 01:45:11
+2026-10-02,NSC,"Norfolk Southern: The Spread Says Wait, Not Walk Away",seekingalpha/NSC,,,2026-10-03 01:45:11
+2026-10-02,NVDA,"Amazon seeks to offload $8B of Nvidia chips to investors, FT reports",seekingalpha/NVDA,,,2026-10-03 01:45:11
+2026-10-02,NVDA,"Nvidia Stock Has Become Deeply Undervalued, But Watch Out For Accounts Receivable",seekingalpha/NVDA,,,2026-10-03 01:45:11
+2026-10-02,NVDA,Nvidia in focus as Morgan Stanley reinstates as top pick,seekingalpha/NVDA,,,2026-10-03 01:45:11
+2026-10-02,NVDA,Nvidia: Competition Caps The Upside Case,seekingalpha/NVDA,,,2026-10-03 01:45:11
+2026-10-02,NVDA,"Stocks to watch on Friday: NVDA, GS, NKE, and more",seekingalpha/NVDA,,,2026-10-03 01:45:11
+2026-10-02,O,Realty Income: Focus On Fundamentals Not The Bond Market Carnage,seekingalpha/O,,,2026-10-03 01:45:11
+2026-10-02,ON,Synaptics downgraded to Equal-weight due to amended merger agreement with onsemi: WF,seekingalpha/ON,,,2026-10-03 01:45:11
+2026-10-02,PFE,Medicare drug pricing model to affect only four firms after Trump’s MFN policy,seekingalpha/PFE,,,2026-10-03 01:45:11
+2026-10-02,PFE,Pfizer says phase 3 data buoys Litfulo as a vitiligo treatment,seekingalpha/PFE,,,2026-10-03 01:45:11
+2026-10-02,PG,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/PG,,,2026-10-03 01:45:11
+2026-10-02,PLTR,"Palantir, Armada team up on sovereign AI infrastructure",seekingalpha/PLTR,,,2026-10-03 01:45:11
+2026-10-02,PM,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/PM,,,2026-10-03 01:45:11
+2026-10-02,PNC,PNC Financial declares $2.00 dividend,seekingalpha/PNC,,,2026-10-03 01:45:11
+2026-10-02,PSKY,"Catalyst Watch: Microsoft event, FOMC talk, and the finish line for Paramount-Warner Bros.",seekingalpha/PSKY,,,2026-10-03 01:45:11
+2026-10-02,PSKY,Paramount-Warner Bros. to adopt Skydance name after merger,seekingalpha/PSKY,,,2026-10-03 01:45:11
+2026-10-02,PSKY,Warner Bros. studio execs to leave after Paramount merger -- Variety,seekingalpha/PSKY,,,2026-10-03 01:45:11
+2026-10-02,PWR,Quanta Services: A Powerful Growth Platform With Little Room For Execution Errors,seekingalpha/PWR,,,2026-10-03 01:45:11
+2026-10-02,QCOM,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/QCOM,,,2026-10-03 01:45:11
+2026-10-02,RTX,Most and least shorted industrial stocks with market caps above $2B as of end-September,seekingalpha/RTX,,,2026-10-03 01:45:11
+2026-10-02,RTX,RTX Corporation's Defense Orders Are Surging Again - Another $45B Just Dropped,seekingalpha/RTX,,,2026-10-03 01:45:11
+2026-10-02,SBUX,Starbucks faces US lawmaker call to close new Xinjiang stores,seekingalpha/SBUX,,,2026-10-03 01:45:11
+2026-10-02,SNDK,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/SNDK,,,2026-10-03 01:45:11
+2026-10-02,SNDK,Sandisk: Great Long-Term Deal Coverage Balanced By Richer Valuations (Upgrade),seekingalpha/SNDK,,,2026-10-03 01:45:11
+2026-10-02,SNPS,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/SNPS,,,2026-10-03 01:45:11
+2026-10-02,SNPS,Synopsys: AI And Ansys Create A Growth Story,seekingalpha/SNPS,,,2026-10-03 01:45:11
+2026-10-02,SPY,AI boom shields stocks from G7 bond bear market: Jefferies,seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,SPY,"Bond Yields Are Normalizing As The Three-Month Average Jobs Prints At 51,000",seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,SPY,"Catalyst Watch: Microsoft event, FOMC talk, and the finish line for Paramount-Warner Bros.",seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,SPY,Energy's inverse grip on stock market hits a record high,seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,SPY,SA analyst: Yields could soon ‘roll over’ as stocks rally,seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,SPY,"The Labor Market Remains Quiet, But Firm",seekingalpha/SPY,,,2026-10-03 01:45:11
+2026-10-02,STX,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/STX,,,2026-10-03 01:45:11
+2026-10-02,STX,Seagate Technology drops 10% amid storage-sector pressure,seekingalpha/STX,,,2026-10-03 01:45:11
+2026-10-02,STX,"Seagate, Western Digital plunge amid report that Toshiba aims to boost hard disk drive supply",seekingalpha/STX,,,2026-10-03 01:45:11
+2026-10-02,TAP,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/TAP,,,2026-10-03 01:45:11
+2026-10-02,TER,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/TER,,,2026-10-03 01:45:11
+2026-10-02,TER,"Teradyne: AI Test Demand Is Exploding, But The Valuation Already Reflects A Lot Of Growth",seekingalpha/TER,,,2026-10-03 01:45:11
+2026-10-02,TSLA,Tesla smashes third-quarter deliveries expectation as Europe demand recovers,seekingalpha/TSLA,,,2026-10-03 01:45:11
+2026-10-02,TSLA,Tesla: The Vision And The Timeline,seekingalpha/TSLA,,,2026-10-03 01:45:11
+2026-10-02,UAL,United Airlines targets top Delta and American flyers with aggressive status-match push,seekingalpha/UAL,,,2026-10-03 01:45:11
+2026-10-02,UNP,"Union Pacific: The Earnings Keep Beating, But The Stock Keeps Falling",seekingalpha/UNP,,,2026-10-03 01:45:11
+2026-10-02,VOO,Bad News Is Good News Again: September Jobs Report,seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VOO,"Bond Yields Are Normalizing As The Three-Month Average Jobs Prints At 51,000",seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VOO,SA analyst: Yields could soon ‘roll over’ as stocks rally,seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VOO,"September Jobs Report: Hiring Slows, But Labor Market Weakness Remains Limited",seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VOO,The Fed Is Done After The September Jobs Report,seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VOO,"The Labor Market Remains Quiet, But Firm",seekingalpha/VOO,,,2026-10-03 01:45:11
+2026-10-02,VST,Vistra set to get $4B U.S. loan to boost nuclear production - Bloomberg,seekingalpha/VST,,,2026-10-03 01:45:11
+2026-10-02,VTI,The Risks Of Returning To Hyper-Concentration,seekingalpha/VTI,,,2026-10-03 01:45:11
+2026-10-02,VZ,"Dividend Roundup: Mastercard, General Mills, Verizon, AT&T, and more",seekingalpha/VZ,,,2026-10-03 01:45:11
+2026-10-02,VZ,Versant renews distribution agreement with Verizon,seekingalpha/VZ,,,2026-10-03 01:45:11
+2026-10-02,WBD,"Catalyst Watch: Microsoft event, FOMC talk, and the finish line for Paramount-Warner Bros.",seekingalpha/WBD,,,2026-10-03 01:45:11
+2026-10-02,WBD,"Moderna to join Nasdaq-100, replacing Warner Bros. Discovery",seekingalpha/WBD,,,2026-10-03 01:45:11
+2026-10-02,WBD,Paramount-Warner Bros. to adopt Skydance name after merger,seekingalpha/WBD,,,2026-10-03 01:45:11
+2026-10-02,WBD,Warner Bros. studio execs to leave after Paramount merger -- Variety,seekingalpha/WBD,,,2026-10-03 01:45:11
+2026-10-02,WDC,Nasdaq rises for the week as Lumentum leads gains,seekingalpha/WDC,,,2026-10-03 01:45:11
+2026-10-02,WDC,"Seagate, Western Digital plunge amid report that Toshiba aims to boost hard disk drive supply",seekingalpha/WDC,,,2026-10-03 01:45:11
+2026-10-02,WDC,Western Digital retreats 10% amid storage selloff,seekingalpha/WDC,,,2026-10-03 01:45:11
+2026-10-02,WMT,"Molson Coors, Freshpet, Kimberly-Clark lead consumer staples short interest above $2B",seekingalpha/WMT,,,2026-10-03 01:45:11
+2026-10-02,XYZ,"CleanSpark sees highest interest from short sellers in September among large, mega cap firms",seekingalpha/XYZ,,,2026-10-03 01:45:11
