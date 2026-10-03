@@ -1607,5 +1607,76 @@ def main():
     return 1 if failed else 0
 
 
+@test
+def an_unsized_holding_is_not_a_holding_worth_nothing():
+    """
+    THE WEIGHTS ARE THE POINT, AND AN UNSIZED POSITION CORRUPTS EVERY ONE OF THEM.
+
+    BTC-USD is held and has no share count, because the counts were transcribed from a
+    screenshot of the Stocks & ETFs tab. Folding it in at zero would understate the total
+    and OVERSTATE every weight computed against that total — and the result reads as a
+    perfectly ordinary book, which is the shape that does the damage. The same applies to
+    a position whose quote simply failed to arrive.
+
+    So an unsized or unpriced holding is NAMED, and the percentages say what they are a
+    share of, rather than being silently excluded or silently zeroed.
+    """
+    import book
+
+    positions = [
+        {"symbol": "AAA", "status": "held", "shares": 10},
+        {"symbol": "BBB", "status": "held"},                     # no share count
+        {"symbol": "CCC", "status": "held", "shares": 5},         # no quote below
+        {"symbol": "DDD", "status": "watching", "shares": 99},    # not owned
+    ]
+    quotes = [{"symbol": "AAA", "price": 10.0, "change_pct": 0.0},
+              {"symbol": "BBB", "price": 50.0, "change_pct": 0.0}]
+    rows, total, unsized = book.value(positions, quotes)
+
+    assert [r["symbol"] for r in rows] == ["AAA"], rows
+    assert total == 100.0, total
+    assert sorted(unsized) == ["BBB", "CCC"], unsized
+    assert rows[0]["weight_pct"] == 100.0, (
+        "the weight must be a share of what COULD be valued, not of a guessed total")
+
+    said = " ".join(book.lines(rows, total, unsized))
+    assert "BBB" in said and "CCC" in said, (
+        "an unsized holding vanished from the letter instead of being named: " + said)
+    assert "share of the rest" in said
+
+    # and a WATCHED position is never in the book, however many shares the file carries
+    assert "DDD" not in said and all(r["symbol"] != "DDD" for r in rows)
+
+
+@test
+def the_letter_never_invents_a_profit_or_a_cost_basis():
+    """
+    NO BASIS IS STORED, SO NO RETURN CAN BE REPORTED.
+
+    The brokerage was never asked for a cost basis and nothing in this repo keeps one. A
+    made-up basis would be the most believable wrong number on the page: "up 12% since you
+    bought" is trusted instantly and checked by nobody, and it is precisely the sentence
+    that sends someone to buy more — which is the opposite of what this letter is for.
+
+    The book reports VALUE and WEIGHT, which need only shares and a price.
+    """
+    import book
+
+    positions = [{"symbol": "AAA", "status": "held", "shares": 4}]
+    quotes = [{"symbol": "AAA", "price": 25.0, "change_pct": 5.0}]
+    rows, total, unsized = book.value(positions, quotes)
+    r = rows[0]
+    assert set(r) == {"symbol", "shares", "price", "value", "change_pct", "day_money",
+                      "weight_pct"}, (
+        "the book grew a field: " + str(sorted(r)) + " — if it is a basis or a return, it "
+        "is invented")
+    assert r["value"] == 100.0
+    assert abs(r["day_money"] - (100.0 - 100.0 / 1.05)) < 1e-9
+
+    said = " ".join(book.lines(rows, total, unsized)).lower()
+    for word in ("gain", "loss", "profit", "return", "since you bought", "cost"):
+        assert word not in said, "the book letter claims a " + word + ": " + said
+
+
 if __name__ == "__main__":
     sys.exit(main())

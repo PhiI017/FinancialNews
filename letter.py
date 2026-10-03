@@ -20,6 +20,8 @@ screen reader gets, and this letter is read aloud.
 
 import html
 
+import book
+
 # Grouped so one sentence can cover twenty symbols. Keyed on what the reader should DO,
 # which is the only thing that makes a failure worth printing to them at all.
 # ── THE SENTENCE NAMES WHAT IS MISSING, NOT JUST WHY ────────────────────────────────
@@ -163,6 +165,14 @@ def plain(mode, facts, verdict, note):
     held = [q for q in facts.get("quotes", [])
             if q["symbol"] in {p["symbol"] for p in facts.get("positions", [])
                                if p.get("status") == "held"}]
+    # THE BOOK FIRST, THEN THE TICKERS. This letter is the only window onto the portfolio
+    # for the five days the brokerage app is on a computer at home, so it leads with what
+    # the thing is WORTH and how it is WEIGHTED — the figures that make opening the app
+    # unnecessary — and leaves the per-symbol prices underneath for anyone who wants them.
+    rows, total, unsized = book.value(facts.get("positions", []), facts.get("quotes", []))
+    if rows:
+        out.append("")
+        out.extend(book.lines(rows, total, unsized))
     if held:
         out.append("")
         out.append("Your holdings: " + "; ".join(
@@ -176,10 +186,13 @@ def plain(mode, facts, verdict, note):
     return "\n".join(out)
 
 
-def _row(q):
+def _row(q, weight_pct=None):
+    """One holding. `weight_pct` is None for a watched name, which has no weight by definition."""
     c = _colour(q["change_pct"])
     return (f'<tr>'
             f'<td style="padding:6px 12px 6px 0;font-weight:600;">{html.escape(q["symbol"])}</td>'
+            f'<td style="padding:6px 12px 6px 0;text-align:right;color:#57606a;">'
+            f'{("" if weight_pct is None else f"{weight_pct:.0f}%")}</td>'
             f'<td style="padding:6px 12px 6px 0;text-align:right;">{q["price"]:,.2f}</td>'
             f'<td style="padding:6px 0;text-align:right;color:{c};white-space:nowrap;">'
             f'{_arrow(q["change_pct"])} {q["change_pct"]:+.2f}%</td></tr>')
@@ -226,6 +239,16 @@ def rich(mode, facts, verdict, note):
     watch_syms = {p["symbol"] for p in facts.get("positions", []) if p.get("status") == "watching"}
     held = [q for q in facts.get("quotes", []) if q["symbol"] in held_syms]
     watching = [q for q in facts.get("quotes", []) if q["symbol"] in watch_syms]
+    brows, btotal, bunsized = book.value(facts.get("positions", []),
+                                        facts.get("quotes", []))
+    weights = {r["symbol"]: r["weight_pct"] for r in brows}
+    if brows:
+        parts.append(
+            '<div style="border:1px solid #d0d7de;border-radius:8px;padding:14px 16px;'
+            'margin:0 0 20px;">'
+            + "".join(f'<div style="margin:0 0 4px;">{html.escape(l)}</div>'
+                      for l in book.lines(brows, btotal, bunsized))
+            + '</div>')
     for title, rows in (("Holdings", held), ("Watching", watching)):
         if not rows:
             continue
@@ -233,7 +256,8 @@ def rich(mode, facts, verdict, note):
                      f'text-transform:uppercase;margin:0 0 6px;">{title}</div>'
                      f'<table style="border-collapse:collapse;width:100%;'
                      f'margin:0 0 20px;font-variant-numeric:tabular-nums;">'
-                     + "".join(_row(q) for q in rows) + '</table>')
+                     + "".join(_row(q, weights.get(q["symbol"])) for q in rows)
+                     + '</table>')
 
     # ── the written note ────────────────────────────────────────────────────────────
     if note:
