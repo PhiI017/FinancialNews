@@ -22,14 +22,6 @@
       "at": "2026-09-24",
       "drawdown_pct": -1.19,
       "fired": [],
-      "mode": "check",
-      "sent": {},
-      "urgency": "quiet"
-    },
-    {
-      "at": "2026-09-24",
-      "drawdown_pct": -1.19,
-      "fired": [],
       "mode": "preclose",
       "sent": {
         "email": "ok",
@@ -526,17 +518,24 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-05",
+      "drawdown_pct": -0.98,
+      "fired": [],
+      "mode": "weekahead",
+      "sent": {
+        "email": "ok",
+        "ntfy": "http_200"
+      },
+      "urgency": "urgent"
     }
   ],
-  "last_run": "2026-10-04 19:34:59",
+  "last_run": "2026-10-05 15:55:15",
   "movers_alerted": {
     "BOT": {
-      "asof": "2026-10-04",
-      "pct": 8.731924360400445
-    },
-    "NAUT": {
-      "asof": "2026-10-04",
-      "pct": 24.840764331210185
+      "asof": "2026-10-05",
+      "pct": 9.12190963341859
     }
   },
   "premium_rungs_spent": {
