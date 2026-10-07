@@ -1,15 +1,7 @@
 {
   "fired_levels": [],
-  "highest_close": 7798.99,
+  "highest_close": 7818.93,
   "history": [
-    {
-      "at": "2026-09-25",
-      "drawdown_pct": -1.22,
-      "fired": [],
-      "mode": "check",
-      "sent": {},
-      "urgency": "quiet"
-    },
     {
       "at": "2026-09-25",
       "drawdown_pct": -1.22,
@@ -529,9 +521,17 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-07",
+      "drawdown_pct": 0.0,
+      "fired": [],
+      "mode": "check",
+      "sent": {},
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-10-06 23:13:12",
+  "last_run": "2026-10-07 00:04:41",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
