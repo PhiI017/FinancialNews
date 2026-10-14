@@ -14,14 +14,6 @@
       "at": "2026-10-02",
       "drawdown_pct": -1.7,
       "fired": [],
-      "mode": "check",
-      "sent": {},
-      "urgency": "quiet"
-    },
-    {
-      "at": "2026-10-02",
-      "drawdown_pct": -1.7,
-      "fired": [],
       "mode": "preclose",
       "sent": {
         "email": "ok",
@@ -529,10 +521,26 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-14",
+      "drawdown_pct": -0.17,
+      "fired": [],
+      "mode": "check",
+      "sent": {
+        "email": "ok",
+        "ntfy": "http_200"
+      },
+      "urgency": "urgent"
     }
   ],
-  "last_run": "2026-10-13 23:50:56",
-  "movers_alerted": {},
+  "last_run": "2026-10-14 17:37:22",
+  "movers_alerted": {
+    "BE": {
+      "asof": "2026-10-14",
+      "pct": -8.772063010058828
+    }
+  },
   "premium_rungs_spent": {
     "BOT": []
   }
