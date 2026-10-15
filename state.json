@@ -3,14 +3,6 @@
   "highest_close": 7818.93,
   "history": [
     {
-      "at": "2026-10-04",
-      "drawdown_pct": -0.98,
-      "fired": [],
-      "mode": "check",
-      "sent": {},
-      "urgency": "quiet"
-    },
-    {
       "at": "2026-10-05",
       "drawdown_pct": -0.98,
       "fired": [],
@@ -535,14 +527,18 @@
         "ntfy": "http_200"
       },
       "urgency": "urgent"
+    },
+    {
+      "at": "2026-10-15",
+      "drawdown_pct": -1.28,
+      "fired": [],
+      "mode": "check",
+      "sent": {},
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-10-15 14:54:13",
+  "last_run": "2026-10-15 17:22:28",
   "movers_alerted": {
-    "ADBE": {
-      "asof": "2026-10-15",
-      "pct": 5.143759348512544
-    },
     "BOT": {
       "asof": "2026-10-15",
       "pct": -8.275101140125042
