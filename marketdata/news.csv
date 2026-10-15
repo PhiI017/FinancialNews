@@ -5599,6 +5599,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-09,ADBE,"India pushes back after U.S. bars Microsoft, Indian firms from Visa program",seekingalpha/ADBE,,,2026-10-10 02:13:00
 2026-10-09,ADSK,Semiconductor stocks lead Nasdaq's weekly decliners amid wider hit on AI trade,seekingalpha/ADSK,,,2026-10-10 02:13:00
 2026-10-09,AEE,Ameren declares $0.75 dividend,seekingalpha/AEE,,,2026-10-13 03:29:19
+2026-10-09,AES,AES declares $0.17595 dividend,seekingalpha/AES,,,2026-10-15 01:10:48
 2026-10-09,AES,AES declares $0.176 dividend,seekingalpha/AES,,,2026-10-13 03:29:19
 2026-10-09,AMD,AMD: The Market Is Not Ready For The Huge Margin Upside,seekingalpha/AMD,,,2026-10-10 02:13:00
 2026-10-09,AMD,AMD: Too Expensive To Be Worth It Despite Unique Position As CPU Leader,seekingalpha/AMD,,,2026-10-10 02:13:00
@@ -6022,8 +6023,10 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-13,AMAT,Applied Materials drops during Investor Day as it eyes growing optical inspection market,seekingalpha/AMAT,,,2026-10-14 01:42:26
 2026-10-13,AMAT,Applied Materials retreats 7% as losing streak reaches six sessions,seekingalpha/AMAT,,,2026-10-14 01:42:26
 2026-10-13,AMAT,"Applied Materials, Inc. (AMAT) Presents at SEMICON West 2026 Transcript",seekingalpha/AMAT,,,2026-10-14 01:42:26
+2026-10-13,AMAT,SEMICON West 2026 Presentation,seekingalpha/AMAT,,,2026-10-15 01:10:48
 2026-10-13,AMD,"Micron Technology, HPE, and AMD lead technology quant picks ahead of Q3 earnings",seekingalpha/AMD,,,2026-10-14 01:42:26
 2026-10-13,AMD,"S&P Hits All-Time Highs, AI Trade Does All The Work",seekingalpha/AMD,,,2026-10-14 01:42:26
+2026-10-13,AMT,"American Tower: An Opportunity To Invest In Tower REITs, As Mobile Demand Grows",seekingalpha/AMT,,,2026-10-15 01:10:48
 2026-10-13,AOS,A. O. Smith Corporation raises dividend by 5.6% to $0.38,seekingalpha/AOS,,,2026-10-14 01:42:26
 2026-10-13,APP,AppLovin: Time And Patience Running Out (Downgrade),seekingalpha/APP,,,2026-10-14 01:42:26
 2026-10-13,AVGO,Broadcom CEO sees viable OpenAI business but warns of AI funding constraints,seekingalpha/AVGO,,,2026-10-14 01:42:26
@@ -6129,6 +6132,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-13,LMT,"Lockheed Martin, Avio agree to expand U.S. rocket motor production",seekingalpha/LMT,,,2026-10-14 01:42:26
 2026-10-13,LRCX,Lam Research Corporation: Strong FY 2027 Setup Makes It A Solid Bet Ahead Of Q1,seekingalpha/LRCX,,,2026-10-14 01:42:26
 2026-10-13,LRCX,Lam Research shares tumbled for seven consecutive sessions,seekingalpha/LRCX,,,2026-10-14 01:42:26
+2026-10-13,LRCX,Lam Research: Strong FY 2027 Setup Makes It A Solid Bet Ahead Of Q1,seekingalpha/LRCX,,,2026-10-15 01:10:48
 2026-10-13,MA,"ClearBridge Appreciation Strategy adds new positions in Mastercard, Novartis; exits Disney, Cisco, SPCX among Q3 moves",seekingalpha/MA,,,2026-10-14 01:42:26
 2026-10-13,MCK,McKesson: Re-Rated Again Amidst Increased M&A Efforts,seekingalpha/MCK,,,2026-10-14 01:42:26
 2026-10-13,META,"Meta AI models opening path to enterprise market, says BNP Paribas",seekingalpha/META,,,2026-10-14 01:42:26
@@ -6164,6 +6168,7 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-13,NOW,AI agent Decagon held sales talks with ServiceNow; others - report,seekingalpha/NOW,,,2026-10-14 01:42:26
 2026-10-13,NOW,"ClearBridge Appreciation Strategy adds new positions in Mastercard, Novartis; exits Disney, Cisco, SPCX among Q3 moves",seekingalpha/NOW,,,2026-10-14 01:42:26
 2026-10-13,NOW,"ServiceNow could be the next software 'accelerator,' BNP Paribas says",seekingalpha/NOW,,,2026-10-14 01:42:26
+2026-10-13,NOW,ServiceNow: I'm Buying Ahead Of Q3 Despite Premium Valuation,seekingalpha/NOW,,,2026-10-15 01:10:48
 2026-10-13,NRG,COPEL and Iberdrola lead utilities quant picks ahead of Q3 earnings,seekingalpha/NRG,,,2026-10-14 01:42:26
 2026-10-13,NVDA,"ClearBridge Large Cap Value adds Nvidia, Coca-Cola; exits Chevron, PepsiCo among Q3 moves",seekingalpha/NVDA,,,2026-10-14 01:42:26
 2026-10-13,NVDA,"Nvidia's Valuation Looks Too Low, But I Understand Why",seekingalpha/NVDA,,,2026-10-14 01:42:26
@@ -6244,3 +6249,226 @@ published_at,ticker,headline,source,score,scored_at,fetched_at
 2026-10-13,WMT,"Walmart expands free drug coverage, adds healthcare benefits for workers",seekingalpha/WMT,,,2026-10-14 01:42:26
 2026-10-13,WYNN,Tropical storm remnants crash the party on the Las Vegas Strip,seekingalpha/WYNN,,,2026-10-14 01:42:26
 2026-10-13,XOM,Guyana weighs scaling back LNG plans as Exxon says more gas needed for its wells - Reuters,seekingalpha/XOM,,,2026-10-14 01:42:26
+2026-10-14,AAPL,Apple asks judge to overturn $5.7B patent verdict in Taction case,seekingalpha/AAPL,,,2026-10-15 01:10:48
+2026-10-14,AAPL,Apple clears regulatory hurdles as it prepares to launch AI features in China: report,seekingalpha/AAPL,,,2026-10-15 01:10:48
+2026-10-14,AAPL,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/AAPL,,,2026-10-15 01:10:48
+2026-10-14,AAPL,OpenAI's legal issues mount as eight states sue ChatGPT maker for harming children,seekingalpha/AAPL,,,2026-10-15 01:10:48
+2026-10-14,ABNB,Airbnb: Diversified Travel Ambitions Already Priced-In - Further Consolidation Likely,seekingalpha/ABNB,,,2026-10-15 01:10:48
+2026-10-14,ACN,Accenture rises as mid-term growth targets point to stronger FY29 outlook,seekingalpha/ACN,,,2026-10-15 01:10:48
+2026-10-14,ADBE,SA Asks: How could the green card crackdown impact Big Tech?,seekingalpha/ADBE,,,2026-10-15 01:10:48
+2026-10-14,AEP,AEP to spend $4B on Wyoming fuel cell project under 20-year Google PPA,seekingalpha/AEP,,,2026-10-15 01:10:48
+2026-10-14,AIZ,"Stocks making big moves after hours: SANM, KEYS, AIZ",seekingalpha/AIZ,,,2026-10-15 01:10:48
+2026-10-14,ALB,Albemarle upgraded at Mizuho on surging energy storage demand,seekingalpha/ALB,,,2026-10-15 01:10:48
+2026-10-14,AVGO,"Broadcom: AI Demand Is Strong, But Is That Enough?",seekingalpha/AVGO,,,2026-10-15 01:10:48
+2026-10-14,AVGO,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/AVGO,,,2026-10-15 01:10:48
+2026-10-14,BAC,Bank of America Corporation (BAC) Q3 2026 Earnings Call Transcript,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BAC,Bank of America Corporation 2026 Q3 - Results - Earnings Call Presentation,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BAC,Bank of America expects 2027 NII to rise 8% or more as it embeds $1.2B regulatory settlement costs,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BAC,Bank of America posts worst day since April 2025 after regulatory fine,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BAC,Bank of America: Huge Fine Makes Shares Slump,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BAC,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/BAC,,,2026-10-15 01:10:48
+2026-10-14,BEN,Asset managers' AUM dips in September as market valuations slip,seekingalpha/BEN,,,2026-10-15 01:10:48
+2026-10-14,BKNG,Booking Holdings plans a $100M investment in its AI-powered Vayo app,seekingalpha/BKNG,,,2026-10-15 01:10:48
+2026-10-14,BLK,"BlackRock Q3 earnings top consensus on strong performance fees, technology revenue growth",seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BLK,BlackRock Q3: The Earnings Upside Isn't Fully Priced In Yet,seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BLK,BlackRock in charts: Strong AUM growth and securities lending boost investment advisory revenue by $990M Y/Y,seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BLK,"BlackRock, Inc. (BLK) Q3 2026 Earnings Call Transcript",seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BLK,"BlackRock, Inc. 2026 Q3 - Results - Earnings Call Presentation",seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BLK,BlackRock’s Larry Fink: ‘Fear about data centers is based on misinformation’,seekingalpha/BLK,,,2026-10-15 01:10:48
+2026-10-14,BNY,Bank of New York Mellon Q4 2026 Earnings Preview,seekingalpha/BNY,,,2026-10-15 01:10:48
+2026-10-14,BRK.B,Bending Spoons stock soars after Berkshire Hathaway boosts stake to 4%,seekingalpha/BRK.B,,,2026-10-15 01:10:48
+2026-10-14,BRK.B,Lessons From GEICO's Lost Battle With Progressive For Berkshire Shareholders,seekingalpha/BRK.B,,,2026-10-15 01:10:48
+2026-10-14,BXP,BXP sells a partial stake in 343 Madison Avenue project,seekingalpha/BXP,,,2026-10-15 01:10:48
+2026-10-14,C,Citigroup Earnings: Tapering Optimism (Rating Downgrade),seekingalpha/C,,,2026-10-15 01:10:48
+2026-10-14,C,Citigroup works on Banamex IPO as Chico Pardo's sons promote bank's revival - report,seekingalpha/C,,,2026-10-15 01:10:48
+2026-10-14,C,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/C,,,2026-10-15 01:10:48
+2026-10-14,CARR,"Trane Technologies upgraded, Lennox and Carrier downgraded at Goldman Sachs",seekingalpha/CARR,,,2026-10-15 01:10:48
+2026-10-14,CAT,Caterpillar declares $1.63 dividend,seekingalpha/CAT,,,2026-10-15 01:10:48
+2026-10-14,CAT,"Caterpillar sinks 30% from record high amid AI selloff, inflation fears",seekingalpha/CAT,,,2026-10-15 01:10:48
+2026-10-14,CBOE,SEC approves Cboe's KPI options with Robinhood,seekingalpha/CBOE,,,2026-10-15 01:10:48
+2026-10-14,CCI,ClearBridge Global Infrastructure Income Strategy adds CCI exits OKE and EIX,seekingalpha/CCI,,,2026-10-15 01:10:48
+2026-10-14,CELH,"Celsius: Recovery In Play, But Limited Upside",seekingalpha/CELH,,,2026-10-15 01:10:48
+2026-10-14,CELH,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/CELH,,,2026-10-15 01:10:48
+2026-10-14,CFG,Citizens Financial Group Q2 2026 Earnings Preview,seekingalpha/CFG,,,2026-10-15 01:10:48
+2026-10-14,CI,Individual health insurance market contracts 18% as Obamacare subsidies lapse,seekingalpha/CI,,,2026-10-15 01:10:48
+2026-10-14,CI,"U.S. to halt Obamacare benefits for 189,000 duplicate and deceased enrollees",seekingalpha/CI,,,2026-10-15 01:10:48
+2026-10-14,CIEN,Ciena slides 10% amid multi-session losing streak,seekingalpha/CIEN,,,2026-10-15 01:10:48
+2026-10-14,CIEN,Ciena: AI Demand Is Outrunning Supply,seekingalpha/CIEN,,,2026-10-15 01:10:48
+2026-10-14,COF,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/COF,,,2026-10-15 01:10:48
+2026-10-14,COR,AI Disruption May Benefit Cencora More Than Hims & Hers,seekingalpha/COR,,,2026-10-15 01:10:48
+2026-10-14,COST,Costco declares $1.47 dividend,seekingalpha/COST,,,2026-10-15 01:10:48
+2026-10-14,CVS,Individual health insurance market contracts 18% as Obamacare subsidies lapse,seekingalpha/CVS,,,2026-10-15 01:10:48
+2026-10-14,CVS,"U.S. to halt Obamacare benefits for 189,000 duplicate and deceased enrollees",seekingalpha/CVS,,,2026-10-15 01:10:48
+2026-10-14,DELL,"Biggest stock movers Wednesday: DELL, LQDA, ENVX and more",seekingalpha/DELL,,,2026-10-15 01:10:48
+2026-10-14,DELL,"Dell Technologies tumbles 11% on Barclays downgrade, tech slide",seekingalpha/DELL,,,2026-10-15 01:10:48
+2026-10-14,DELL,"Dell, HPE, NetApp slide after Barclays downgrades trio to Equal Weight",seekingalpha/DELL,,,2026-10-15 01:10:48
+2026-10-14,DELL,"Honeywell launches AI platform with Nvidia, Dell for building automation",seekingalpha/DELL,,,2026-10-15 01:10:48
+2026-10-14,DELL,SK Group chairman to sell 1.34% stake to Dell family office fund,seekingalpha/DELL,,,2026-10-15 01:10:48
+2026-10-14,DHR,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/DHR,,,2026-10-15 01:10:48
+2026-10-14,DIS,"Disney: Cruise Expansion, Strong Live Event Schedule, And Retention Support Good FY 2027 Growth",seekingalpha/DIS,,,2026-10-15 01:10:48
+2026-10-14,EBAY,eBay: Live Commerce Is The Next Growth Catalyst,seekingalpha/EBAY,,,2026-10-15 01:10:48
+2026-10-14,EIX,ClearBridge Global Infrastructure Income Strategy adds CCI exits OKE and EIX,seekingalpha/EIX,,,2026-10-15 01:10:48
+2026-10-14,EIX,Edison wins dismissal of some key claims in Palisades Fire lawsuit,seekingalpha/EIX,,,2026-10-15 01:10:48
+2026-10-14,EIX,"PG&E, SoCal Edison warn of hundreds of thousands of potential wildfire-related power shutoffs",seekingalpha/EIX,,,2026-10-15 01:10:48
+2026-10-14,EQT,EQT raises dividend to $0.17 up 3%,seekingalpha/EQT,,,2026-10-15 01:10:48
+2026-10-14,ETN,Eaton: Strong Backlog And Margin Recovery Support The Buy Case,seekingalpha/ETN,,,2026-10-15 01:10:48
+2026-10-14,F,Ford: The Market Is Worried And You Should Be Too,seekingalpha/F,,,2026-10-15 01:10:48
+2026-10-14,FAST,Fastenal Company (FAST) Q3 2026 Earnings Call Transcript,seekingalpha/FAST,,,2026-10-15 01:10:48
+2026-10-14,FAST,Fastenal Company 2026 Q3 - Results - Earnings Call Presentation,seekingalpha/FAST,,,2026-10-15 01:10:48
+2026-10-14,FAST,"Fastenal GAAP EPS of $0.35 beats by $0.01, revenue of $2.46B beats by $20M",seekingalpha/FAST,,,2026-10-15 01:10:48
+2026-10-14,FAST,"Fastenal expects 27,000 to 29,000 weighted device signings in 2026 as sales rise 15.5%",seekingalpha/FAST,,,2026-10-15 01:10:48
+2026-10-14,FAST,Fastenal stock falls as margins face pressure,seekingalpha/FAST,,,2026-10-15 01:10:48
+2026-10-14,FCX,"Freeport-McMoRan: Rally Looks Tired, Consolidation Likely",seekingalpha/FCX,,,2026-10-15 01:10:48
+2026-10-14,FOX,Federal judge indefinitely blocks Trump’s ban on three media outlets,seekingalpha/FOX,,,2026-10-15 01:10:48
+2026-10-14,FOXA,Federal judge indefinitely blocks Trump’s ban on three media outlets,seekingalpha/FOXA,,,2026-10-15 01:10:48
+2026-10-14,GE,Aerospace CEOs meet with U.S. officials on aircraft certification reform,seekingalpha/GE,,,2026-10-15 01:10:48
+2026-10-14,GILD,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/GILD,,,2026-10-15 01:10:48
+2026-10-14,GILD,Vir jumps on Gilead licensing deal worth up to $1.9B for cancer drugs,seekingalpha/GILD,,,2026-10-15 01:10:48
+2026-10-14,GOOG,"Google Cloud, DeepMind provide AI research tools and computing credits to Europe",seekingalpha/GOOG,,,2026-10-15 01:10:48
+2026-10-14,GOOG,"Google DeepMind, Google Cloud to give European researchers access to AI models",seekingalpha/GOOG,,,2026-10-15 01:10:48
+2026-10-14,GOOGL,"Google Cloud, DeepMind provide AI research tools and computing credits to Europe",seekingalpha/GOOGL,,,2026-10-15 01:10:48
+2026-10-14,GOOGL,"Google DeepMind, Google Cloud to give European researchers access to AI models",seekingalpha/GOOGL,,,2026-10-15 01:10:48
+2026-10-14,HII,HII unit gets $56M US Navy contract to advance AUKUS design,seekingalpha/HII,,,2026-10-15 01:10:48
+2026-10-14,HON,"ClearBridge Dividend Strategy exits RTX, Honeywell International in Q3, adds Otis, T-Mobile, and Kinder Morgan",seekingalpha/HON,,,2026-10-15 01:10:48
+2026-10-14,HON,"Honeywell launches AI platform with Nvidia, Dell for building automation",seekingalpha/HON,,,2026-10-15 01:10:48
+2026-10-14,HONA,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/HONA,,,2026-10-15 01:10:48
+2026-10-14,HOOD,SEC approves Cboe's KPI options with Robinhood,seekingalpha/HOOD,,,2026-10-15 01:10:48
+2026-10-14,HPE,"Dell, HPE, NetApp slide after Barclays downgrades trio to Equal Weight",seekingalpha/HPE,,,2026-10-15 01:10:48
+2026-10-14,HPE,Hewlett Packard Enterprise: Fears Mount For Bears As Juniper Acquisition Shows Strength,seekingalpha/HPE,,,2026-10-15 01:10:48
+2026-10-14,HSY,Hershey's Dip Buying Opportunity Is Here - Demand/Margin Risks Entering H2'26 (Rating Upgrade),seekingalpha/HSY,,,2026-10-15 01:10:48
+2026-10-14,HWM,Howmet Aerospace declares $0.14 dividend,seekingalpha/HWM,,,2026-10-15 01:10:48
+2026-10-14,IBKR,Interactive Brokers Group Q3 2026 Earnings Preview,seekingalpha/IBKR,,,2026-10-15 01:10:48
+2026-10-14,IBM,IBM partners with Siemens to advance nanostack transistor architecture,seekingalpha/IBM,,,2026-10-15 01:10:48
+2026-10-14,IVZ,Asset managers' AUM dips in September as market valuations slip,seekingalpha/IVZ,,,2026-10-15 01:10:48
+2026-10-14,JBHT,J.B. Hunt Transport Services Q3 2026 Earnings Preview,seekingalpha/JBHT,,,2026-10-15 01:10:48
+2026-10-14,JCI,"Trane Technologies upgraded, Lennox and Carrier downgraded at Goldman Sachs",seekingalpha/JCI,,,2026-10-15 01:10:48
+2026-10-14,JNJ,Johnson & Johnson: Stop Paying A Premium For Disappointment - Strong Sell,seekingalpha/JNJ,,,2026-10-15 01:10:48
+2026-10-14,JPM,JPMorgan Chase Q3 2026: A Top-Tier Bank Whose Shares Already Reflect It,seekingalpha/JPM,,,2026-10-15 01:10:48
+2026-10-14,JPM,"JPMorgan's Q3 Miss Is Noise, But Tread Carefully",seekingalpha/JPM,,,2026-10-15 01:10:48
+2026-10-14,JPM,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/JPM,,,2026-10-15 01:10:48
+2026-10-14,KDP,Piper Sandler sees Keurig Dr Pepper as undervalued ahead of business separation,seekingalpha/KDP,,,2026-10-15 01:10:48
+2026-10-14,KEYS,"Stocks making big moves after hours: SANM, KEYS, AIZ",seekingalpha/KEYS,,,2026-10-15 01:10:48
+2026-10-14,KHC,Kraft Heinz brings soup outside the can to Canada,seekingalpha/KHC,,,2026-10-15 01:10:48
+2026-10-14,KHC,Kraft Heinz: A High Yield Won't Fix A Broken Growth Story,seekingalpha/KHC,,,2026-10-15 01:10:48
+2026-10-14,KMI,"ClearBridge Dividend Strategy exits RTX, Honeywell International in Q3, adds Otis, T-Mobile, and Kinder Morgan",seekingalpha/KMI,,,2026-10-15 01:10:48
+2026-10-14,KO,"ClearBridge ESG Fund initiates Nvidia, Coca-Cola positions in Q3, exits PepsiCo, trims Alphabet and Meta",seekingalpha/KO,,,2026-10-15 01:10:48
+2026-10-14,LDOS,Navy deploys Leidos autonomous vessel with carrier group for 1st time,seekingalpha/LDOS,,,2026-10-15 01:10:48
+2026-10-14,LHX,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/LHX,,,2026-10-15 01:10:48
+2026-10-14,LII,"Trane Technologies upgraded, Lennox and Carrier downgraded at Goldman Sachs",seekingalpha/LII,,,2026-10-15 01:10:48
+2026-10-14,LMT,Lockheed Martin plans 6K U.S. jobs in $300M Texas expansion,seekingalpha/LMT,,,2026-10-15 01:10:48
+2026-10-14,LMT,Lockheed Martin upgraded at Vertical Research on missile growth,seekingalpha/LMT,,,2026-10-15 01:10:48
+2026-10-14,MCHP,"Microchip: Stronger Demand, Higher Prices, And An Attractive Valuation",seekingalpha/MCHP,,,2026-10-15 01:10:48
+2026-10-14,MDT,"Medtronic reports final results of MiniMed share swap, exits stake",seekingalpha/MDT,,,2026-10-15 01:10:48
+2026-10-14,META,Meta Platforms: Muse Wonder Exposes The AI Trade's Biggest Disconnect,seekingalpha/META,,,2026-10-15 01:10:48
+2026-10-14,MGM,MGM Resorts' Japan casino resort is still tracking for a 2030 opening,seekingalpha/MGM,,,2026-10-15 01:10:48
+2026-10-14,MKC,McCormick: Add Spice To Your Portfolio,seekingalpha/MKC,,,2026-10-15 01:10:48
+2026-10-14,MRSH,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/MRSH,,,2026-10-15 01:10:48
+2026-10-14,MRSH,Marsh &amp; McLennan Q3 2026 Earnings Preview,seekingalpha/MRSH,,,2026-10-15 01:10:48
+2026-10-14,MRVL,Marvell: A $37.5 Billion Business Is Quietly Carrying The Growth Plan,seekingalpha/MRVL,,,2026-10-15 01:10:48
+2026-10-14,MRVL,"Marvell: Buy For The Connectivity, Stay For The Custom Silicon",seekingalpha/MRVL,,,2026-10-15 01:10:48
+2026-10-14,MS,Morgan Stanley (MS) Q3 2026 Earnings Call Transcript,seekingalpha/MS,,,2026-10-15 01:10:48
+2026-10-14,MS,"Morgan Stanley GAAP EPS of $3.03 beats by $0.11, revenue of $20.34B beats by $230M",seekingalpha/MS,,,2026-10-15 01:10:48
+2026-10-14,MS,"Morgan Stanley Q3 earnings beat, helped by equity, wealth management growth",seekingalpha/MS,,,2026-10-15 01:10:48
+2026-10-14,MS,Morgan Stanley declares $1.15 dividend,seekingalpha/MS,,,2026-10-15 01:10:48
+2026-10-14,MSFT,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/MSFT,,,2026-10-15 01:10:48
+2026-10-14,MSFT,"Microsoft: Bears Are Making Noise About AI Spending, You Should Ignore It - Buy",seekingalpha/MSFT,,,2026-10-15 01:10:48
+2026-10-14,MSFT,Microsoft’s Azure chief seeks at least 20% cost cuts - report,seekingalpha/MSFT,,,2026-10-15 01:10:48
+2026-10-14,MSFT,OpenAI's legal issues mount as eight states sue ChatGPT maker for harming children,seekingalpha/MSFT,,,2026-10-15 01:10:48
+2026-10-14,MSFT,SA Asks: How could the green card crackdown impact Big Tech?,seekingalpha/MSFT,,,2026-10-15 01:10:48
+2026-10-14,MU,Elon Musk praises Micron for ‘reasonable’ memory pricing,seekingalpha/MU,,,2026-10-15 01:10:48
+2026-10-14,MU,Micron: Buy The China Panic,seekingalpha/MU,,,2026-10-15 01:10:48
+2026-10-14,MU,Micron: China Just Broke The Memory Supercycle Story,seekingalpha/MU,,,2026-10-15 01:10:48
+2026-10-14,NFLX,"Netflix cutting workforce as engagement slows, competition grows -- WSJ",seekingalpha/NFLX,,,2026-10-15 01:10:48
+2026-10-14,NFLX,Netflix may have a churn problem in the U.S. - Apptopia,seekingalpha/NFLX,,,2026-10-15 01:10:48
+2026-10-14,NOW,ServiceNow price target bumped to $170 at Citi on improving AI demand,seekingalpha/NOW,,,2026-10-15 01:10:48
+2026-10-14,NTAP,"Biggest stock movers Wednesday: DELL, LQDA, ENVX and more",seekingalpha/NTAP,,,2026-10-15 01:10:48
+2026-10-14,NTAP,"Dell, HPE, NetApp slide after Barclays downgrades trio to Equal Weight",seekingalpha/NTAP,,,2026-10-15 01:10:48
+2026-10-14,NVDA,"ClearBridge ESG Fund initiates Nvidia, Coca-Cola positions in Q3, exits PepsiCo, trims Alphabet and Meta",seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,NVDA,"Honeywell launches AI platform with Nvidia, Dell for building automation",seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,NVDA,LSEG taps Nvidia to speed up financial data crunching,seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,NVDA,Nvidia's Valuation Is Becoming Absurdly Cheap,seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,NVDA,"Nvidia, ChipAgents launch benchmark to test AI models on chip design: report",seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,NVDA,Nvidia: The $235 Billion Bullish Signal Investors Are Missing,seekingalpha/NVDA,,,2026-10-15 01:10:48
+2026-10-14,O,Realty Income: Bulls Need To Learn The Dividend And Interest Rate Lessons,seekingalpha/O,,,2026-10-15 01:10:48
+2026-10-14,OKE,ClearBridge Global Infrastructure Income Strategy adds CCI exits OKE and EIX,seekingalpha/OKE,,,2026-10-15 01:10:48
+2026-10-14,OKE,ONEOK declares $1.07 dividend,seekingalpha/OKE,,,2026-10-15 01:10:48
+2026-10-14,ORCL,"Oracle slumps 9% amid tech selloff, AI buildout concerns",seekingalpha/ORCL,,,2026-10-15 01:10:48
+2026-10-14,OTIS,"ClearBridge Dividend Strategy exits RTX, Honeywell International in Q3, adds Otis, T-Mobile, and Kinder Morgan",seekingalpha/OTIS,,,2026-10-15 01:10:48
+2026-10-14,PCG,"PG&E, SoCal Edison warn of hundreds of thousands of potential wildfire-related power shutoffs",seekingalpha/PCG,,,2026-10-15 01:10:48
+2026-10-14,PEP,"ClearBridge ESG Fund initiates Nvidia, Coca-Cola positions in Q3, exits PepsiCo, trims Alphabet and Meta",seekingalpha/PEP,,,2026-10-15 01:10:48
+2026-10-14,PG,Citi places Procter & Gamble on positive catalyst watch ahead of FQ1 gains,seekingalpha/PG,,,2026-10-15 01:10:48
+2026-10-14,PGR,Lessons From GEICO's Lost Battle With Progressive For Berkshire Shareholders,seekingalpha/PGR,,,2026-10-15 01:10:48
+2026-10-14,PGR,"Progressive GAAP EPS of $4.37 misses by $0.08, net premiums written of $22.3B misses by $210M",seekingalpha/PGR,,,2026-10-15 01:10:48
+2026-10-14,PGR,Progressive stock dips as policies in force rise less than expected; Q3 combined ratio falls Y/Y,seekingalpha/PGR,,,2026-10-15 01:10:48
+2026-10-14,PKG,Weyerhaeuser upgraded at Bank of America on timberland assets,seekingalpha/PKG,,,2026-10-15 01:10:48
+2026-10-14,PLD,Prologis Q3 2026 Earnings Preview,seekingalpha/PLD,,,2026-10-15 01:10:48
+2026-10-14,PLTR,"Palantir Is Not C3.ai, But C3.ai Wrote Its Watch List - Downgrade Palantir To Hold, Sell C3.ai",seekingalpha/PLTR,,,2026-10-15 01:10:48
+2026-10-14,PNC,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/PNC,,,2026-10-15 01:10:48
+2026-10-14,PNC,PNC Financial Q3 2026 Earnings Preview,seekingalpha/PNC,,,2026-10-15 01:10:48
+2026-10-14,PSX,"Phillips 66: Not My Favorite, But A Solid Pick For Investors Seeking Predictability",seekingalpha/PSX,,,2026-10-15 01:10:48
+2026-10-14,PYPL,"PayPal's Valuation Is Unreasonable, And A Potential Acquisition Could Rectify That",seekingalpha/PYPL,,,2026-10-15 01:10:48
+2026-10-14,Q,Qnity Electronics declares $0.08 dividend,seekingalpha/Q,,,2026-10-15 01:10:48
+2026-10-14,QCOM,Qualcomm: Navigating The Shift From Handsets To AI,seekingalpha/QCOM,,,2026-10-15 01:10:48
+2026-10-14,RDDT,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/RDDT,,,2026-10-15 01:10:48
+2026-10-14,REGN,Regeneron a new Buy at UBS as Street undervalues Dupixent's future,seekingalpha/REGN,,,2026-10-15 01:10:48
+2026-10-14,RF,Regions Financial Q3 2026 Earnings Preview,seekingalpha/RF,,,2026-10-15 01:10:48
+2026-10-14,RF,Regions Financial declares $0.30 dividend,seekingalpha/RF,,,2026-10-15 01:10:48
+2026-10-14,RTX,"ClearBridge Dividend Strategy exits RTX, Honeywell International in Q3, adds Otis, T-Mobile, and Kinder Morgan",seekingalpha/RTX,,,2026-10-15 01:10:48
+2026-10-14,RTX,RTX Q3 Preview: Two Growth Engines Make This Aerospace And Defense Leader A 'Buy',seekingalpha/RTX,,,2026-10-15 01:10:48
+2026-10-14,SCHW,Charles Schwab Q3 2026 Earnings Preview,seekingalpha/SCHW,,,2026-10-15 01:10:48
+2026-10-14,SO,Southern Company: Long-Term Growth Meets Near-Term Cash Flow Pressure,seekingalpha/SO,,,2026-10-15 01:10:48
+2026-10-14,SPY,CPI Pressures Markets And Fed Reserve's Move On Interest Rates,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,SPY,Consumer Price Index: Inflation At 3.7% In September,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,SPY,Could Russian Diesel Reduce American CPI?,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,SPY,Odds Of A Rate Hike Rise After The September CPI Report,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,SPY,SA analyst says a  stagflationary recession risk is growing,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,SPY,The Impact The Upcoming Midterm Election May Have On The Economy And Equity Markets,seekingalpha/SPY,,,2026-10-15 01:10:48
+2026-10-14,STT,State Street Corporation (STT) Q3 2026 Earnings Call Transcript,seekingalpha/STT,,,2026-10-15 01:10:48
+2026-10-14,STT,State Street Corporation 2026 Q3 - Results - Earnings Call Presentation,seekingalpha/STT,,,2026-10-15 01:10:48
+2026-10-14,STT,State Street Q3 earnings as fee revenue disappoint; stock trades down,seekingalpha/STT,,,2026-10-15 01:10:48
+2026-10-14,STT,State Street expects 2026 fee revenue growth of 13%-14% and NII growth of 15%-16% as payout ratio approaches 80%,seekingalpha/STT,,,2026-10-15 01:10:48
+2026-10-14,STT,State Street reports mixed Q3 results; updates FY26 outlook,seekingalpha/STT,,,2026-10-15 01:10:48
+2026-10-14,STX,Seagate's Improving Earnings Support A Cautious Upside,seekingalpha/STX,,,2026-10-15 01:10:48
+2026-10-14,T,"SA Asks: How much of a threat is SpaceX to AT&T, Verizon, T-Mobile?",seekingalpha/T,,,2026-10-15 01:10:48
+2026-10-14,TECH,RBC Capital downgrades tech to market weight as valuations appear stretched,seekingalpha/TECH,,,2026-10-15 01:10:48
+2026-10-14,TECH,S&P 500 sectors face strong historical tailwinds after mid-October close,seekingalpha/TECH,,,2026-10-15 01:10:48
+2026-10-14,TEL,"TE Connectivity: Solid Q3 Beat, But Low AI Mix And CPO Threat Keep Me On The Sidelines",seekingalpha/TEL,,,2026-10-15 01:10:48
+2026-10-14,TMO,"ClearBridge Value Strategy adds eight stocks, and exits 10 positions in Q3",seekingalpha/TMO,,,2026-10-15 01:10:48
+2026-10-14,TMUS,"ClearBridge Dividend Strategy exits RTX, Honeywell International in Q3, adds Otis, T-Mobile, and Kinder Morgan",seekingalpha/TMUS,,,2026-10-15 01:10:48
+2026-10-14,TMUS,"SA Asks: How much of a threat is SpaceX to AT&T, Verizon, T-Mobile?",seekingalpha/TMUS,,,2026-10-15 01:10:48
+2026-10-14,TRGP,Targa Resources declares $1.25 dividend,seekingalpha/TRGP,,,2026-10-15 01:10:48
+2026-10-14,TROW,Asset managers' AUM dips in September as market valuations slip,seekingalpha/TROW,,,2026-10-15 01:10:48
+2026-10-14,TSLA,"Controversial ""Musk"" documentary hits theaters amid legal threats, X ban",seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TSLA,Elon Musk praises Micron for ‘reasonable’ memory pricing,seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TSLA,Tesla and SpaceX could merge before December 6 -- Barclays,seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TSLA,Tesla: Germany's U-Turn Could Unlock Up To €932 Million A Year,seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TSLA,Tesla: The Robotaxi Dream Meets An Earnings Reality Check,seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TSLA,"The Tesla Story Is Falling Apart, And A Flying Roadster Won't Save It",seekingalpha/TSLA,,,2026-10-15 01:10:48
+2026-10-14,TT,"Trane Technologies upgraded, Lennox and Carrier downgraded at Goldman Sachs",seekingalpha/TT,,,2026-10-15 01:10:48
+2026-10-14,TTWO,It is less than 30 days until Grand Theft Auto 6 orders can be preloaded,seekingalpha/TTWO,,,2026-10-15 01:10:48
+2026-10-14,UBER,Taking A Brief Ride In Uber Technologies,seekingalpha/UBER,,,2026-10-15 01:10:48
+2026-10-14,UBER,Uber pursues a RICO case against a personal injury lawyer,seekingalpha/UBER,,,2026-10-15 01:10:48
+2026-10-14,UNH,Individual health insurance market contracts 18% as Obamacare subsidies lapse,seekingalpha/UNH,,,2026-10-15 01:10:48
+2026-10-14,UNH,"U.S. to halt Obamacare benefits for 189,000 duplicate and deceased enrollees",seekingalpha/UNH,,,2026-10-15 01:10:48
+2026-10-14,UNH,UnitedHealth Is Earning More From Less,seekingalpha/UNH,,,2026-10-15 01:10:48
+2026-10-14,URI,United Rentals Q3 Preview: Cost Improvements Meet A Demanding Valuation,seekingalpha/URI,,,2026-10-15 01:10:48
+2026-10-14,USB,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/USB,,,2026-10-15 01:10:48
+2026-10-14,USB,U.S. Bancorp Q3 2026 Earnings Preview,seekingalpha/USB,,,2026-10-15 01:10:48
+2026-10-14,V,Visa: Unpacking The 7 Powers And Forward Valuation Ahead Of Q4 Earnings,seekingalpha/V,,,2026-10-15 01:10:48
+2026-10-14,VOO,CPI Pressures Markets And Fed Reserve's Move On Interest Rates,seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VOO,Consumer Price Index: Inflation At 3.7% In September,seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VOO,Could Russian Diesel Reduce American CPI?,seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VOO,"Inflation Spreads Across The Economy, Not Going Back Into The Bottle: CPI, Core CPI, Core Services CPI Spike",seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VOO,Odds Of A Rate Hike Rise After The September CPI Report,seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VOO,SA analyst says a  stagflationary recession risk is growing,seekingalpha/VOO,,,2026-10-15 01:10:48
+2026-10-14,VRSK,Verisk Analytics: More Compelling Setup At Lower Levels,seekingalpha/VRSK,,,2026-10-15 01:10:48
+2026-10-14,VTI,The Brutal Inequality Of The U.S. Economy As Inflation Hits Consumers,seekingalpha/VTI,,,2026-10-15 01:10:48
+2026-10-14,VZ,"SA Asks: How much of a threat is SpaceX to AT&T, Verizon, T-Mobile?",seekingalpha/VZ,,,2026-10-15 01:10:48
+2026-10-14,VZ,Verizon: Rarely Is Income This Cheap; We Added $1420 Of Income,seekingalpha/VZ,,,2026-10-15 01:10:48
+2026-10-14,WAB,Westinghouse Air Brake declares $0.31 dividend,seekingalpha/WAB,,,2026-10-15 01:10:48
+2026-10-14,WDAY,"Workday, Inc. (WDAY) Analyst/Investor Day Transcript",seekingalpha/WDAY,,,2026-10-15 01:10:48
+2026-10-14,WFC,OCC says the nine largest US banks engaged in debanking practices,seekingalpha/WFC,,,2026-10-15 01:10:48
+2026-10-14,WY,Weyerhaeuser upgraded at Bank of America on timberland assets,seekingalpha/WY,,,2026-10-15 01:10:48
+2026-10-14,XYZ,Block: Cash App And Square Could Drive Another Leg Higher,seekingalpha/XYZ,,,2026-10-15 01:10:48
+2026-10-14,XYZ,"Block: Priced Like A Clean Fintech, But Regulatory And Legal Issues Loom",seekingalpha/XYZ,,,2026-10-15 01:10:48
+2026-10-14,ZBRA,"Zebra Technologies: Recovery Is Clear, But Valuation Leaves Little Room For Error",seekingalpha/ZBRA,,,2026-10-15 01:10:48
