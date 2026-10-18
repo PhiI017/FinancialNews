@@ -1678,5 +1678,48 @@ def the_letter_never_invents_a_profit_or_a_cost_basis():
         assert word not in said, "the book letter claims a " + word + ": " + said
 
 
+@test
+def test_the_letter_switch_defaults_to_on_and_gates_only_the_scheduled_sends():
+    """
+    A MAIL SWITCH FAILS BY MAKING MAIL STOP QUIETLY, so the default has to be ON.
+
+    The pre-open letter did not arrive for eleven days with nothing switched off at all —
+    GitHub simply never ran a poll inside its grace window, and no indicator said so. A
+    config key that could silence the rest by being absent, mistyped, or dropped from a
+    hand-edited `WATCHLIST_JSON` secret would be the same failure with a cause nobody
+    would look for. So OFF must be stated on purpose, and anything else means ON.
+
+    IT GATES THE POLLS, NOT THE LETTERS THEMSELVES. `overdue_letter` still reports what is
+    owed, so it stays testable and `--preclose` still sends when a person types it — the
+    switch stops letters ARRIVING UNASKED, which is what was actually requested. And it
+    must not touch the urgent path: a mover is not a letter, and silencing the alerts
+    along with the newsletters would be a different decision than the one taken.
+    """
+    import inspect
+    import alerter
+
+    assert alerter.letters_on({}) is True, "an absent key must mean ON"
+    assert alerter.letters_on({"letters": True}) is True
+    assert alerter.letters_on({"letters": False}) is False, "an explicit false must mean OFF"
+
+    # The scheduled poll branch consults the switch...
+    src = inspect.getsource(alerter)
+    gate = [l for l in src.splitlines()
+            if '"--accounts" in argv or "--check" in argv' in l]
+    assert gate, "the scheduled-poll branch moved; this test no longer guards anything"
+    assert any("letters_on()" in l for l in gate), (
+        "the --check/--accounts branch no longer consults letters_on(), so turning the "
+        "letters off in watchlist.json would do nothing: " + str(gate))
+
+    # ...and `overdue_letter` itself is NOT gated, or a named flag could not send.
+    assert "letters_on" not in inspect.getsource(alerter.overdue_letter), (
+        "overdue_letter now checks the switch itself, so `--preclose` typed by hand would "
+        "be silenced too — the switch is for unasked mail, not for the letters")
+
+    # The urgent path must be untouched.
+    assert "letters_on" not in inspect.getsource(alerter.evaluate), (
+        "the switch reached the urgent/mover path; a mover is not a newsletter")
+
+
 if __name__ == "__main__":
     sys.exit(main())

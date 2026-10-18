@@ -1,5 +1,7 @@
 {
   "_comment": "THE ONLY FILE YOU EDIT TO ADD OR REMOVE SOMETHING. Add a line, commit, done.",
+  "_letters_comment": "letters: false stops the FOUR SCHEDULED EMAIL LETTERS (pre-open, pre-close, week-ahead, weekly). Urgent mover and trigger alerts are NOT letters and keep firing to phone and email. Remove the key or set true to turn them back on; an absent key means ON, so a dropped line cannot silence your mail by accident. A letter still sends if you ask for it by name, e.g. python alerter.py --preclose.",
+  "letters": false,
   "_status_meanings": {
     "held": "you own it — moves are alerted and it appears in every digest",
     "watching": "you do not own it yet — alerted the same way, but the LLM is told you are deciding, not holding",

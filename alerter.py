@@ -69,6 +69,32 @@ def save_state(state):
         fh.write("\n")
 
 
+def letters_on(wl=None):
+    """
+    Is the project's scheduled-letter sending switched on? Default YES.
+
+    ── THE DEFAULT IS THE WHOLE DESIGN HERE ────────────────────────────────────────
+
+    An absent key means ON. A typo in `watchlist.json`, a hand-edited copy that drops
+    the line, or the `WATCHLIST_JSON` secret going stale therefore cannot silently stop
+    the letters — the failure mode of a mail switch is that mail quietly stops and nobody
+    notices for a week, which is exactly what happened to the pre-open letter for eleven
+    days when nothing was switched off at all. So OFF has to be stated, in the file, on
+    purpose.
+
+    IT GATES THE SCHEDULED SENDS ONLY. `--preopen` and the rest still send when a person
+    asks for them by name: typing the flag IS the intent, and leaving that working is what
+    makes the switch safe to flip — nothing is lost, it just stops arriving unasked.
+
+    AND IT DOES NOT TOUCH THE URGENT ALERTS. A mover or a trigger is not a letter; it is
+    the thing the alerter exists for, and `triggers.movers` keeps firing to phone and
+    email regardless. Turning the newsletters off is a volume decision, not a decision to
+    stop watching the book.
+    """
+    wl = load_watchlist() if wl is None else wl
+    return bool(wl.get("letters", True))
+
+
 def active_positions(wl):
     return [p for p in wl["positions"] if p.get("status") != "muted"]
 
@@ -535,7 +561,7 @@ if __name__ == "__main__":
     # A DROPPED CRON MUST NOT MEAN A MISSING LETTER — see overdue_letter(). Only the
     # polls give way: a run asked for a letter is doing the thing that matters already,
     # and the next hourly sweep recovers whatever else is owed.
-    if "--accounts" in argv or "--check" in argv:
+    if ("--accounts" in argv or "--check" in argv) and letters_on():
         owed, slot = overdue_letter(load_state())
         if owed:
             print(f"catching up: the {owed} letter for {slot} was never sent")
