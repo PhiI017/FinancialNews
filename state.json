@@ -11,14 +11,6 @@
       "urgency": "quiet"
     },
     {
-      "at": "2026-10-07",
-      "drawdown_pct": 0.0,
-      "fired": [],
-      "mode": "check",
-      "sent": {},
-      "urgency": "quiet"
-    },
-    {
       "at": "2026-10-08",
       "drawdown_pct": -0.22,
       "fired": [],
@@ -529,9 +521,17 @@
       "mode": "check",
       "sent": {},
       "urgency": "quiet"
+    },
+    {
+      "at": "2026-10-18",
+      "drawdown_pct": -2.04,
+      "fired": [],
+      "mode": "check",
+      "sent": {},
+      "urgency": "quiet"
     }
   ],
-  "last_run": "2026-10-18 18:04:23",
+  "last_run": "2026-10-18 18:37:29",
   "movers_alerted": {},
   "premium_rungs_spent": {
     "BOT": []
