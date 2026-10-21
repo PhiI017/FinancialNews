@@ -1228,14 +1228,39 @@ def every_letter_slot_has_a_cron_that_reaches_it_in_both_halves_of_the_year():
     winter week and asserts that for every slot on every day it runs, some scheduled cron
     fires between the slot and the end of its grace window.
     """
+    import json
     import re
     from datetime import datetime, timedelta, timezone
 
     PROMPT_MINUTES = 15
     here = os.path.dirname(os.path.abspath(__file__))
     text = open(os.path.join(here, ".github", "workflows", "alerts.yml")).read()
-    crons = re.findall(r'- cron: "([^"]+)"', text)
-    assert crons, "no crons found in alerts.yml"
+    # ── ONLY THE CRONS THAT ACTUALLY RUN, which the first version did not do ────────
+    #
+    # This read `re.findall(r'- cron: ...')` over the whole file, and that is a substring
+    # match: a commented-out `#   - cron: "10 * * * *"` matches it exactly as well as a
+    # live one. When every schedule was switched off on 2026-10-21 the crons stayed in the
+    # file, commented, so turning the alerter OFF would have left this test green and
+    # still asserting that the letter slots were covered by a schedule that no longer
+    # existed. A test that passes because of text in a comment is the silent-wrongness
+    # shape with a green tick on it.
+    crons = [m.group(1) for ln in text.splitlines()
+             if not ln.lstrip().startswith("#")
+             for m in [re.search(r'- cron: "([^"]+)"', ln)] if m]
+
+    if not crons:
+        # THE DELIBERATE-OFF STATE IS ASSERTED, NOT WAVED THROUGH. No schedule is a valid
+        # configuration — the owner asked for it — but it must look deliberate and it must
+        # be consistent: a workflow with no schedule while the letters are still switched
+        # ON would mean letters that can never arrive and nothing saying so.
+        assert "DELIBERATE OFF" in text.upper(), (
+            "alerts.yml has no active schedule and no comment saying that is on purpose, "
+            "so this is indistinguishable from someone deleting the crons by accident")
+        wl = json.load(open(os.path.join(here, "watchlist.json")))
+        assert wl.get("letters", True) is False, (
+            "the schedules are off but watchlist.json still has letters ON, so a letter "
+            "can never be delivered and nothing reports it — switch one or the other")
+        return
 
     def field(spec, value):
         for part in spec.split(","):
